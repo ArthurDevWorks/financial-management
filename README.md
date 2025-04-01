@@ -22,6 +22,10 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 npm install
 ```
 
+```sh
+composer install
+```
+
 ### Compile and Hot-Reload for Development
 
 ```sh
