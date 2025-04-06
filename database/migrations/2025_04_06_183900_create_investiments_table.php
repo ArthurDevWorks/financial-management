@@ -11,16 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('revenue_models', function (Blueprint $table) {
+        Schema::create('investiments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('account_id')->constrained('accounts');
-            $table->foreignId('categorie_id')->constrained('categories');
+            $table->foreignId('category_id')->constrained('categories');
             $table->string('name');
-            $table->string('value');
-            $table->dateTime('dt_revenue');
-            $table->string('observations'); 
+            $table->dateTime('dt_investiment');
+            $table->decimal('value',10,2);
+            $table->string('profitability');
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('revenue_models');
+        Schema::dropIfExists('investiments');
     }
 };
