@@ -13,6 +13,12 @@ return new class extends Migration
     {
         Schema::create('revenues', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('account_id')->constrained();
+            $table->foreignId('category_id')->constrained();
+            $table->string('name');
+            $table->decimal('value', 15, 2);
+            $table->date('dt_revenue');
+            $table->text('description')->nullable();
             $table->timestamps();
         });
     }

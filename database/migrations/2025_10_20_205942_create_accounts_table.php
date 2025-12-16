@@ -13,7 +13,11 @@ return new class extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->foreignId('user_id')->constrained();
+            $table->integer('type');
+            $table->string('bank');
+            $table->string('agency');
+            $table->string('account');
             $table->decimal('total', 15, 2);
             $table->timestamps();
         });
