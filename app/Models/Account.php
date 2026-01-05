@@ -12,7 +12,6 @@ class Account extends Model
 
     protected $fillable = [
         'type',
-        'name',
         'agency',
         'account',
         'total',
@@ -31,5 +30,10 @@ class Account extends Model
     public function expenses()
     {
         return $this->hasMany(Expense::class);
+    }
+
+    public function banck()
+    {
+        return $this->belongsTo(Bank::class);
     }
 }

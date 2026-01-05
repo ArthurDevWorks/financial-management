@@ -25,8 +25,8 @@ class Category extends Model
         return $this->hasMany(Expense::class);
     }
 
-    // public function investments()
-    // {
-    //     return $this->hasMany(Investiment::class);
-    // }
+    public function investments()
+    {
+        return $this->hasMany(Investiment::class);
+    }
 }

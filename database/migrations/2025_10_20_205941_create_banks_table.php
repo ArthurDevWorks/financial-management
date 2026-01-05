@@ -11,13 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('investiments', function (Blueprint $table) {
+        Schema::create('banks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('type')->constrained('categories');
             $table->string('name');
-            $table->dateTime('dt_investment');
-            $table->decimal('value', 15, 2);
-            $table->integer('profitability');
+            $table->text('logo');
             $table->timestamps();
         });
     }
@@ -27,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('investiments');
+        Schema::dropIfExists('banks');
     }
 };
