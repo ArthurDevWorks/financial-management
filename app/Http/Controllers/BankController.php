@@ -4,62 +4,97 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BankStoreRequest;
 use App\Http\Requests\BankUpdateRequest;
-use App\Models\Bank;
-use Illuminate\Container\Attributes\Storage;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use App\Models\Bank;
+use Inertia\Inertia;
 
 class BankController
 {
     /**
-     * Display a listing of the resource.
+     * List of banks has created
      */
     public function index()
     {
-        $banks = Bank::orderBy('name', 'asc')->paginate(15);
-
-        return $banks;
+        return Inertia::render('banks/Index', [
+            'banks' => Bank::query()
+                    ->withCount('accounts')
+                    ->orderBy('name')
+                    ->paginate(10)
+        ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Show form to create banks
+     */
+    public function create()
+    {
+        return Inertia::render('banks/Create');
+    }
+
+    /**
+     * Save banks in database
      */
     public function store(BankStoreRequest $request)
     {
-        $validated = $request->validated();
+        $data = $request->validated();
 
         if ($request->hasFile('logo'))
         {
-            $path = $request->file('logo')->store('banks', 'public');
-            $validated['logo'] = $request->file('logo')->store('banks', 'public');
+            $data['logo'] = $request->file('logo')->store('banks', 'public');
         }
 
-        return Bank::create($validated);
+        $save = Bank::create([
+            'name' => $request->name,
+            'logo' => $data['logo'],
+        ]);
+
+        if(!$save)
+        {
+            return redirect()->route('banks.index')
+                ->with('sucess', 'Erro ao cadastrar banco');
+        }else{
+            return redirect()->route('banks.index')
+                ->with('sucess', 'Banco cadastrado com sucesso');
+        }
+
     }
 
     /**
-     * Display the specified resource.
+     * Show form to update data
      */
-    public function show(Bank $bank)
+    public function edit(Bank $bank)
     {
-        return $bank;
-    }   
+        return Inertia::render('banks/Edit',[
+            'bank' => $bank,
+        ]);
+    }
 
     /**
      * Update the specified resource in storage.
      */
     public function update(BankUpdateRequest $request, Bank $bank)
     {
+        $data = $request->validated();
+
         if ($request->hasFile('logo')) {
             if ($bank->logo) {
                 Storage::disk('public')->delete($bank->logo);
             }
 
-            $validated['logo'] = $request->file('logo')->store('banks', 'public');
+            $data['logo'] = $request->file('logo')->store('banks', 'public');
         }
 
-        $bank->update($validated);
+        $update = $bank->update($data);
 
-        return $bank;
+        if(!$update)
+        {
+            return redirect()->route('banks.index')
+                ->with('success', 'Erro ao atualizar banco');
+        }else{
+            return redirect()->route('banks.index')
+                ->with('success', 'Banco atualizado com sucesso');
+        }
     }
 
     /**
@@ -73,6 +108,6 @@ class BankController
         
         $bank->delete();
 
-        return response()->noContent();
+        return redirect()->route('banks.index');
     }
 }
