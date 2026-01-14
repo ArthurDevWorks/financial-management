@@ -20,6 +20,7 @@ return new class extends Migration
             $table->date('dt_revenue');
             $table->text('description')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('account');
             $table->decimal('total', 15, 2);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

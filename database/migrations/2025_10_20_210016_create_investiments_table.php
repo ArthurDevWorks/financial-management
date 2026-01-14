@@ -19,6 +19,7 @@ return new class extends Migration
             $table->decimal('value', 15, 2);
             $table->integer('profitability');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
