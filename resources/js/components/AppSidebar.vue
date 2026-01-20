@@ -16,9 +16,7 @@ import {
 </script>
 
 <template>
-    <aside
-        class="fixed left-0 top-0 z-40 flex h-screen w-64 flex-col bg-[#0F223A] text-white"
-    >
+    <aside class="flex h-full w-64 flex-col bg-[#0F223A] text-white">
         <!-- LOGO -->
         <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10">
             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500">
