@@ -49,14 +49,11 @@ const handleFileSelect = (event: Event) => {
       </button>
 
       <div class="flex items-center gap-3 mb-2">
-        <div class="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
-          <Landmark class="h-6 w-6 text-white" />
-        </div>
         <h1 class="text-3xl font-bold text-slate-900">
           Novo Banco
         </h1>
       </div>
-      <p class="mt-1 text-slate-500 ml-11">
+      <p class="mt-1 text-slate-500">
         Cadastre um novo banco para gerenciar suas contas
       </p>
     </div>
@@ -73,7 +70,7 @@ const handleFileSelect = (event: Event) => {
             v-model="form.name"
             type="text"
             placeholder="Ex: Banco do Brasil"
-            class="text-base"
+            class="!bg-white text-slate-900"
           />
           <InputError :message="form.errors.name" />
         </div>
@@ -115,7 +112,7 @@ const handleFileSelect = (event: Event) => {
         </div>
 
         <!-- BUTTONS -->
-        <div class="flex justify-end gap-3 pt-6 border-t border-slate-200">
+        <div class="flex justify-end gap-3 pt-6 border-t border-slate-200 text-muted">
           <Button
             type="button"
             variant="outline"
@@ -123,7 +120,7 @@ const handleFileSelect = (event: Event) => {
           >
             Cancelar
           </Button>
-          <Button type="submit" :disabled="form.processing" class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800">
+          <Button type="submit" :disabled="form.processing" class="bg-emerald-600 text-white">
             {{ form.processing ? 'Cadastrando...' : 'Cadastrar Banco' }}
           </Button>
         </div>

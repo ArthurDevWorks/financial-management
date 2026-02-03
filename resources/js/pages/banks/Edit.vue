@@ -11,6 +11,7 @@ interface Bank {
   id: number
   name: string
   logo?: string
+  logo_url?: string
 }
 
 const props = defineProps<{
@@ -59,14 +60,11 @@ const handleFileSelect = (event: Event) => {
       </button>
 
       <div class="flex items-center gap-3 mb-2">
-        <div class="p-2 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg">
-          <Landmark class="h-6 w-6 text-white" />
-        </div>
         <h1 class="text-3xl font-bold text-slate-900">
           Editar Banco
         </h1>
       </div>
-      <p class="mt-1 text-slate-500 ml-11">
+      <p class="mt-1 text-slate-500">
         Atualize as informações do banco
       </p>
     </div>
@@ -83,7 +81,7 @@ const handleFileSelect = (event: Event) => {
             v-model="form.name"
             type="text"
             placeholder="Ex: Banco do Brasil"
-            class="text-base"
+            class="!bg-white text-slate-900"
           />
           <InputError :message="form.errors.name" />
         </div>
@@ -103,9 +101,9 @@ const handleFileSelect = (event: Event) => {
             />
             
             <!-- CURRENT LOGO -->
-            <div v-if="bank.logo && !logoPreview" class="mb-4 flex justify-center p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl border-2 border-emerald-200">
-              <img :src="bank.logo" alt="Logo atual" class="h-20 object-contain" />
-              <span class="text-xs text-emerald-600 ml-3 self-center font-medium">Logo atual</span>
+            <div v-if="bank.logo_url && !logoPreview" class="mb-4 flex justify-center items-center gap-3 p-6 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl border-2 border-emerald-200">
+              <img :src="bank.logo_url" :alt="`Logo ${bank.name}`" class="h-20 object-contain" />
+              <span class="text-xs text-emerald-600 font-medium">Logo atual</span>
             </div>
             
             <!-- NEW PREVIEW -->
@@ -139,7 +137,7 @@ const handleFileSelect = (event: Event) => {
           >
             Cancelar
           </Button>
-          <Button type="submit" :disabled="form.processing" class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800">
+          <Button type="submit" :disabled="form.processing" class="bg-emerald-600 text-white">
             {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
           </Button>
         </div>
