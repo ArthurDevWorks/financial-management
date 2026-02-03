@@ -21,18 +21,18 @@ interface AuthConfigContent {
 const authConfigContent = computed<AuthConfigContent>(() => {
     if (showRecoveryInput.value) {
         return {
-            title: 'Recovery Code',
+            title: 'Código de Recuperação',
             description:
-                'Please confirm access to your account by entering one of your emergency recovery codes.',
-            toggleText: 'login using an authentication code',
+                'Por favor, confirme o acesso à sua conta inserindo um de seus códigos de recuperação de emergência.',
+            toggleText: 'usar código de autenticação',
         };
     }
 
     return {
-        title: 'Authentication Code',
+        title: 'Código de Autenticação',
         description:
-            'Enter the authentication code provided by your authenticator application.',
-        toggleText: 'login using a recovery code',
+            'Digite o código de autenticação fornecido pelo seu aplicativo autenticador.',
+        toggleText: 'usar código de recuperação',
     };
 });
 
@@ -83,20 +83,21 @@ const codeValue = computed<string>(() => code.value.join(''));
                                         :index="index"
                                         :disabled="processing"
                                         autofocus
+                                        class="border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500"
                                     />
                                 </PinInputGroup>
                             </PinInput>
                         </div>
                         <InputError :message="errors.code" />
                     </div>
-                    <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
+                    <Button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg" :disabled="processing"
+                        >Continuar</Button
                     >
-                    <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                    <div class="text-center text-sm text-slate-600">
+                        <span>ou </span>
                         <button
                             type="button"
-                            class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            class="text-emerald-600 hover:text-emerald-700 font-semibold underline underline-offset-4"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}
@@ -115,20 +116,21 @@ const codeValue = computed<string>(() => code.value.join(''));
                     <Input
                         name="recovery_code"
                         type="text"
-                        placeholder="Enter recovery code"
+                        placeholder="Digite seu código de recuperação"
                         :autofocus="showRecoveryInput"
                         required
+                        class="bg-slate-50 border-slate-200 text-slate-900"
                     />
                     <InputError :message="errors.recovery_code" />
-                    <Button type="submit" class="w-full" :disabled="processing"
-                        >Continue</Button
+                    <Button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg" :disabled="processing"
+                        >Continuar</Button
                     >
 
-                    <div class="text-center text-sm text-muted-foreground">
-                        <span>or you can </span>
+                    <div class="text-center text-sm text-slate-600">
+                        <span>ou </span>
                         <button
                             type="button"
-                            class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                            class="text-emerald-600 hover:text-emerald-700 font-semibold underline underline-offset-4"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}

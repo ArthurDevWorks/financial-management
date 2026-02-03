@@ -11,27 +11,29 @@ import { LoaderCircle } from 'lucide-vue-next';
 
 <template>
     <AuthLayout
-        title="Confirm your password"
-        description="This is a secure area of the application. Please confirm your password before continuing."
+        title="Confirmar Senha"
+        description="Esta é uma área segura. Por favor, confirme sua senha antes de continuar."
     >
-        <Head title="Confirm password" />
+        <Head title="Confirmar Senha" />
 
         <Form
             v-bind="store.form()"
             reset-on-success
             v-slot="{ errors, processing }"
+            class="flex flex-col gap-6"
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password" class="text-slate-700 font-semibold">Senha</Label>
                     <Input
                         id="password"
                         type="password"
                         name="password"
-                        class="mt-1 block w-full"
+                        class="bg-slate-50 border-slate-200 text-slate-900"
                         required
                         autocomplete="current-password"
                         autofocus
+                        placeholder="Digite sua senha"
                     />
 
                     <InputError :message="errors.password" />
@@ -39,15 +41,15 @@ import { LoaderCircle } from 'lucide-vue-next';
 
                 <div class="flex items-center">
                     <Button
-                        class="w-full"
+                        class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
                         :disabled="processing"
                         data-test="confirm-password-button"
                     >
                         <LoaderCircle
                             v-if="processing"
-                            class="h-4 w-4 animate-spin"
+                            class="h-4 w-4 animate-spin mr-2"
                         />
-                        Confirm Password
+                        {{ processing ? 'Confirmando...' : 'Confirmar Senha' }}
                     </Button>
                 </div>
             </div>

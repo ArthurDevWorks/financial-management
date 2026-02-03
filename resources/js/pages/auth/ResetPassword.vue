@@ -19,72 +19,73 @@ const inputEmail = ref(props.email);
 
 <template>
     <AuthLayout
-        title="Reset password"
-        description="Please enter your new password below"
+        title="Redefinir Senha"
+        description="Digite sua nova senha abaixo"
     >
-        <Head title="Reset password" />
+        <Head title="Redefinir Senha" />
 
         <Form
             v-bind="update.form()"
             :transform="(data) => ({ ...data, token, email })"
             :reset-on-success="['password', 'password_confirmation']"
             v-slot="{ errors, processing }"
+            class="flex flex-col gap-6"
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email">Email</Label>
+                    <Label for="email" class="text-slate-700 font-semibold">Email</Label>
                     <Input
                         id="email"
                         type="email"
                         name="email"
                         autocomplete="email"
                         v-model="inputEmail"
-                        class="mt-1 block w-full"
+                        class="bg-slate-50 border-slate-200 text-slate-900"
                         readonly
                     />
-                    <InputError :message="errors.email" class="mt-2" />
+                    <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password" class="text-slate-700 font-semibold">Nova Senha</Label>
                     <Input
                         id="password"
                         type="password"
                         name="password"
                         autocomplete="new-password"
-                        class="mt-1 block w-full"
+                        class="bg-slate-50 border-slate-200 text-slate-900"
                         autofocus
-                        placeholder="Password"
+                        placeholder="Digite sua nova senha"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">
-                        Confirm Password
+                    <Label for="password_confirmation" class="text-slate-700 font-semibold">
+                        Confirmar Senha
                     </Label>
                     <Input
                         id="password_confirmation"
                         type="password"
                         name="password_confirmation"
                         autocomplete="new-password"
-                        class="mt-1 block w-full"
-                        placeholder="Confirm password"
+                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        placeholder="Confirme sua nova senha"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
                 <Button
                     type="submit"
-                    class="mt-4 w-full"
+                    class="mt-4 w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
                     :disabled="processing"
                     data-test="reset-password-button"
                 >
                     <LoaderCircle
                         v-if="processing"
-                        class="h-4 w-4 animate-spin"
+                        class="h-4 w-4 animate-spin mr-2"
                     />
-                    Reset password
+                    {{ processing ? 'Alterando...' : 'Redefinir Senha' }}
                 </Button>
             </div>
         </Form>
