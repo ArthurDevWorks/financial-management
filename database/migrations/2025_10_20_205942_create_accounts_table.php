@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('bank')->constrained('banks');
+            $table->foreignId('bank_id')->constrained('banks');
             $table->integer('type');
             $table->string('agency');
             $table->string('account');

@@ -32,7 +32,7 @@ class Account extends Model
         return $this->hasMany(Expense::class);
     }
 
-    public function banck()
+    public function bank()
     {
         return $this->belongsTo(Bank::class);
     }
