@@ -16,11 +16,19 @@ class BankController
      */
     public function index()
     {
+        $banks = Bank::query()
+            ->withCount('accounts')
+            ->paginate(10);
+
+        $banks->getCollection()->transform(function ($bank) {
+            $bank->logo_url = $bank->logo
+                ? asset('storage/' . $bank->logo)  // storage/banks/filename.png
+                : null;
+            return $bank;
+        });
+
         return Inertia::render('banks/Index', [
-            'banks' => Bank::query()
-                    ->withCount('accounts')
-                    ->orderBy('name')
-                    ->paginate(10)
+            'banks' => $banks,
         ]);
     }
 
@@ -65,6 +73,10 @@ class BankController
      */
     public function edit(Bank $bank)
     {
+        $bank->logo_url = $bank->logo
+            ? asset('storage/' . $bank->logo)
+            : null;
+
         return Inertia::render('banks/Edit',[
             'bank' => $bank,
         ]);

@@ -2,64 +2,63 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ExpenseStoreRequest;
+use App\Http\Requests\ExpenseUpdateRequest;
 use App\Models\Expense;
-use Illuminate\Http\Request;
+use App\Models\Account;
+use App\Models\Category;
+use Inertia\Inertia;
 
 class ExpenseController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return Inertia::render('expenses/Index', [
+            'expenses' => Expense::query()
+                ->with(['account', 'category'])
+                ->orderBy('dt_expense', 'desc')
+                ->paginate(10)
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return Inertia::render('expenses/Create', [
+            'accounts' => Account::all(),
+            'categories' => Category::where('type', 'expense')->get(),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(ExpenseStoreRequest $request)
     {
-        //
+        Expense::create($request->validated());
+
+        return redirect()->route('expenses.index')
+            ->with('success', 'Despesa cadastrada com sucesso');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Expense $expense)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Expense $expense)
     {
-        //
+        return Inertia::render('expenses/Edit', [
+            'expense' => $expense->load(['account', 'category']),
+            'accounts' => Account::all(),
+            'categories' => Category::where('type', 'expense')->get(),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Expense $expense)
+    public function update(ExpenseUpdateRequest $request, Expense $expense)
     {
-        //
+        $expense->update($request->validated());
+
+        return redirect()->route('expenses.index')
+            ->with('success', 'Despesa atualizada com sucesso');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Expense $expense)
     {
-        //
+        $expense->delete();
+
+        return redirect()->route('expenses.index')
+            ->with('success', 'Despesa removida com sucesso');
     }
 }

@@ -2,64 +2,63 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\RevenueStoreRequest;
+use App\Http\Requests\RevenueUpdateRequest;
 use App\Models\Revenue;
-use Illuminate\Http\Request;
+use App\Models\Account;
+use App\Models\Category;
+use Inertia\Inertia;
 
 class RevenueController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        return Inertia::render('revenues/Index', [
+            'revenues' => Revenue::query()
+                ->with(['account', 'category'])
+                ->orderBy('dt_revenue', 'desc')
+                ->paginate(10)
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        //
+        return Inertia::render('revenues/Create', [
+            'accounts' => Account::all(),
+            'categories' => Category::where('type', 'revenue')->get(),
+        ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function store(RevenueStoreRequest $request)
     {
-        //
+        Revenue::create($request->validated());
+
+        return redirect()->route('revenues.index')
+            ->with('success', 'Receita cadastrada com sucesso');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Revenue $revenue)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Revenue $revenue)
     {
-        //
+        return Inertia::render('revenues/Edit', [
+            'revenue' => $revenue->load(['account', 'category']),
+            'accounts' => Account::all(),
+            'categories' => Category::where('type', 'revenue')->get(),
+        ]);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Revenue $revenue)
+    public function update(RevenueUpdateRequest $request, Revenue $revenue)
     {
-        //
+        $revenue->update($request->validated());
+
+        return redirect()->route('revenues.index')
+            ->with('success', 'Receita atualizada com sucesso');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Revenue $revenue)
     {
-        //
+        $revenue->delete();
+
+        return redirect()->route('revenues.index')
+            ->with('success', 'Receita removida com sucesso');
     }
 }
