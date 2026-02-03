@@ -28,7 +28,7 @@ defineProps<{
 
         <div
             v-if="status"
-            class="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-center text-sm font-medium text-emerald-700"
+            class="mb-6 p-4 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-center text-sm font-medium text-cyan-300"
         >
             {{ status }}
         </div>
@@ -41,7 +41,7 @@ defineProps<{
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email" class="text-slate-700 font-semibold">Email</Label>
+                    <Label for="email" class="text-slate-200 font-semibold">Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -51,18 +51,18 @@ defineProps<{
                         :tabindex="1"
                         autocomplete="email"
                         placeholder="seu@email.com"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password" class="text-slate-700 font-semibold">Senha</Label>
+                        <Label for="password" class="text-slate-200 font-semibold">Senha</Label>
                         <TextLink
                             v-if="canResetPassword"
                             :href="request()"
-                            class="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                            class="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition"
                             :tabindex="5"
                         >
                             Esqueceu a senha?
@@ -76,7 +76,7 @@ defineProps<{
                         :tabindex="2"
                         autocomplete="current-password"
                         placeholder="Sua senha"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.password" />
                 </div>
@@ -84,13 +84,13 @@ defineProps<{
                 <div class="flex items-center justify-between">
                     <Label for="remember" class="flex items-center gap-3 cursor-pointer">
                         <Checkbox id="remember" name="remember" :tabindex="3" />
-                        <span class="text-sm text-slate-700">Manter-me conectado</span>
+                        <span class="text-sm text-slate-200">Manter-me conectado</span>
                     </Label>
                 </div>
 
                 <Button
                     type="submit"
-                    class="mt-4 w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
+                    class="mt-4 w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg transition-colors"
                     :tabindex="4"
                     :disabled="processing"
                     data-test="login-button"
@@ -104,11 +104,11 @@ defineProps<{
             </div>
 
             <div
-                class="text-center text-sm text-slate-600"
+                class="text-center text-sm text-slate-300"
                 v-if="canRegister"
             >
                 Não tem uma conta?
-                <TextLink :href="register()" class="text-emerald-600 hover:text-emerald-700 font-semibold" :tabindex="5">Cadastrar-se</TextLink>
+                <TextLink :href="register()" class="text-cyan-400 hover:text-cyan-300 font-semibold transition" :tabindex="5">Cadastrar-se</TextLink>
             </div>
         </Form>
     </AuthBase>

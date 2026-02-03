@@ -21,7 +21,7 @@ defineProps<{
 
         <div
             v-if="status === 'verification-link-sent'"
-            class="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-center text-sm font-medium text-emerald-700"
+            class="mb-6 p-4 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-center text-sm font-medium text-cyan-300"
         >
             Um novo link de verificação foi enviado para o email fornecido durante o cadastro.
         </div>
@@ -32,7 +32,7 @@ defineProps<{
             v-slot="{ processing }"
         >
             <Button 
-                class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
+                class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg"
                 :disabled="processing"
             >
                 <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin mr-2" />
@@ -42,7 +42,7 @@ defineProps<{
             <TextLink
                 :href="logout()"
                 as="button"
-                class="mx-auto block text-sm text-slate-600 hover:text-emerald-600 font-medium"
+                class="mx-auto block text-sm text-slate-400 hover:text-cyan-400 font-medium"
             >
                 Sair
             </TextLink>

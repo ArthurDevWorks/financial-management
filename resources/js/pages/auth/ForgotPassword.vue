@@ -24,7 +24,7 @@ defineProps<{
 
         <div
             v-if="status"
-            class="mb-6 p-4 rounded-lg bg-emerald-50 border border-emerald-200 text-center text-sm font-medium text-emerald-700"
+            class="mb-6 p-4 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-center text-sm font-medium text-cyan-300"
         >
             {{ status }}
         </div>
@@ -32,7 +32,7 @@ defineProps<{
         <div class="space-y-6">
             <Form v-bind="email.form()" v-slot="{ errors, processing }">
                 <div class="grid gap-2">
-                    <Label for="email" class="text-slate-700 font-semibold">Email</Label>
+                    <Label for="email" class="text-slate-200 font-semibold">Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -40,14 +40,14 @@ defineProps<{
                         autocomplete="off"
                         autofocus
                         placeholder="seu@email.com"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="my-6 flex items-center justify-start">
                     <Button
-                        class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
+                        class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg"
                         :disabled="processing"
                         data-test="email-password-reset-link-button"
                     >
@@ -62,7 +62,7 @@ defineProps<{
 
             <div class="text-center text-sm text-slate-600">
                 Lembrou a senha?
-                <TextLink :href="login()" class="text-emerald-600 hover:text-emerald-700 font-semibold">Voltar para login</TextLink>
+                <TextLink :href="login()" class="text-cyan-400 hover:text-cyan-300 font-semibold">Voltar para login</TextLink>
             </div>
         </div>
     </AuthLayout>

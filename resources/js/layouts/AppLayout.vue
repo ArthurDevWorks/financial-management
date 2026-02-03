@@ -12,7 +12,7 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-    <div class="flex h-screen bg-slate-50">
+    <div class="flex h-screen bg-slate-900">
         <AppSidebar />
          <!-- Conteúdo -->
         <main class="flex-1 overflow-y-auto p-8">

@@ -24,12 +24,12 @@ import { LoaderCircle } from 'lucide-vue-next';
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label htmlFor="password" class="text-slate-700 font-semibold">Senha</Label>
+                    <Label htmlFor="password" class="text-slate-200 font-semibold">Senha</Label>
                     <Input
                         id="password"
                         type="password"
                         name="password"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                         required
                         autocomplete="current-password"
                         autofocus
@@ -41,7 +41,7 @@ import { LoaderCircle } from 'lucide-vue-next';
 
                 <div class="flex items-center">
                     <Button
-                        class="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
+                        class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg"
                         :disabled="processing"
                         data-test="confirm-password-button"
                     >

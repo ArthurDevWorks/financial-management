@@ -21,11 +21,11 @@ const isActive = () => page.url.startsWith(props.href)
         :href="href"
         :method="method ?? 'get'"
         as="button"
-        class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm transition"
+        class="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm transition"
         :class="[
-            isActive() && !danger && 'bg-emerald-500 text-white',
+            isActive() && !danger && 'bg-cyan-500 text-slate-900 font-semibold',
             danger && 'text-red-400 hover:bg-red-500/10',
-            !isActive() && !danger && 'text-white/80 hover:bg-white/10'
+            !isActive() && !danger && 'text-slate-300 hover:bg-slate-700/50'
         ]"
     >
         <component :is="icon" class="h-5 w-5" />

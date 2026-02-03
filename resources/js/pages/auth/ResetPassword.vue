@@ -33,27 +33,27 @@ const inputEmail = ref(props.email);
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="email" class="text-slate-700 font-semibold">Email</Label>
+                    <Label for="email" class="text-slate-200 font-semibold">Email</Label>
                     <Input
                         id="email"
                         type="email"
                         name="email"
                         autocomplete="email"
                         v-model="inputEmail"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                         readonly
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password" class="text-slate-700 font-semibold">Nova Senha</Label>
+                    <Label for="password" class="text-slate-200 font-semibold">Nova Senha</Label>
                     <Input
                         id="password"
                         type="password"
                         name="password"
                         autocomplete="new-password"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                         autofocus
                         placeholder="Digite sua nova senha"
                     />
@@ -61,7 +61,7 @@ const inputEmail = ref(props.email);
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation" class="text-slate-700 font-semibold">
+                    <Label for="password_confirmation" class="text-slate-200 font-semibold">
                         Confirmar Senha
                     </Label>
                     <Input
@@ -69,7 +69,7 @@ const inputEmail = ref(props.email);
                         type="password"
                         name="password_confirmation"
                         autocomplete="new-password"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                         placeholder="Confirme sua nova senha"
                     />
                     <InputError :message="errors.password_confirmation" />
@@ -77,7 +77,7 @@ const inputEmail = ref(props.email);
 
                 <Button
                     type="submit"
-                    class="mt-4 w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
+                    class="mt-4 w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg"
                     :disabled="processing"
                     data-test="reset-password-button"
                 >

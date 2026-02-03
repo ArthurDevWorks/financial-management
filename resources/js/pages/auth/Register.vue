@@ -26,7 +26,7 @@ import { LoaderCircle } from 'lucide-vue-next';
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name" class="text-slate-700 font-semibold">Nome Completo</Label>
+                    <Label for="name" class="text-slate-200 font-semibold">Nome Completo</Label>
                     <Input
                         id="name"
                         type="text"
@@ -36,13 +36,13 @@ import { LoaderCircle } from 'lucide-vue-next';
                         autocomplete="name"
                         name="name"
                         placeholder="Seu nome"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.name" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="email" class="text-slate-700 font-semibold">Email</Label>
+                    <Label for="email" class="text-slate-200 font-semibold">Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -51,13 +51,13 @@ import { LoaderCircle } from 'lucide-vue-next';
                         autocomplete="email"
                         name="email"
                         placeholder="seu@email.com"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password" class="text-slate-700 font-semibold">Senha</Label>
+                    <Label for="password" class="text-slate-200 font-semibold">Senha</Label>
                     <Input
                         id="password"
                         type="password"
@@ -66,13 +66,13 @@ import { LoaderCircle } from 'lucide-vue-next';
                         autocomplete="new-password"
                         name="password"
                         placeholder="Crie uma senha forte"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation" class="text-slate-700 font-semibold">Confirmar Senha</Label>
+                    <Label for="password_confirmation" class="text-slate-200 font-semibold">Confirmar Senha</Label>
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -81,14 +81,14 @@ import { LoaderCircle } from 'lucide-vue-next';
                         autocomplete="new-password"
                         name="password_confirmation"
                         placeholder="Confirme sua senha"
-                        class="bg-slate-50 border-slate-200 text-slate-900"
+                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
                 <Button
                     type="submit"
-                    class="mt-2 w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold h-11 rounded-lg"
+                    class="mt-2 w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg transition-colors"
                     tabindex="5"
                     :disabled="processing"
                     data-test="register-user-button"
@@ -101,11 +101,11 @@ import { LoaderCircle } from 'lucide-vue-next';
                 </Button>
             </div>
 
-            <div class="text-center text-sm text-slate-600">
+            <div class="text-center text-sm text-slate-300">
                 Já tem uma conta?
                 <TextLink
                     :href="login()"
-                    class="text-emerald-600 hover:text-emerald-700 font-semibold"
+                    class="text-cyan-400 hover:text-cyan-300 font-semibold transition"
                     :tabindex="6"
                     >Entrar</TextLink
                 >
