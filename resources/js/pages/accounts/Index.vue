@@ -11,40 +11,57 @@ import {
 } from '@/components/ui/table'
 
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, Plus, Landmark } from 'lucide-vue-next'
+import { Pencil, Trash2, Plus, Wallet } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 
-interface Bank {
+interface Account {
   id: number
-  name: string
-  logo?: string
-  logo_url?: string
-  accounts_count: number
+  agency: string
+  account: string
+  type: number
+  total: number
+  bank: { id: number; name: string }
 }
 
 defineProps<{
-  banks: {
-    data: Bank[]
+  accounts: {
+    data: Account[]
   }
 }>()
 
-const editBank = (bank: Bank) => {
-  router.visit(`/banks/${bank.id}/edit`)
+const editAccount = (account: Account) => {
+  router.visit(`/accounts/${account.id}/edit`)
 }
 
-const deleteBank = (bank: Bank) => {
-  if (confirm(`Deseja excluir o banco "${bank.name}"?`)) {
-    router.delete(`/banks/${bank.id}`)
+const deleteAccount = (account: Account) => {
+  if (confirm(`Deseja excluir a conta bancária?`)) {
+    router.delete(`/accounts/${account.id}`)
   }
 }
 
-const createBank = () => {
-  router.visit('/banks/create')
+const createAccount = () => {
+  router.visit('/accounts/create')
 }
 
-const logoSrc = (bank: Bank) => {
-  if (bank.logo_url) return bank.logo_url
-  return '/images/bank-placeholder.png'
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value)
+}
+
+const typeLabel: Record<number, string> = {
+  1: 'Corrente',
+  2: 'Poupança',
+  3: 'Crédito',
+  4: 'Investimento',
+}
+
+const typeColor: Record<number, string> = {
+  1: 'bg-blue-500/20 text-blue-400 border border-blue-500/50',
+  2: 'bg-green-500/20 text-green-400 border border-green-500/50',
+  3: 'bg-orange-500/20 text-orange-400 border border-orange-500/50',
+  4: 'bg-purple-500/20 text-purple-400 border border-purple-500/50',
 }
 </script>
 
@@ -53,27 +70,31 @@ const logoSrc = (bank: Bank) => {
     <!-- PAGE HEADER -->
     <div class="mb-8 flex items-center justify-between">
       <div>
-        <h1 class="text-3xl font-bold text-white">
-          Bancos
-        </h1>
-        <p class="text-slate-400 mt-1">
-          Gerencie os bancos cadastrados no sistema
+        <div class="flex items-center gap-3 mb-2">
+          <h1 class="text-3xl font-bold text-white">
+            Contas
+          </h1>
+        </div>
+        <p class="mt-1 text-slate-400">
+          Gerencie suas contas bancárias e controle seus saldos
         </p>
       </div>
 
-      <Button class="gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold" @click="createBank">
-        <Plus class="h-4 w-4 "/>
-        Novo Banco
+      <Button class="gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold" @click="createAccount">
+        <Plus class="h-4 w-4" />
+        Nova Conta
       </Button>
     </div>
 
-    <div class="rounded-lg border border-slate-700 bg-slate-800 shadow-lg overflow-hidden">
+    <!-- CARD -->
+    <div class="rounded-2xl border border-slate-700 bg-slate-800 shadow-sm overflow-hidden">
+      <!-- CARD HEADER -->
       <div class="border-b border-slate-700 px-8 py-6 bg-slate-800">
         <h2 class="text-lg font-semibold text-white">
-          Bancos Cadastrados
+          Contas Cadastradas
         </h2>
         <p class="text-sm text-slate-400 mt-1">
-          {{ banks.data.length }} banco(s) encontrado(s)
+          {{ accounts.data.length }} conta(s) encontrada(s)
         </p>
       </div>
 
@@ -82,10 +103,12 @@ const logoSrc = (bank: Bank) => {
         <Table>
           <TableHeader>
             <TableRow class="border-b border-slate-700 hover:bg-transparent">
-              <TableHead class="w-20 text-slate-300 font-semibold">Logo</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Nome</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Contas Vinculadas</TableHead>
-              <TableHead class="text-right w-32 text-slate-300 font-semibold">
+              <TableHead class="text-slate-300 font-semibold">Banco</TableHead>
+              <TableHead class="text-slate-300 font-semibold">Agência</TableHead>
+              <TableHead class="text-slate-300 font-semibold">Conta</TableHead>
+              <TableHead class="text-slate-300 font-semibold">Tipo</TableHead>
+              <TableHead class="text-right text-slate-300 font-semibold">Saldo Total</TableHead>
+              <TableHead class="text-right w-20 text-slate-300 font-semibold">
                 Ações
               </TableHead>
             </TableRow>
@@ -93,37 +116,39 @@ const logoSrc = (bank: Bank) => {
 
           <TableBody>
             <!-- COM DADOS -->
-            <template v-if="banks.data.length">
+            <template v-if="accounts.data.length">
               <TableRow
-                v-for="bank in banks.data"
-                :key="bank.id"
+                v-for="account in accounts.data"
+                :key="account.id"
                 class="hover:bg-slate-700/50 border-b border-slate-700 transition"
               >
-                <TableCell class="py-4">
-                  <div class="flex items-center">
-                    <img
-                      :src="logoSrc(bank)"
-                      :alt="`Logo ${bank.name}`"
-                      class="h-8 w-8 rounded-md object-contain"
-                    />
-                  </div>
-                </TableCell>
-
                 <TableCell class="font-semibold text-white py-4">
-                  <span class="text-base">{{ bank.name }}</span>
+                  <span class="text-base">{{ account.bank.name }}</span>
                 </TableCell>
 
                 <TableCell class="py-4">
-                  <span class="inline-flex items-center rounded-full bg-cyan-500/20 px-4 py-2 text-xs font-semibold text-cyan-400 border border-cyan-500/50">
-                    {{ bank.accounts_count }} conta(s)
+                  <span class="text-slate-300">{{ account.agency }}</span>
+                </TableCell>
+
+                <TableCell class="py-4">
+                  <span class="text-slate-300 font-mono">{{ account.account }}</span>
+                </TableCell>
+
+                <TableCell class="py-4">
+                  <span :class="['inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold', typeColor[account.type] || 'bg-slate-500/20 text-slate-400 border border-slate-500/50']">
+                    {{ typeLabel[account.type] || `Tipo ${account.type}` }}
                   </span>
+                </TableCell>
+
+                <TableCell class="text-right font-semibold text-cyan-400 py-4">
+                  {{ formatCurrency(account.total) }}
                 </TableCell>
 
                 <TableCell class="text-right py-4">
                   <div class="flex justify-end gap-2">
                     <button
                       class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition"
-                      @click="editBank(bank)"
+                      @click="editAccount(account)"
                       title="Editar"
                     >
                       <Pencil class="h-4 w-4" />
@@ -131,7 +156,7 @@ const logoSrc = (bank: Bank) => {
 
                     <button
                       class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition"
-                      @click="deleteBank(bank)"
+                      @click="deleteAccount(account)"
                       title="Deletar"
                     >
                       <Trash2 class="h-4 w-4" />
@@ -145,13 +170,13 @@ const logoSrc = (bank: Bank) => {
             <template v-else>
               <TableRow>
                 <TableCell
-                  colspan="4"
+                  colspan="6"
                   class="py-12 text-center text-slate-400"
                 >
                   <div class="flex flex-col items-center justify-center">
-                    <Landmark class="h-12 w-12 text-slate-600 mb-3" />
-                    <p class="font-medium">Nenhum banco cadastrado</p>
-                    <p class="text-sm">Comece criando um novo banco</p>
+                    <Wallet class="h-12 w-12 text-slate-600 mb-3" />
+                    <p class="font-medium">Nenhuma conta cadastrada</p>
+                    <p class="text-sm">Comece criando uma nova conta</p>
                   </div>
                 </TableCell>
               </TableRow>

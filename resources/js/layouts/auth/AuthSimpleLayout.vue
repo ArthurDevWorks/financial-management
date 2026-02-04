@@ -2,6 +2,10 @@
 import { home } from '@/routes';
 import { Link } from '@inertiajs/vue3';
 
+import {
+    PiggyBank,
+} from 'lucide-vue-next'
+
 defineProps<{
     title?: string;
     description?: string;
@@ -20,7 +24,7 @@ defineProps<{
                             :href="home()"
                             class="flex items-center justify-center h-12 w-12 rounded-lg bg-cyan-500 hover:bg-cyan-600 transition-colors shadow-lg text-slate-900 font-bold text-lg"
                         >
-                            FM
+                            <PiggyBank class="h-6 w-6 text-white" />
                         </Link>
                         <div class="space-y-2 text-center">
                             <h1 class="text-2xl font-bold text-white">{{ title }}</h1>
