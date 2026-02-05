@@ -14,6 +14,7 @@ class Investiment extends Model
         'name',
         'dt_investment',
         'value',
+        'type',
         'profitability',
     ];
 

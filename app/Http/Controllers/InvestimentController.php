@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Investiment;
+use App\Models\Account;
+use App\Models\Category;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class InvestimentController extends Controller
 {
@@ -12,7 +15,12 @@ class InvestimentController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('investiments/Index', [
+            'investiments' => Investiment::query()
+                ->with(['categories'])
+                ->orderBy('dt_investment', 'desc')
+                ->paginate(10)
+        ]);
     }
 
     /**
@@ -20,7 +28,9 @@ class InvestimentController extends Controller
      */
     public function create()
     {
-        //
+        return Inertia::render('investiments/Create', [
+            'categories' => Category::all(),
+        ]);
     }
 
     /**
@@ -28,7 +38,18 @@ class InvestimentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'dt_investment' => 'required|date_format:Y-m-d H:i:s',
+            'value' => 'required|numeric|min:0',
+            'type' => 'required|exists:categories,id',
+            'profitability' => 'required|integer',
+        ]);
+
+        Investiment::create($validated);
+
+        return redirect()->route('investiments.index')
+            ->with('success', 'Investimento cadastrado com sucesso');
     }
 
     /**
@@ -44,7 +65,10 @@ class InvestimentController extends Controller
      */
     public function edit(Investiment $investiment)
     {
-        //
+        return Inertia::render('investiments/Edit', [
+            'investiment' => $investiment->load(['categories']),
+            'categories' => Category::all(),
+        ]);
     }
 
     /**
@@ -52,7 +76,18 @@ class InvestimentController extends Controller
      */
     public function update(Request $request, Investiment $investiment)
     {
-        //
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'dt_investment' => 'required|date_format:Y-m-d H:i:s',
+            'value' => 'required|numeric|min:0',
+            'type' => 'required|exists:categories,id',
+            'profitability' => 'required|integer',
+        ]);
+
+        $investiment->update($validated);
+
+        return redirect()->route('investiments.index')
+            ->with('success', 'Investimento atualizado com sucesso');
     }
 
     /**
@@ -60,6 +95,9 @@ class InvestimentController extends Controller
      */
     public function destroy(Investiment $investiment)
     {
-        //
+        $investiment->delete();
+
+        return redirect()->route('investiments.index')
+            ->with('success', 'Investimento removido com sucesso');
     }
 }
