@@ -18,9 +18,10 @@ interface Investment {
   id: number
   name: string
   value: number
-  type: number
+  type: string
   profitability: number
   dt_investment: string
+  category_id: number
   categories: { id: number; name: string }
 }
 

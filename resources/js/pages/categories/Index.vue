@@ -25,15 +25,15 @@ defineProps<{
 }>()
 
 const typeLabel: Record<string, string> = {
-  revenue: 'Receita',
-  expense: 'Despesa',
-  investment: 'Investimento',
+  receita: 'Receita',
+  despesa: 'Despesa',
+  investimento: 'Investimento',
 }
 
 const typeColor: Record<string, string> = {
-  revenue: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/50',
-  expense: 'bg-red-500/20 text-red-400 border border-red-500/50',
-  investment: 'bg-amber-500/20 text-amber-400 border border-amber-500/50',
+  receita: 'bg-green-500/20 text-green-400 border border-green-500/50',
+  despesa: 'bg-red-500/20 text-red-400 border border-red-500/50',
+  investimento: 'bg-purple-500/20 text-purple-400 border border-purple-500/50',
 }
 
 const editCategory = (category: Category) => {

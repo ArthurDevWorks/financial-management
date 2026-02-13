@@ -4,46 +4,44 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
-import { ArrowLeft, Landmark, Upload, CheckCircle } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ArrowLeft, TrendingUp } from 'lucide-vue-next'
+import { router } from '@inertiajs/vue3'
 
-interface Bank {
+interface Category {
   id: number
   name: string
-  logo?: string
-  logo_url?: string
+}
+
+interface Investment {
+  id: number
+  name: string
+  dt_investment: string
+  value: number
+  type: string
+  profitability: number
+  category_id: number
 }
 
 const props = defineProps<{
-  bank: Bank
+  investiment: Investment
+  categories: Category[]
 }>()
 
-const logoPreview = ref<string | null>(null)
-
 const form = useForm({
-  name: props.bank.name,
-  logo: null as File | null,
+  name: props.investiment.name,
+  dt_investment: props.investiment.dt_investment,
+  value: props.investiment.value.toString(),
+  type: props.investiment.type,
+  profitability: props.investiment.profitability.toString(),
+  category_id: props.investiment.category_id.toString(),
 })
 
 const submit = () => {
-  form.post(`/banks/${props.bank.id}?_method=PUT`)
+  form.post(`/investiments/${props.investiment.id}?_method=PUT`)
 }
 
 const goBack = () => {
-  window.history.back()
-}
-
-const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (target.files?.[0]) {
-    form.logo = target.files[0]
-    
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      logoPreview.value = e.target?.result as string
-    }
-    reader.readAsDataURL(target.files[0])
-  }
+  router.visit('/investiments')
 }
 </script>
 
@@ -60,12 +58,13 @@ const handleFileSelect = (event: Event) => {
       </button>
 
       <div class="flex items-center gap-3 mb-2">
+        <TrendingUp class="h-8 w-8 text-cyan-400" />
         <h1 class="text-3xl font-bold text-white">
-          Editar Banco
+          Editar Investimento
         </h1>
       </div>
       <p class="mt-1 text-slate-300">
-        Atualize as informações do banco
+        Atualize as informações do investimento
       </p>
     </div>
 
@@ -74,58 +73,97 @@ const handleFileSelect = (event: Event) => {
       <form @submit.prevent="submit" class="space-y-6">
         <!-- NAME -->
         <div>
-          <label class="block text-sm font-semibold text-white mb-3">
-            Nome do Banco
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Descrição do Investimento
           </label>
           <Input
             v-model="form.name"
             type="text"
-            placeholder="Ex: Banco do Brasil"
-            class="!bg-slate-700 text-white"
+            placeholder="Ex: Tesouro Direto, Fundo de Ações, CDB"
+            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
           />
           <InputError :message="form.errors.name" />
         </div>
 
-        <!-- LOGO UPLOAD -->
+        <!-- CATEGORY -->
         <div>
-          <label class="block text-sm font-semibold text-white mb-3">
-            Logo (Opcional)
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Tipo/Categoria
+          </label>
+          <select
+            v-model="form.category_id"
+            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:border-cyan-500 focus:ring-cyan-500"
+          >
+            <option value="">Selecione uma categoria</option>
+            <option v-for="category in categories" :key="category.id" :value="category.id">
+              {{ category.name }}
+            </option>
+          </select>
+          <InputError :message="form.errors.category_id" />
+        </div>
+
+        <!-- DATE -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Data do Investimento
+          </label>
+          <Input
+            v-model="form.dt_investment"
+            type="date"
+            class="bg-slate-700 border-slate-600 text-white focus:border-cyan-500 focus:ring-cyan-500"
+          />
+          <InputError :message="form.errors.dt_investment" />
+        </div>
+
+        <!-- VALUE -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Valor Investido
           </label>
           <div class="relative">
-            <input
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="handleFileSelect"
-              id="logo-input"
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+            <Input
+              v-model="form.value"
+              type="number"
+              placeholder="0,00"
+              step="0.01"
+              class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500 pl-8"
             />
-            
-            <!-- CURRENT LOGO -->
-            <div v-if="bank.logo_url && !logoPreview" class="mb-4 flex justify-center items-center gap-3 p-6 bg-slate-700 rounded-lg border-2 border-slate-600">
-              <img :src="bank.logo_url" :alt="`Logo ${bank.name}`" class="h-20 object-contain" />
-              <span class="text-xs text-cyan-400 font-medium">Logo atual</span>
-            </div>
-            
-            <!-- NEW PREVIEW -->
-            <div v-if="logoPreview" class="mb-4 flex justify-center p-6 bg-slate-700 rounded-lg border-2 border-slate-600">
-              <img :src="logoPreview" alt="Preview" class="h-20 object-contain" />
-            </div>
-            
-            <!-- UPLOAD AREA -->
-            <label
-              for="logo-input"
-              class="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer hover:border-slate-500 hover:bg-slate-700/50 transition\"
-            >
-              <div class="text-center">
-                <Upload v-if="!logoPreview" class="h-8 w-8 text-cyan-400 mx-auto mb-2" />
-                <CheckCircle v-else class="h-8 w-8 text-cyan-400 mx-auto mb-2" />
-                <p class="text-slate-300 font-semibold">{{ logoPreview ? 'Nova logo carregada' : 'Clique para alterar a logo' }}</p>
-                <p class="text-xs text-slate-400 mt-1">PNG, JPG, JPEG, SVG, WebP (máx. 2MB)</p>
-              </div>
-            </label>
           </div>
-          <InputError :message="form.errors.logo" />
-          <p v-if="form.logo" class="text-xs text-cyan-400 mt-2 font-medium">✓ {{ form.logo.name }}</p>
+          <InputError :message="form.errors.value" />
+        </div>
+
+        <!-- TYPE -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Tipo de Investimento
+          </label>
+          <Input
+            v-model="form.type"
+            type="text"
+            placeholder="Ex: Renda Fixa, Renda Variável, Crypto"
+            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
+          />
+          <InputError :message="form.errors.type" />
+        </div>
+
+        <!-- PROFITABILITY -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Rentabilidade (%)
+          </label>
+          <div class="relative">
+            <Input
+              v-model="form.profitability"
+              type="number"
+              placeholder="0,00"
+              step="0.01"
+              class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
+            />
+            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">Use valores negativos para perdas</p>
+          <InputError :message="form.errors.profitability" />
         </div>
 
         <!-- BUTTONS -->
@@ -134,6 +172,7 @@ const handleFileSelect = (event: Event) => {
             type="button"
             variant="outline"
             @click="goBack"
+            class="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
           >
             Cancelar
           </Button>

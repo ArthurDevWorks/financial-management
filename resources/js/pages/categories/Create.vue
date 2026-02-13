@@ -6,6 +6,14 @@ import { Input } from '@/components/ui/input'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
 
+interface TypeOption {
+  [key: string]: string
+}
+
+defineProps<{
+  types: TypeOption
+}>()
+
 const form = useForm({
   type: '',
   name: '',
@@ -33,6 +41,7 @@ const goBack = () => {
       </button>
 
       <div class="flex items-center gap-3 mb-2">
+        <Tags class="h-8 w-8 text-cyan-400" />
         <h1 class="text-3xl font-bold text-white">
           Nova Categoria
         </h1>
@@ -48,16 +57,16 @@ const goBack = () => {
         <!-- TYPE -->
         <div>
           <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Tipo
+            Tipo de Categoria
           </label>
           <select
             v-model="form.type"
-            class="w-full px-4 py-3 rounded-lg bg-slate-700 border border-slate-600 text-white focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 text-base"
+            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:border-cyan-500 focus:ring-cyan-500"
           >
-            <option value="" class="bg-slate-700 text-white">Selecione um tipo</option>
-            <option value="revenue" class="bg-slate-700 text-white">Receita</option>
-            <option value="expense" class="bg-slate-700 text-white">Despesa</option>
-            <option value="investment" class="bg-slate-700 text-white">Investimento</option>
+            <option value="">Selecione um tipo</option>
+            <option v-for="(label, value) in types" :key="value" :value="value">
+              {{ label }}
+            </option>
           </select>
           <InputError :message="form.errors.type" />
         </div>
@@ -65,13 +74,13 @@ const goBack = () => {
         <!-- NAME -->
         <div>
           <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Nome
+            Nome da Categoria
           </label>
           <Input
             v-model="form.name"
             type="text"
-            placeholder="Ex: Salário, Alimentação"
-            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500 text-base"
+            placeholder="Ex: Salário, Alimentação, Ações"
+            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
           />
           <InputError :message="form.errors.name" />
         </div>

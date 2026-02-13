@@ -4,46 +4,40 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
-import { ArrowLeft, Landmark, Upload, CheckCircle } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { ArrowLeft, Wallet } from 'lucide-vue-next'
+import { router } from '@inertiajs/vue3'
 
 interface Bank {
   id: number
   name: string
-  logo?: string
-  logo_url?: string
+}
+
+interface Account {
+  id: number
+  bank_id: number
+  name: string
+  account_number: string
+  initial_balance: number
 }
 
 const props = defineProps<{
-  bank: Bank
+  account: Account
+  banks: Bank[]
 }>()
 
-const logoPreview = ref<string | null>(null)
-
 const form = useForm({
-  name: props.bank.name,
-  logo: null as File | null,
+  bank_id: props.account.bank_id.toString(),
+  name: props.account.name,
+  account_number: props.account.account_number,
+  initial_balance: props.account.initial_balance.toString(),
 })
 
 const submit = () => {
-  form.post(`/banks/${props.bank.id}?_method=PUT`)
+  form.post(`/accounts/${props.account.id}?_method=PUT`)
 }
 
 const goBack = () => {
-  window.history.back()
-}
-
-const handleFileSelect = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  if (target.files?.[0]) {
-    form.logo = target.files[0]
-    
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      logoPreview.value = e.target?.result as string
-    }
-    reader.readAsDataURL(target.files[0])
-  }
+  router.visit('/accounts')
 }
 </script>
 
@@ -60,72 +54,80 @@ const handleFileSelect = (event: Event) => {
       </button>
 
       <div class="flex items-center gap-3 mb-2">
+        <Wallet class="h-8 w-8 text-cyan-400" />
         <h1 class="text-3xl font-bold text-white">
-          Editar Banco
+          Editar Conta
         </h1>
       </div>
       <p class="mt-1 text-slate-300">
-        Atualize as informações do banco
+        Atualize as informações da conta bancária
       </p>
     </div>
 
     <!-- FORM CARD -->
     <div class="rounded-lg border border-slate-700 bg-slate-800 p-8 shadow-lg">
       <form @submit.prevent="submit" class="space-y-6">
-        <!-- NAME -->
+        <!-- BANK -->
         <div>
-          <label class="block text-sm font-semibold text-white mb-3">
-            Nome do Banco
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Banco
+          </label>
+          <select
+            v-model="form.bank_id"
+            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:border-cyan-500 focus:ring-cyan-500"
+          >
+            <option value="">Selecione um banco</option>
+            <option v-for="bank in banks" :key="bank.id" :value="bank.id">
+              {{ bank.name }}
+            </option>
+          </select>
+          <InputError :message="form.errors.bank_id" />
+        </div>
+
+        <!-- ACCOUNT NAME -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Nome da Conta
           </label>
           <Input
             v-model="form.name"
             type="text"
-            placeholder="Ex: Banco do Brasil"
-            class="!bg-slate-700 text-white"
+            placeholder="Ex: Minha Conta Corrente"
+            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
           />
           <InputError :message="form.errors.name" />
         </div>
 
-        <!-- LOGO UPLOAD -->
+        <!-- ACCOUNT NUMBER -->
         <div>
-          <label class="block text-sm font-semibold text-white mb-3">
-            Logo (Opcional)
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Número da Conta
+          </label>
+          <Input
+            v-model="form.account_number"
+            type="text"
+            placeholder="Ex: 123456-7"
+            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
+          />
+          <InputError :message="form.errors.account_number" />
+        </div>
+
+        <!-- INITIAL BALANCE -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Saldo Inicial
           </label>
           <div class="relative">
-            <input
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="handleFileSelect"
-              id="logo-input"
+            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
+            <Input
+              v-model="form.initial_balance"
+              type="number"
+              placeholder="0,00"
+              step="0.01"
+              class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500 pl-8"
             />
-            
-            <!-- CURRENT LOGO -->
-            <div v-if="bank.logo_url && !logoPreview" class="mb-4 flex justify-center items-center gap-3 p-6 bg-slate-700 rounded-lg border-2 border-slate-600">
-              <img :src="bank.logo_url" :alt="`Logo ${bank.name}`" class="h-20 object-contain" />
-              <span class="text-xs text-cyan-400 font-medium">Logo atual</span>
-            </div>
-            
-            <!-- NEW PREVIEW -->
-            <div v-if="logoPreview" class="mb-4 flex justify-center p-6 bg-slate-700 rounded-lg border-2 border-slate-600">
-              <img :src="logoPreview" alt="Preview" class="h-20 object-contain" />
-            </div>
-            
-            <!-- UPLOAD AREA -->
-            <label
-              for="logo-input"
-              class="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer hover:border-slate-500 hover:bg-slate-700/50 transition\"
-            >
-              <div class="text-center">
-                <Upload v-if="!logoPreview" class="h-8 w-8 text-cyan-400 mx-auto mb-2" />
-                <CheckCircle v-else class="h-8 w-8 text-cyan-400 mx-auto mb-2" />
-                <p class="text-slate-300 font-semibold">{{ logoPreview ? 'Nova logo carregada' : 'Clique para alterar a logo' }}</p>
-                <p class="text-xs text-slate-400 mt-1">PNG, JPG, JPEG, SVG, WebP (máx. 2MB)</p>
-              </div>
-            </label>
           </div>
-          <InputError :message="form.errors.logo" />
-          <p v-if="form.logo" class="text-xs text-cyan-400 mt-2 font-medium">✓ {{ form.logo.name }}</p>
+          <InputError :message="form.errors.initial_balance" />
         </div>
 
         <!-- BUTTONS -->
@@ -134,6 +136,7 @@ const handleFileSelect = (event: Event) => {
             type="button"
             variant="outline"
             @click="goBack"
+            class="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
           >
             Cancelar
           </Button>
