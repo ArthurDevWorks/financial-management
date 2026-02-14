@@ -16,8 +16,9 @@ import { router } from '@inertiajs/vue3'
 
 interface Account {
   id: number
-  name: string
-  account_number: string
+  type: string
+  agency: string
+  account: string
   total: number
   bank: { id: number; name: string }
 }
@@ -49,9 +50,13 @@ const formatCurrency = (value: number) => {
   }).format(value)
 }
 
-const typeLabel: Record<number, string> = {}
-
-const typeColor: Record<number, string> = {}
+const typeLabel: Record<string, string> = {
+  'corrente': 'Conta Corrente',
+  'poupanca': 'Poupança',
+  'digital': 'Conta Digital',
+  'investimento': 'Conta de Investimento',
+  'salario': 'Conta Salário',
+}
 </script>
 
 <template>
@@ -93,8 +98,9 @@ const typeColor: Record<number, string> = {}
           <TableHeader>
             <TableRow class="border-b border-slate-700 hover:bg-transparent">
               <TableHead class="text-slate-300 font-semibold">Banco</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Nome</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Número</TableHead>
+              <TableHead class="text-slate-300 font-semibold">Tipo</TableHead>
+              <TableHead class="text-slate-300 font-semibold">Agência</TableHead>
+              <TableHead class="text-slate-300 font-semibold">Conta</TableHead>
               <TableHead class="text-right text-slate-300 font-semibold">Saldo Total</TableHead>
               <TableHead class="text-right w-20 text-slate-300 font-semibold">
                 Ações
@@ -115,11 +121,15 @@ const typeColor: Record<number, string> = {}
                 </TableCell>
 
                 <TableCell class="py-4">
-                  <span class="text-slate-300">{{ account.name }}</span>
+                  <span class="text-slate-300">{{ typeLabel[account.type] }}</span>
                 </TableCell>
 
                 <TableCell class="py-4">
-                  <span class="text-slate-300 font-mono">{{ account.account_number }}</span>
+                  <span class="text-slate-300 font-mono">{{ account.agency }}</span>
+                </TableCell>
+
+                <TableCell class="py-4">
+                  <span class="text-slate-300 font-mono">{{ account.account }}</span>
                 </TableCell>
 
                 <TableCell class="text-right font-semibold text-cyan-400 py-4">

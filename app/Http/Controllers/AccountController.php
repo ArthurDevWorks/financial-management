@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountType;
+use App\Http\Requests\AccountStoreRequest;
+use App\Http\Requests\AccountUpdateRequest;
 use App\Models\Account;
 use App\Models\Bank;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class AccountController extends Controller
@@ -16,6 +19,7 @@ class AccountController extends Controller
     {
         return Inertia::render('accounts/Index', [
             'accounts' => Account::query()
+                ->where('user_id', Auth::id())
                 ->with(['bank'])
                 ->paginate(10)
         ]);
@@ -28,34 +32,22 @@ class AccountController extends Controller
     {
         return Inertia::render('accounts/Create', [
             'banks' => Bank::all(),
+            'accountTypes' => AccountType::options(),
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(AccountStoreRequest $request)
     {
-        $validated = $request->validate([
-            'bank_id' => 'required|exists:banks,id',
-            'type' => 'required|integer',
-            'agency' => 'required|string|max:255',
-            'account' => 'required|string|max:255',
-            'total' => 'required|numeric|min:0',
-        ]);
+        $validated = $request->validated();
+        $validated['user_id'] = Auth::id();
 
         Account::create($validated);
 
         return redirect()->route('accounts.index')
             ->with('success', 'Conta cadastrada com sucesso');
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(Account $account)
-    {
-        //
     }
 
     /**
@@ -66,23 +58,16 @@ class AccountController extends Controller
         return Inertia::render('accounts/Edit', [
             'account' => $account->load('bank'),
             'banks' => Bank::all(),
+            'accountTypes' => AccountType::options(),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Account $account)
+    public function update(AccountUpdateRequest $request, Account $account)
     {
-        $validated = $request->validate([
-            'bank_id' => 'required|exists:banks,id',
-            'type' => 'required|integer',
-            'agency' => 'required|string|max:255',
-            'account' => 'required|string|max:255',
-            'total' => 'required|numeric|min:0',
-        ]);
-
-        $account->update($validated);
+        $account->update($request->validated());
 
         return redirect()->route('accounts.index')
             ->with('success', 'Conta atualizada com sucesso');

@@ -15,21 +15,24 @@ interface Bank {
 interface Account {
   id: number
   bank_id: number
-  name: string
-  account_number: string
-  initial_balance: number
+  type: string
+  agency: string
+  account: string
+  total: number
 }
 
 const props = defineProps<{
   account: Account
   banks: Bank[]
+  accountTypes: Record<string, string>
 }>()
 
 const form = useForm({
   bank_id: props.account.bank_id.toString(),
-  name: props.account.name,
-  account_number: props.account.account_number,
-  initial_balance: props.account.initial_balance.toString(),
+  type: props.account.type,
+  agency: props.account.agency,
+  account: props.account.account,
+  total: props.account.total.toString(),
 })
 
 const submit = () => {
@@ -84,18 +87,35 @@ const goBack = () => {
           <InputError :message="form.errors.bank_id" />
         </div>
 
-        <!-- ACCOUNT NAME -->
+        <!-- TYPE -->
         <div>
           <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Nome da Conta
+            Tipo de Conta
+          </label>
+          <select
+            v-model="form.type"
+            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:border-cyan-500 focus:ring-cyan-500"
+          >
+            <option value="">Selecione o tipo de conta</option>
+            <option v-for="(label, value) in accountTypes" :key="value" :value="value">
+              {{ label }}
+            </option>
+          </select>
+          <InputError :message="form.errors.type" />
+        </div>
+
+        <!-- AGENCY -->
+        <div>
+          <label class="block text-sm font-semibold text-slate-200 mb-3">
+            Agência
           </label>
           <Input
-            v-model="form.name"
+            v-model="form.agency"
             type="text"
-            placeholder="Ex: Minha Conta Corrente"
+            placeholder="Ex: 0001"
             class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
           />
-          <InputError :message="form.errors.name" />
+          <InputError :message="form.errors.agency" />
         </div>
 
         <!-- ACCOUNT NUMBER -->
@@ -104,30 +124,30 @@ const goBack = () => {
             Número da Conta
           </label>
           <Input
-            v-model="form.account_number"
+            v-model="form.account"
             type="text"
             placeholder="Ex: 123456-7"
             class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
           />
-          <InputError :message="form.errors.account_number" />
+          <InputError :message="form.errors.account" />
         </div>
 
-        <!-- INITIAL BALANCE -->
+        <!-- TOTAL -->
         <div>
           <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Saldo Inicial
+            Saldo Total
           </label>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
             <Input
-              v-model="form.initial_balance"
+              v-model="form.total"
               type="number"
               placeholder="0,00"
               step="0.01"
               class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500 pl-8"
             />
           </div>
-          <InputError :message="form.errors.initial_balance" />
+          <InputError :message="form.errors.total" />
         </div>
 
         <!-- BUTTONS -->

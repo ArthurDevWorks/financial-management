@@ -11,6 +11,8 @@ class Account extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'user_id',
+        'bank_id',
         'type',
         'agency',
         'account',
@@ -26,7 +28,7 @@ class Account extends Model
     {
         return $this->hasMany(Revenue::class);
     }
-
+            
     public function expenses()
     {
         return $this->hasMany(Expense::class);
