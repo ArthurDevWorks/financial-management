@@ -69,11 +69,10 @@ import {
                 :icon="Tags"
                 href="/categories"
             />
-
             <SidebarItem
                 label="Investimentos"
                 :icon="PiggyBank"
-                href="/investments"
+                href="/investiments"
             />
         </nav>
 
