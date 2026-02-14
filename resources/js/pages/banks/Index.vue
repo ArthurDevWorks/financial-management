@@ -17,7 +17,6 @@ import { router } from '@inertiajs/vue3'
 interface Bank {
   id: number
   name: string
-  logo?: string
   logo_url?: string
   accounts_count: number
 }
@@ -43,8 +42,9 @@ const createBank = () => {
 }
 
 const logoSrc = (bank: Bank) => {
-  if (bank.logo_url) return bank.logo_url
-  return '/images/bank-placeholder.png'
+  if (bank.logo_url){
+    return bank.logo_url;
+  }
 }
 </script>
 

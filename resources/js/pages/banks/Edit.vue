@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
-import { ArrowLeft, Landmark, Upload, CheckCircle } from 'lucide-vue-next'
+import { ArrowLeft, Upload, CheckCircle } from 'lucide-vue-next'
 import { ref } from 'vue'
 
 interface Bank {

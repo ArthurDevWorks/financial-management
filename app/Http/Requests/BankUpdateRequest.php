@@ -23,7 +23,7 @@ class BankUpdateRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:3|max:255',
-            'logo' => 'required|mimes:png,jpg,jpeg,svg,webp|max:2048',
+            'logo' => 'nullable|mimes:png,jpg,jpeg,svg,webp|max:2048',
         ];
     }
 }

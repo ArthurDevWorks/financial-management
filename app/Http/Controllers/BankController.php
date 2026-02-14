@@ -90,6 +90,12 @@ class BankController
         $data = $request->validated();
 
         if ($request->hasFile('logo')) {
+            $data['logo'] = $request->file('logo')->store('banks', 'public');
+        } else {
+            unset($data['logo']);
+        }
+
+        if ($request->hasFile('logo')) {
             if ($bank->logo) {
                 Storage::disk('public')->delete($bank->logo);
             }
