@@ -7,6 +7,7 @@ import {
     Wallet,
     TrendingUp,
     TrendingDown,
+    ArrowRightLeft,
     Tags,
     PiggyBank,
     Settings,
@@ -53,15 +54,9 @@ import {
             />
 
             <SidebarItem
-                label="Receitas"
-                :icon="TrendingUp"
-                href="/revenues"
-            />
-
-            <SidebarItem
-                label="Despesas"
-                :icon="TrendingDown"
-                href="/expenses"
+                label="Lançamentos"
+                :icon="ArrowRightLeft"
+                href="/releases"
             />
 
             <SidebarItem

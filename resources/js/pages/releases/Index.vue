@@ -9,36 +9,37 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, Plus, TrendingUp } from 'lucide-vue-next'
+import { Pencil, Trash2, Plus, ArrowRightLeft } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 
-interface Revenue {
+interface Release {
   id: number
-  name: string
-  value: number
-  dt_revenue: string
-  account: { id: number; name: string }
-  category: { id: number; name: string }
+  title: string
+  amount: number
+  date: string
+  type: 'revenue' | 'expense'
+  account: { id: number; name: string } | null
+  category: { id: number; name: string } | null
 }
 
 defineProps<{
-  revenues: {
-    data: Revenue[]
+  releases: {
+    data: Release[]
   }
 }>()
 
-const editRevenue = (revenue: Revenue) => {
-  router.visit(`/revenues/${revenue.id}/edit`)
+const editRelease = (release: Release) => {
+  router.visit(`/releases/${release.id}/edit`)
 }
 
-const deleteRevenue = (revenue: Revenue) => {
-  if (confirm(`Deseja excluir a receita "${revenue.name}"?`)) {
-    router.delete(`/revenues/${revenue.id}`)
+const deleteRelease = (release: Release) => {
+  if (confirm(`Deseja excluir o lançamento "${release.title}"?`)) {
+    router.delete(`/releases/${release.id}`)
   }
 }
 
-const createRevenue = () => {
-  router.visit('/revenues/create')
+const createRelease = () => {
+  router.visit('/releases/create')
 }
 
 const formatCurrency = (value: number) => {
@@ -60,17 +61,17 @@ const formatDate = (date: string) => {
       <div>
         <div class="flex items-center gap-3 mb-2">
           <h1 class="text-3xl font-bold text-white">
-            Receitas
+            Lançamentos
           </h1>
         </div>
         <p class="mt-1 text-slate-400">
-          Controle suas receitas e ganhos
+          Controle centralizado de suas receitas e despesas
         </p>
       </div>
 
-      <Button class="gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold" @click="createRevenue">
+      <Button class="gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold" @click="createRelease">
         <Plus class="h-4 w-4" />
-        Nova Receita
+        Novo Lançamento
       </Button>
     </div>
 
@@ -79,10 +80,10 @@ const formatDate = (date: string) => {
       <!-- CARD HEADER -->
       <div class="border-b border-slate-700 px-8 py-6 bg-slate-800">
         <h2 class="text-lg font-semibold text-white">
-          Receitas Cadastradas
+          Lançamentos Cadastrados
         </h2>
         <p class="text-sm text-slate-400 mt-1">
-          {{ revenues.data.length }} receita(s) encontrada(s)
+          {{ releases?.data?.length || 0 }} lançamento(s) encontrado(s)
         </p>
       </div>
 
@@ -104,39 +105,51 @@ const formatDate = (date: string) => {
 
           <TableBody>
             <!-- COM DADOS -->
-            <template v-if="revenues.data.length">
+            <template v-if="releases?.data?.length">
               <TableRow
-                v-for="revenue in revenues.data"
-                :key="revenue.id"
+                v-for="release in releases.data"
+                :key="release.id"
                 class="hover:bg-slate-700/50 border-b border-slate-700 transition"
               >
                 <TableCell class="font-semibold text-white py-4">
-                  {{ revenue.name }}
+                  {{ release.title }}
                 </TableCell>
 
                 <TableCell class="py-4">
-                  <span class="inline-flex items-center rounded-full bg-cyan-500/20 px-3 py-1 text-xs font-semibold text-cyan-400 border border-cyan-500/50">
-                    {{ revenue.category.name }}
+                  <span
+                    :class="[
+                      'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border',
+                      release.type === 'revenue'
+                        ? 'bg-green-500/20 text-green-400 border-green-500/50'
+                        : 'bg-red-500/20 text-red-400 border-red-500/50'
+                    ]"
+                  >
+                    {{ release.category?.name ?? 'Sem Categoria' }}
                   </span>
                 </TableCell>
 
                 <TableCell class="text-slate-600 py-4">
-                  {{ revenue.account.name }}
+                  {{ release.account?.name ?? 'Sem Conta' }}
                 </TableCell>
 
                 <TableCell class="text-slate-600 py-4">
-                  {{ formatDate(revenue.dt_revenue) }}
+                  {{ formatDate(release.date) }}
                 </TableCell>
 
-                <TableCell class="text-right font-semibold text-cyan-400 py-4">
-                  + {{ formatCurrency(revenue.value) }}
+                <TableCell
+                  :class="[
+                    'text-right font-semibold py-4',
+                    release.type === 'revenue' ? 'text-green-400' : 'text-red-400'
+                  ]"
+                >
+                  {{ release.type === 'revenue' ? '+' : '-' }} {{ formatCurrency(release.amount) }}
                 </TableCell>
 
                 <TableCell class="text-right py-4">
                   <div class="flex justify-end gap-2">
                     <button
                       class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition"
-                      @click="editRevenue(revenue)"
+                      @click="editRelease(release)"
                       title="Editar"
                     >
                       <Pencil class="h-4 w-4" />
@@ -144,7 +157,7 @@ const formatDate = (date: string) => {
 
                     <button
                       class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition"
-                      @click="deleteRevenue(revenue)"
+                      @click="deleteRelease(release)"
                       title="Deletar"
                     >
                       <Trash2 class="h-4 w-4" />
@@ -162,9 +175,9 @@ const formatDate = (date: string) => {
                   class="py-12 text-center text-slate-400"
                 >
                   <div class="flex flex-col items-center justify-center">
-                    <TrendingUp class="h-12 w-12 text-slate-500 mb-3" />
-                    <p class="font-medium">Nenhuma receita cadastrada</p>
-                    <p class="text-sm">Comece criando uma nova receita</p>
+                    <ArrowRightLeft class="h-12 w-12 text-slate-500 mb-3" />
+                    <p class="font-medium">Nenhum lançamento cadastrado</p>
+                    <p class="text-sm">Comece criando um novo lançamento financeiro</p>
                   </div>
                 </TableCell>
               </TableRow>

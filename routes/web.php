@@ -3,9 +3,8 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\InvestimentController;
-use App\Http\Controllers\RevenueController;
+use App\Http\Controllers\ReleaseController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Laravel\Fortify\Features;
@@ -16,9 +15,11 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
-Route::get('dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+use App\Http\Controllers\DashboardController;
+
+Route::get('dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])->name('dashboard');
+
 
 Route::middleware(['auth'])->group(function () {
     Route::resource('banks', BankController::class);
@@ -29,11 +30,7 @@ Route::middleware(['auth'])->group(function () {
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
-    Route::resource('revenues', RevenueController::class);
-})->middleware(['auth', 'verified']);
-
-Route::middleware(['auth'])->group(function () {
-    Route::resource('expenses', ExpenseController::class);
+    Route::resource('releases', ReleaseController::class);
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {

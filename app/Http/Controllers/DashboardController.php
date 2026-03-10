@@ -1,0 +1,116 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Account;
+use App\Models\Release;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
+
+class DashboardController extends Controller
+{
+    public function index(Request $request)
+    {
+        $user_id = Auth::id();
+
+        // Defaults to current month
+        $period = $request->query('period', 'month');
+        $month = $request->query('month', Carbon::now()->month);
+        $year = $request->query('year', Carbon::now()->year);
+        $startDate = $request->query('start_date');
+        $endDate = $request->query('end_date');
+
+        $query = Release::where('user_id', $user_id);
+
+        if ($period === 'month') {
+            $query->whereMonth('date', $month)->whereYear('date', $year);
+        } elseif ($period === 'year') {
+            $query->whereYear('date', $year);
+        } elseif ($period === 'custom' && $startDate && $endDate) {
+            $query->whereBetween('date', [$startDate, $endDate]);
+        }
+
+        $releases = $query->with(['category', 'account'])->get();
+
+        // Totals
+        $totalRevenue = $releases->where('type', 'revenue')->sum('amount');
+        $totalExpense = $releases->where('type', 'expense')->sum('amount');
+        $netBalance = $totalRevenue - $totalExpense;
+
+        // Group by category for revenues
+        $revenuesByCategory = $releases->where('type', 'revenue')->groupBy('category.name')
+            ->map(function ($group, $categoryName) {
+                return [
+                    'category' => $categoryName ?? 'Sem Categoria',
+                    'value' => $group->sum('amount'),
+                    'count' => $group->count(),
+                ];
+            })->values()->all();
+
+        // Group by category for expenses
+        $expensesByCategory = $releases->where('type', 'expense')->groupBy('category.name')
+            ->map(function ($group, $categoryName) {
+                return [
+                    'category' => $categoryName ?? 'Sem Categoria',
+                    'value' => $group->sum('amount'),
+                    'count' => $group->count(),
+                ];
+            })->values()->all();
+
+        // Transações Recentes
+        $recentTransactions = $releases->sortByDesc('date')->take(10)->map(function ($r) {
+            return [
+                'id' => $r->id,
+                'type' => $r->type,
+                'description' => $r->title,
+                'category' => $r->category ? $r->category->name : 'Sem Categoria',
+                'value' => (float) $r->amount,
+                'date' => $r->date->format('Y-m-d'),
+                'account' => $r->account ? $r->account->name : 'Sem Conta',
+            ];
+        })->values()->all();
+
+        // Contas e saldos
+        // Total Base
+        $accounts = Account::where('user_id', $user_id)->get();
+        $totalInitialBalance = $accounts->sum('initial_balance');
+        
+        $accountsEvolution = $accounts->map(function ($acc) {
+            $accRevenues = Release::where('account_id', $acc->id)->where('type', 'revenue')->sum('amount');
+            $accExpenses = Release::where('account_id', $acc->id)->where('type', 'expense')->sum('amount');
+            
+            return [
+                'account' => $acc->name,
+                'bank' => $acc->bank ? $acc->bank->name : 'Outro',
+                'balance' => $acc->initial_balance + $accRevenues - $accExpenses,
+                'initialBalance' => (float) $acc->initial_balance,
+            ];
+        })->values()->all();
+
+        $totalBalance = collect($accountsEvolution)->sum('balance');
+
+        return Inertia::render('Dashboard', [
+            'period' => $period,
+            'month' => (int) $month,
+            'year' => (int) $year,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'summary' => [
+                'totalBalance' => $totalBalance,
+                'totalInitialBalance' => $totalInitialBalance,
+                'totalRevenue' => $totalRevenue,
+                'totalExpense' => $totalExpense,
+                'totalInvestment' => 0, // Mock for now or implement if there is Investment Model
+                'netBalance' => $netBalance,
+                'totalProfitability' => 0,
+            ],
+            'revenuesByCategory' => $revenuesByCategory,
+            'expensesByCategory' => $expensesByCategory,
+            'recentTransactions' => $recentTransactions,
+            'monthlyData' => [], // Simplifying monthly data for generic dashboard
+            'accountsEvolution' => $accountsEvolution,
+        ]);
+    }
+}
