@@ -68,13 +68,13 @@ class DashboardController extends Controller
                 'category' => $r->category ? $r->category->name : 'Sem Categoria',
                 'value' => (float) $r->amount,
                 'date' => $r->date->format('Y-m-d'),
-                'account' => $r->account ? $r->account->name : 'Sem Conta',
+                'account' => $r->account ? $r->account->account : 'Sem Conta',
             ];
         })->values()->all();
 
         // Contas e saldos
         // Total Base
-        $accounts = Account::where('user_id', $user_id)->get();
+        $accounts = Account::with('bank')->where('user_id', $user_id)->get();
         $totalInitialBalance = $accounts->sum('initial_balance');
         
         $accountsEvolution = $accounts->map(function ($acc) {
@@ -82,7 +82,7 @@ class DashboardController extends Controller
             $accExpenses = Release::where('account_id', $acc->id)->where('type', 'expense')->sum('amount');
             
             return [
-                'account' => $acc->name,
+                'account' => $acc->account,
                 'bank' => $acc->bank ? $acc->bank->name : 'Outro',
                 'balance' => $acc->initial_balance + $accRevenues - $accExpenses,
                 'initialBalance' => (float) $acc->initial_balance,

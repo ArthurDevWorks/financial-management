@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/vue3'
 import SidebarItem from '@/components/SidebarItem.vue'
 
 import {
+    LayoutDashboard,
     Landmark,
     Wallet,
     TrendingUp,
@@ -40,6 +41,12 @@ import {
             <p class="px-2 text-xs font-semibold uppercase text-white/40">
                 Menu Principal
             </p>
+
+            <SidebarItem
+                label="Dashboard"
+                :icon="LayoutDashboard"
+                href="/dashboard"
+            />
 
             <SidebarItem
                 label="Bancos"

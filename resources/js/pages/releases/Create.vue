@@ -9,7 +9,8 @@ import { router } from '@inertiajs/vue3'
 
 interface Account {
   id: number
-  name: string
+  account: string
+  bank?: { name: string }
 }
 
 interface Category {
@@ -109,7 +110,7 @@ const goBack = () => {
                 :value="account.id"
                 class="bg-slate-700 text-white"
               >
-                {{ account.name }}
+                {{ account.bank ? `${account.bank.name} - ${account.account}` : account.account }}
               </option>
             </select>
             <InputError :message="form.errors.account_id" />

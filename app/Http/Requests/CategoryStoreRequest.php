@@ -14,7 +14,7 @@ class CategoryStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => 'required|in:revenue,expense,investment',
+            'type' => 'required|in:receita,despesa,investimento',
             'name' => 'required|string|min:3|max:255',
         ];
     }

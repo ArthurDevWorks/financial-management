@@ -18,7 +18,7 @@ interface Release {
   amount: number
   date: string
   type: 'revenue' | 'expense'
-  account: { id: number; name: string } | null
+  account: { id: number; account: string; bank?: { name: string } } | null
   category: { id: number; name: string } | null
 }
 
@@ -129,7 +129,7 @@ const formatDate = (date: string) => {
                 </TableCell>
 
                 <TableCell class="text-slate-600 py-4">
-                  {{ release.account?.name ?? 'Sem Conta' }}
+                  {{ release.account?.bank ? `${release.account.bank.name} - ${release.account.account}` : (release.account?.account ?? 'Sem Conta') }}
                 </TableCell>
 
                 <TableCell class="text-slate-600 py-4">

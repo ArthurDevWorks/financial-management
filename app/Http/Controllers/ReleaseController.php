@@ -28,8 +28,8 @@ class ReleaseController extends Controller
     public function create()
     {
         return Inertia::render('releases/Create', [
-            'accounts' => Account::where('user_id', Auth::id())->get(),
-            'categories' => Category::where('user_id', Auth::id())->get(),
+            'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
+            'categories' => Category::all(),
         ]);
     }
 
@@ -60,7 +60,7 @@ class ReleaseController extends Controller
 
         return Inertia::render('releases/Edit', [
             'release' => $release,
-            'accounts' => Account::where('user_id', Auth::id())->get(),
+            'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
             'categories' => Category::where('user_id', Auth::id())->get(),
         ]);
     }

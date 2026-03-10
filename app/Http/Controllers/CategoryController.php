@@ -21,7 +21,9 @@ class CategoryController extends Controller
 
     public function create()
     {
-        return Inertia::render('categories/Create');
+        return Inertia::render('categories/Create', [
+            'types' => \App\Enums\CategoryType::all(),
+        ]);
     }
 
     public function store(CategoryStoreRequest $request)
@@ -36,6 +38,7 @@ class CategoryController extends Controller
     {
         return Inertia::render('categories/Edit', [
             'category' => $category,
+            'types' => \App\Enums\CategoryType::all(),
         ]);
     }
 
