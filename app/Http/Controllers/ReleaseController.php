@@ -29,7 +29,7 @@ class ReleaseController extends Controller
     {
         return Inertia::render('releases/Create', [
             'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
-            'categories' => Category::all(),
+            'categories' => Category::where('type', 'receita')->orWhere('type', 'despesa')->get(),
         ]);
     }
 

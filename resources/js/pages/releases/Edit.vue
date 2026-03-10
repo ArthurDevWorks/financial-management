@@ -3,9 +3,9 @@ import AppLayout from '@/layouts/AppLayout.vue'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import InputError from '@/components/InputError.vue'
-import { useForm } from '@inertiajs/vue3'
+import { useForm, router } from '@inertiajs/vue3'
 import { ArrowLeft, ArrowRightLeft } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import { computed, watch } from 'vue'
 
 interface Account {
   id: number
@@ -16,6 +16,7 @@ interface Account {
 interface Category {
   id: number
   name: string
+  type: string
 }
 
 interface Release {
@@ -52,6 +53,17 @@ const submit = () => {
 const goBack = () => {
   router.visit('/releases')
 }
+
+const filteredCategories = computed(() => {
+  const targetType = form.type === 'revenue' ? 'receita' : 'despesa'
+  return props.categories.filter(c => c.type === targetType)
+})
+
+watch(() => form.type, (newType, oldType) => {
+  if (oldType) {
+    form.category_id = '' as any
+  }
+})
 </script>
 
 <template>
@@ -139,7 +151,7 @@ const goBack = () => {
             >
               <option value="" class="bg-slate-700 text-white">Selecione uma categoria</option>
               <option
-                v-for="category in categories"
+                v-for="category in filteredCategories"
                 :key="category.id"
                 :value="category.id"
                 class="bg-slate-700 text-white"
