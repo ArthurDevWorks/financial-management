@@ -116,7 +116,7 @@ const goBack = () => {
               type="number"
               placeholder="0,00"
               step="0.01"
-              class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500 pl-8"
+              class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500 pl-8 ml-2"
             />
           </div>
           <InputError :message="form.errors.value" />

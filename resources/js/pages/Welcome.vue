@@ -83,7 +83,7 @@ import {
                     <template v-if="!$page.props.auth.user">
                         <Link
                             :href="register()"
-                            class="px-8 py-4 rounded-lg font-bold text-lg transition-all duration-200 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-slate-900 shadow-lg hover:shadow-2xl transform hover:scale-105"
+                            class="px-8 py-4 rounded-lg font-bold text-lg transition-all duration-200 bg-cyan-500 hover:bg-cyan-600 to-blue-500 hover:from-cyan-500 hover:to-blue-600 text-slate-900 shadow-lg hover:shadow-2xl transform hover:scale-105"
                         >
                             Começar Agora
                         </Link>
@@ -206,7 +206,7 @@ import {
                 <template v-if="!$page.props.auth.user">
                     <Link
                         :href="register()"
-                        class="inline-block px-8 py-4 rounded-lg font-bold text-lg transition-all duration-200 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-slate-900 shadow-lg hover:shadow-2xl transform hover:scale-105"
+                        class="inline-block px-8 py-4 rounded-lg font-bold text-lg transition-all duration-200  bg-cyan-500 hover:bg-cyan-600 text-slate-900 shadow-lg hover:shadow-2xl transform hover:scale-105"
                     >
                         Criar Conta Agora
                     </Link>
