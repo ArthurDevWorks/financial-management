@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\InvestimentStoreRequest;
+use App\Http\Requests\InvestimentUpdateRequest;
 use App\Models\Investiment;
-use App\Models\Account;
 use App\Models\Category;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InvestimentController extends Controller
@@ -36,17 +36,9 @@ class InvestimentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(InvestimentStoreRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'dt_investment' => 'required|date_format:Y-m-d H:i:s',
-            'value' => 'required|numeric|min:0',
-            'type' => 'required|exists:categories,id',
-            'profitability' => 'required|integer',
-        ]);
-
-        Investiment::create($validated);
+        Investiment::create($request->validated());
 
         return redirect()->route('investiments.index')
             ->with('success', 'Investimento cadastrado com sucesso');
@@ -74,17 +66,9 @@ class InvestimentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Investiment $investiment)
+    public function update(InvestimentUpdateRequest $request, Investiment $investiment)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'dt_investment' => 'required|date_format:Y-m-d H:i:s',
-            'value' => 'required|numeric|min:0',
-            'type' => 'required|exists:categories,id',
-            'profitability' => 'required|integer',
-        ]);
-
-        $investiment->update($validated);
+        $investiment->update($request->validated());
 
         return redirect()->route('investiments.index')
             ->with('success', 'Investimento atualizado com sucesso');

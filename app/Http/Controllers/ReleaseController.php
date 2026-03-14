@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ReleaseStoreRequest;
+use App\Http\Requests\ReleaseUpdateRequest;
 use App\Models\Account;
 use App\Models\Category;
 use App\Models\Release;
@@ -33,18 +35,9 @@ class ReleaseController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(ReleaseStoreRequest $request)
     {
-        $validated = $request->validate([
-            'account_id' => 'required|exists:accounts,id',
-            'category_id' => 'required|exists:categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0.01',
-            'type' => 'required|in:revenue,expense',
-            'date' => 'required|date',
-        ]);
-
+        $validated = $request->validated();
         $validated['user_id'] = Auth::id();
 
         Release::create($validated);
@@ -61,27 +54,17 @@ class ReleaseController extends Controller
         return Inertia::render('releases/Edit', [
             'release' => $release,
             'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
-            'categories' => Category::where('user_id', Auth::id())->get(),
+            'categories' => Category::all(),
         ]);
     }
 
-    public function update(Request $request, Release $release)
+    public function update(ReleaseUpdateRequest $request, Release $release)
     {
         if ($release->user_id !== Auth::id()) {
             abort(403);
         }
 
-        $validated = $request->validate([
-            'account_id' => 'required|exists:accounts,id',
-            'category_id' => 'required|exists:categories,id',
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0.01',
-            'type' => 'required|in:revenue,expense',
-            'date' => 'required|date',
-        ]);
-
-        $release->update($validated);
+        $release->update($request->validated());
 
         return redirect()->route('releases.index')->with('success', 'Lançamento atualizado com sucesso.');
     }
