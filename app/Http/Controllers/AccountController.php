@@ -21,6 +21,8 @@ class AccountController extends Controller
             'accounts' => Account::query()
                 ->where('user_id', Auth::id())
                 ->with(['bank'])
+                ->withSum(['releases as revenue_sum' => fn($query) => $query->where('type', 'revenue')], 'amount')
+                ->withSum(['releases as expense_sum' => fn($query) => $query->where('type', 'expense')], 'amount')
                 ->paginate(10)
         ]);
     }

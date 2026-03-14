@@ -19,23 +19,27 @@ class Account extends Model
         'total',
     ];
 
+    protected $appends = ['current_balance'];
+
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function revenues()
+    public function releases()
     {
-        return $this->hasMany(Revenue::class);
-    }
-            
-    public function expenses()
-    {
-        return $this->hasMany(Expense::class);
+        return $this->hasMany(Release::class);
     }
 
     public function bank()
     {
         return $this->belongsTo(Bank::class);
+    }
+
+    public function getCurrentBalanceAttribute()
+    {
+        $revenues = (float) ($this->revenue_sum ?? 0);
+        $expenses = (float) ($this->expense_sum ?? 0);
+        return (float) $this->total + $revenues - $expenses;
     }
 }

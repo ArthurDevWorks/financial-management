@@ -20,6 +20,7 @@ interface Account {
   agency: string
   account: string
   total: number
+  current_balance: number
   bank: { id: number; name: string }
 }
 
@@ -101,7 +102,8 @@ const typeLabel: Record<string, string> = {
               <TableHead class="text-slate-300 font-semibold">Tipo</TableHead>
               <TableHead class="text-slate-300 font-semibold">Agência</TableHead>
               <TableHead class="text-slate-300 font-semibold">Conta</TableHead>
-              <TableHead class="text-right text-slate-300 font-semibold">Saldo Total</TableHead>
+              <TableHead class="text-right text-slate-300 font-semibold">Saldo Inicial</TableHead>
+              <TableHead class="text-right text-slate-300 font-semibold">Saldo Atual</TableHead>
               <TableHead class="text-right w-20 text-slate-300 font-semibold">
                 Ações
               </TableHead>
@@ -132,8 +134,12 @@ const typeLabel: Record<string, string> = {
                   <span class="text-slate-300 font-mono">{{ account.account }}</span>
                 </TableCell>
 
-                <TableCell class="text-right font-semibold text-cyan-400 py-4">
+                <TableCell class="text-right font-semibold text-slate-400 py-4">
                   {{ formatCurrency(account.total) }}
+                </TableCell>
+
+                <TableCell class="text-right font-semibold py-4" :class="account.current_balance >= 0 ? 'text-cyan-400' : 'text-red-400'">
+                  {{ formatCurrency(account.current_balance) }}
                 </TableCell>
 
                 <TableCell class="text-right py-4">
@@ -162,7 +168,7 @@ const typeLabel: Record<string, string> = {
             <template v-else>
               <TableRow>
                 <TableCell
-                  colspan="5"
+                  colspan="6"
                   class="py-12 text-center text-slate-400"
                 >
                   <div class="flex flex-col items-center justify-center">
