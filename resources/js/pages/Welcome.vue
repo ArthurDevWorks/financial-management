@@ -70,7 +70,7 @@ import {
                     </span>
                 </div>
                 
-                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent text-balance">
                     Controle Total de Suas Finanças
                 </h1>
                 
