@@ -70,7 +70,7 @@ import {
                     </span>
                 </div>
                 
-                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent text-balance">
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 pb-2 bg-linear-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent text-balance">
                     Controle Total de Suas Finanças
                 </h1>
                 
@@ -97,7 +97,7 @@ import {
                     <template v-else>
                         <Link
                             :href="dashboard()"
-                            class="px-8 py-4 rounded-lg font-bold text-lg transition-all duration-200 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-slate-900 shadow-lg hover:shadow-2xl transform hover:scale-105"
+                            class="px-8 py-4 rounded-lg font-bold text-lg transition-all duration-200 bg-linear-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-slate-900 shadow-lg hover:shadow-2xl transform hover:scale-105"
                         >
                             Ir ao Dashboard
                         </Link>
