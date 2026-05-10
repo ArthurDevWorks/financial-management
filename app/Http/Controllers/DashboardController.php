@@ -22,7 +22,8 @@ class DashboardController extends Controller
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
-        $query = Release::where('user_id', $user_id);
+        $query = Release::query()
+            ->where('user_id', $user_id);
 
         if ($period === 'month') {
             $query->whereMonth('date', $month)->whereYear('date', $year);
@@ -74,18 +75,25 @@ class DashboardController extends Controller
 
         // Contas e saldos
         // Total Base
-        $accounts = Account::with('bank')->where('user_id', $user_id)->get();
-        $totalInitialBalance = $accounts->sum('initial_balance');
+        $accounts = Account::query()
+            ->with('bank')
+            ->withSum(['releases as revenue_sum' => fn($query) => $query->where('type', 'revenue')], 'amount')
+            ->withSum(['releases as expense_sum' => fn($query) => $query->where('type', 'expense')], 'amount')
+            ->where('user_id', $user_id)
+            ->get();
+
+        $totalInitialBalance = $accounts->sum('total');
         
         $accountsEvolution = $accounts->map(function ($acc) {
-            $accRevenues = Release::where('account_id', $acc->id)->where('type', 'revenue')->sum('amount');
-            $accExpenses = Release::where('account_id', $acc->id)->where('type', 'expense')->sum('amount');
+            $accRevenues = (float) ($acc->revenue_sum ?? 0);
+            $accExpenses = (float) ($acc->expense_sum ?? 0);
+            $saldoInicial = (float) $acc->total;
             
             return [
                 'account' => $acc->account,
                 'bank' => $acc->bank ? $acc->bank->name : 'Outro',
-                'balance' => $acc->initial_balance + $accRevenues - $accExpenses,
-                'initialBalance' => (float) $acc->initial_balance,
+                'balance' => $saldoInicial + $accRevenues - $accExpenses,
+                'initialBalance' => $saldoInicial,
             ];
         })->values()->all();
 

@@ -259,10 +259,13 @@ const topExpenseCategories = props.expensesByCategory.sort((a, b) => b.value - a
         <div class="flex items-center justify-between">
           <div>
             <p :class="['text-sm font-medium', summary.netBalance >= 0 ? 'text-cyan-400' : 'text-orange-400']">
-              Saldo Líquido
+              Movimentação Líquida
             </p>
             <p :class="['text-2xl font-bold mt-2', summary.netBalance >= 0 ? 'text-cyan-400' : 'text-orange-400']">
               {{ formatCurrency(summary.netBalance) }}
+            </p>
+            <p class="mt-1 text-xs text-slate-400">
+              Receitas - despesas do período
             </p>
           </div>
         </div>

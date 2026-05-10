@@ -18,11 +18,8 @@ defineProps<{
 
 const form = useForm({
   name: '',
-  dt_investment: '',
   value: '',
   type: '',
-  profitability: '',
-  category_id: '',
 })
 
 const submit = () => {
@@ -53,7 +50,7 @@ const goBack = () => {
         </h1>
       </div>
       <p class="mt-1 text-slate-400">
-        Registre um novo investimento
+        Registre uma posicao inicial da sua carteira
       </p>
     </div>
 
@@ -63,12 +60,12 @@ const goBack = () => {
         <!-- NAME -->
         <div>
           <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Descrição do Investimento
+            Nome (ticker)
           </label>
           <Input
             v-model="form.name"
             type="text"
-            placeholder="Ex: Tesouro Direto, Fundo de Ações, CDB"
+            placeholder="Ex: PETR4, IVVB11, HGLG11"
             class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
           />
           <InputError :message="form.errors.name" />
@@ -77,37 +74,23 @@ const goBack = () => {
         <!-- CATEGORY -->
         <div>
           <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Tipo/Categoria
+            Tipo do ativo
           </label>
           <select
-            v-model="form.category_id"
+            v-model="form.type"
             class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:border-cyan-500 focus:ring-cyan-500"
           >
-            <option value="">Selecione uma categoria</option>
+            <option value="">Selecione o tipo</option>
             <option v-for="category in categories" :key="category.id" :value="category.id">
               {{ category.name }}
             </option>
           </select>
-          <InputError :message="form.errors.category_id" />
+          <InputError :message="form.errors.type" />
         </div>
 
-        <!-- DATE -->
         <div>
           <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Data do Investimento
-          </label>
-          <Input
-            v-model="form.dt_investment"
-            type="date"
-            class="bg-slate-700 border-slate-600 text-white focus:border-cyan-500 focus:ring-cyan-500"
-          />
-          <InputError :message="form.errors.dt_investment" />
-        </div>
-
-        <!-- VALUE -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Valor Investido
+            Cotação do ticker
           </label>
           <div class="relative">
             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
@@ -120,39 +103,6 @@ const goBack = () => {
             />
           </div>
           <InputError :message="form.errors.value" />
-        </div>
-
-        <!-- TYPE -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Tipo de Investimento
-          </label>
-          <Input
-            v-model="form.type"
-            type="text"
-            placeholder="Ex: Renda Fixa, Renda Variável, Crypto"
-            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
-          />
-          <InputError :message="form.errors.type" />
-        </div>
-
-        <!-- PROFITABILITY -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Rentabilidade (%)
-          </label>
-          <div class="relative">
-            <Input
-              v-model="form.profitability"
-              type="number"
-              placeholder="0,00"
-              step="0.01"
-              class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
-            />
-            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">%</span>
-          </div>
-          <p class="text-xs text-slate-400 mt-1">Use valores negativos para perdas</p>
-          <InputError :message="form.errors.profitability" />
         </div>
 
         <!-- BUTTONS -->

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\CategoryType;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class InvestimentStoreRequest extends FormRequest
 {
@@ -11,14 +13,25 @@ class InvestimentStoreRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'dt_investment' => $this->input('dt_investment', now()->toDateTimeString()),
+            'profitability' => $this->input('profitability', 0),
+        ]);
+    }
+
     public function rules(): array
     {
         return [
-            'name'          => 'required|string|max:255',
-            'dt_investment' => 'required|date_format:Y-m-d H:i:s',
-            'value'         => 'required|numeric|min:0',
-            'type'          => 'required|exists:categories,id',
-            'profitability' => 'required|integer',
+            'name' => 'required|string|max:255',
+            'value' => 'required|numeric|min:0',
+            'type' => [
+                'required',
+                Rule::exists('categories', 'id')->where('type', CategoryType::INVESTMENT->value),
+            ],
+            'dt_investment' => 'nullable|date',
+            'profitability' => 'nullable|integer|min:-100',
         ];
     }
 }

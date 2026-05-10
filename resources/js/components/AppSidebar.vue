@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3'
 import SidebarItem from '@/components/SidebarItem.vue'
 
 import {
     LayoutDashboard,
     Landmark,
     Wallet,
-    TrendingUp,
-    TrendingDown,
     ArrowRightLeft,
     Tags,
     PiggyBank,
@@ -39,7 +36,7 @@ import {
         <!-- MENU -->
         <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-2">
             <p class="px-2 text-xs font-semibold uppercase text-white/40">
-                Menu Principal
+                Financeiro
             </p>
 
             <SidebarItem

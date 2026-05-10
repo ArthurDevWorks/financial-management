@@ -50,7 +50,15 @@ const formatCurrency = (value: number) => {
 }
 
 const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('pt-BR')
+  if (!date) return ''
+
+  const [ano, mes, dia] = date.split('-')
+
+  if (!ano || !mes || !dia) {
+    return date
+  }
+
+  return `${dia}/${mes}/${ano}`
 }
 </script>
 

@@ -28,6 +28,6 @@ class Category extends Model
 
     public function investments()
     {
-        return $this->hasMany(Investiment::class);
+        return $this->hasMany(Investiment::class, 'type');
     }
 }

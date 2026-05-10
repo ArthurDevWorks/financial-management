@@ -11,18 +11,17 @@ import {
 } from '@/components/ui/table'
 
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, Plus, TrendingUp } from 'lucide-vue-next'
+import { Pencil, Trash2, Plus, TrendingUp, Calculator } from 'lucide-vue-next'
 import { router } from '@inertiajs/vue3'
 
 interface Investment {
   id: number
   name: string
   value: number
-  type: string
+  type: number
   profitability: number
   dt_investment: string
-  category_id: number
-  categories: { id: number; name: string }
+  category?: { id: number; name: string }
 }
 
 defineProps<{
@@ -33,6 +32,10 @@ defineProps<{
 
 const editInvestment = (investment: Investment) => {
   router.visit(`/investiments/${investment.id}/edit`)
+}
+
+const valuateInvestment = (investment: Investment) => {
+  router.visit(`/investiments/${investment.id}`)
 }
 
 const deleteInvestment = (investment: Investment) => {
@@ -51,10 +54,6 @@ const formatCurrency = (value: number) => {
     currency: 'BRL',
   }).format(value)
 }
-
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('pt-BR')
-}
 </script>
 
 <template>
@@ -68,7 +67,7 @@ const formatDate = (date: string) => {
           </h1>
         </div>
         <p class="mt-1 text-slate-400">
-          Controle e monitore seus investimentos
+          Controle as posicoes atuais da sua carteira
         </p>
       </div>
 
@@ -95,12 +94,10 @@ const formatDate = (date: string) => {
         <Table>
           <TableHeader>
             <TableRow class="border-b border-slate-700 hover:bg-transparent">
-              <TableHead class="text-slate-300 font-semibold">Descrição</TableHead>
+              <TableHead class="text-slate-300 font-semibold">Ticker</TableHead>
               <TableHead class="text-slate-300 font-semibold">Tipo</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Data</TableHead>
-              <TableHead class="text-right text-slate-300 font-semibold">Valor</TableHead>
-              <TableHead class="text-right text-slate-300 font-semibold">Rentabilidade</TableHead>
-              <TableHead class="text-right w-20 text-slate-300 font-semibold">
+              <TableHead class="text-slate-300 font-semibold">Cotação</TableHead>
+              <TableHead class="text-right text-slate-300 font-semibold">
                 Ações
               </TableHead>
             </TableRow>
@@ -120,26 +117,24 @@ const formatDate = (date: string) => {
 
                 <TableCell class="py-4">
                   <span class="inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold bg-slate-600/30 text-slate-300 border border-slate-500/50">
-                    {{ investment.categories?.name || `Tipo ${investment.type}` }}
+                    {{ investment.category?.name || `Categoria ${investment.type}` }}
                   </span>
                 </TableCell>
 
-                <TableCell class="text-slate-400 py-4">
-                  {{ formatDate(investment.dt_investment) }}
-                </TableCell>
-
-                <TableCell class="text-right font-semibold text-cyan-400 py-4">
+                <TableCell class="font-semibold text-cyan-400 py-4">
                   {{ formatCurrency(investment.value) }}
                 </TableCell>
 
                 <TableCell class="text-right py-4">
-                  <span :class="investment.profitability >= 0 ? 'text-green-400' : 'text-red-400'" class="font-semibold">
-                    {{ investment.profitability }}%
-                  </span>
-                </TableCell>
-
-                <TableCell class="text-right py-4">
                   <div class="flex justify-end gap-2">
+                    <button
+                      class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700 rounded-lg transition"
+                      @click="valuateInvestment(investment)"
+                      title="Calcular valuation"
+                    >
+                      <Calculator class="h-4 w-4" />
+                    </button>
+
                     <button
                       class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition"
                       @click="editInvestment(investment)"
@@ -164,7 +159,7 @@ const formatDate = (date: string) => {
             <template v-else>
               <TableRow>
                 <TableCell
-                  colspan="6"
+                  colspan="4"
                   class="py-12 text-center text-slate-400"
                 >
                   <div class="flex flex-col items-center justify-center">
@@ -181,4 +176,3 @@ const formatDate = (date: string) => {
     </div>
   </AppLayout>
 </template>
-

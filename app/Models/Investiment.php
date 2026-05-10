@@ -20,10 +20,11 @@ class Investiment extends Model
 
     protected $casts = [
         'dt_investment' => 'date',
+        'value' => 'decimal:2',
     ];
 
-    public function categories()
+    public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'type');
     }
 }
