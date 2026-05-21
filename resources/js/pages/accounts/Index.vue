@@ -104,7 +104,7 @@ const typeLabel: Record<string, string> = {
               <TableHead class="text-slate-300 font-semibold">Conta</TableHead>
               <TableHead class="text-right text-slate-300 font-semibold">Saldo Inicial</TableHead>
               <TableHead class="text-right text-slate-300 font-semibold">Saldo Atual</TableHead>
-              <TableHead class="text-right w-20 text-slate-300 font-semibold">
+              <TableHead class="text-center w-52 text-slate-300 font-semibold">
                 Ações
               </TableHead>
             </TableRow>
@@ -142,22 +142,24 @@ const typeLabel: Record<string, string> = {
                   {{ formatCurrency(account.current_balance) }}
                 </TableCell>
 
-                <TableCell class="text-right py-4">
-                  <div class="flex justify-end gap-2">
+                <TableCell class="py-4">
+                  <div class="flex w-full items-center justify-center gap-2">
                     <button
-                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition"
+                      class="inline-flex items-center gap-1.5 rounded-md border border-slate-600/70 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-500/60 hover:bg-slate-700 hover:text-cyan-300"
                       @click="editAccount(account)"
                       title="Editar"
                     >
                       <Pencil class="h-4 w-4" />
+                      Editar
                     </button>
 
                     <button
-                      class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition"
+                      class="inline-flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-xs font-medium text-red-200 transition hover:border-red-400/70 hover:bg-red-500/20 hover:text-red-100"
                       @click="deleteAccount(account)"
                       title="Deletar"
                     >
                       <Trash2 class="h-4 w-4" />
+                      Excluir
                     </button>
                   </div>
                 </TableCell>
@@ -185,4 +187,3 @@ const typeLabel: Record<string, string> = {
     </div>
   </AppLayout>
 </template>
-

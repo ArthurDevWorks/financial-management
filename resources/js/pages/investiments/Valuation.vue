@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import InputError from '@/components/InputError.vue'
 import { useForm, router } from '@inertiajs/vue3'
-import { ArrowLeft, Calculator, Landmark, Sparkles } from 'lucide-vue-next'
+import { ArrowLeft, Calculator } from 'lucide-vue-next'
 import { computed, watch } from 'vue'
 
 interface InvestmentCategory {
@@ -65,9 +65,56 @@ const props = defineProps<{
   defaultAssumptions: DefaultAssumptions
 }>()
 
+const normalizeNumericString = (value: string | number | null | undefined) => {
+  if (value === null || value === undefined || value === '') return ''
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value.toString() : ''
+  }
+
+  const textValue = value
+    .toString()
+    .trim()
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\s/g, '')
+  if (!textValue) return ''
+
+  const lastCommaIndex = textValue.lastIndexOf(',')
+  const lastDotIndex = textValue.lastIndexOf('.')
+  const commaCount = (textValue.match(/,/g) || []).length
+  const dotCount = (textValue.match(/\./g) || []).length
+
+  if (lastCommaIndex > -1 && lastDotIndex > -1) {
+    return lastCommaIndex > lastDotIndex
+      ? textValue.replace(/\./g, '').replace(',', '.')
+      : textValue.replace(/,/g, '')
+  }
+
+  if (lastCommaIndex > -1) {
+    return commaCount > 1
+      ? textValue.replace(/,/g, '')
+      : textValue.replace(',', '.')
+  }
+
+  if (lastDotIndex > -1) {
+    return dotCount > 1
+      ? textValue.replace(/\./g, '')
+      : textValue
+  }
+
+  return textValue
+}
+
 const parseNumber = (value: string | number | null | undefined) => {
-  const parsed = Number(value)
+  const normalizedValue = normalizeNumericString(value)
+  if (!normalizedValue) return 0
+
+  const parsed = Number(normalizedValue)
   return Number.isFinite(parsed) ? parsed : 0
+}
+
+const normalizeNumericInput = (value: string | number | null | undefined) => {
+  return normalizeNumericString(value)
 }
 
 const formatCurrency = (value: number) => {
@@ -84,6 +131,7 @@ const formatPercent = (value: number | null | undefined) => {
 
 const initialProjectionYears = parseNumber(props.defaultAssumptions.projection_years || 5) || 5
 const initialGrowthRate = parseNumber(props.defaultAssumptions.roe || 24) * (1 - parseNumber(props.defaultAssumptions.payout || 75) / 100)
+const currentCalendarYear = new Date().getFullYear()
 
 const form = useForm({
   current_fcf: props.defaultAssumptions.current_fcf ?? '',
@@ -106,6 +154,10 @@ const projectionYearsCount = computed(() => {
 
 const projectionYearIndexes = computed(() =>
   Array.from({ length: projectionYearsCount.value }, (_, index) => index),
+)
+
+const projectionCalendarYears = computed(() =>
+  Array.from({ length: projectionYearsCount.value }, (_, index) => currentCalendarYear + index),
 )
 
 const currentPrice = computed(() => parseNumber(form.current_price_per_share || props.investiment.value))
@@ -167,6 +219,7 @@ const summaryCards = computed(() => {
 const yearlyForecasts = computed(() =>
   projectionYearIndexes.value.map((yearIndex) => ({
     yearIndex,
+    calendarYear: projectionCalendarYears.value[yearIndex],
     forecast: props.valuation?.projected_cash_flows[yearIndex] ?? null,
   })),
 )
@@ -176,13 +229,26 @@ const goBack = () => {
 }
 
 const submit = () => {
-  form.post(`/investiments/${props.investiment.id}/valuation`)
+  form
+    .transform((data) => ({
+      ...data,
+      current_fcf: normalizeNumericInput(data.current_fcf),
+      discount_rate: normalizeNumericInput(data.discount_rate),
+      terminal_growth_rate: normalizeNumericInput(data.terminal_growth_rate),
+      projection_years: normalizeNumericInput(data.projection_years),
+      total_shares: normalizeNumericInput(data.total_shares),
+      payout: normalizeNumericInput(data.payout),
+      roe: normalizeNumericInput(data.roe),
+      current_price_per_share: normalizeNumericInput(data.current_price_per_share),
+      growth_rates: data.growth_rates.map((growthRate) => normalizeNumericInput(growthRate)),
+    }))
+    .post(`/investiments/${props.investiment.id}/valuation`)
 }
 </script>
 
 <template>
   <AppLayout>
-    <div class="mb-8 flex flex-wrap items-start justify-between gap-4">
+    <div class="mb-6">
       <div>
         <button
           class="mb-4 inline-flex items-center gap-2 font-medium text-cyan-400 transition hover:text-cyan-300"
@@ -199,26 +265,16 @@ const submit = () => {
               Valuation por Fluxo de Caixa Descontado
             </h1>
             <p class="mt-1 max-w-3xl text-sm text-slate-400">
-              A distribuição da tela foi pensada com base na lógica de uma planilha: entradas à esquerda, análise no centro e resultado à direita.
+              Preencha as premissas principais e veja o resultado consolidado ao lado.
             </p>
           </div>
         </div>
       </div>
-
-      <div class="rounded-2xl border border-slate-700 bg-slate-800/80 px-4 py-3 text-sm text-slate-300 shadow-sm">
-        <div class="flex items-center gap-2 text-cyan-300">
-          <Sparkles class="h-4 w-4" />
-          <span class="font-semibold">Organização inspirada no Excel</span>
-        </div>
-        <p class="mt-1 max-w-md text-slate-400">
-          Mantendo os padrões do sistema, mas com a distribuição dos elementos baseada na forma como a planilha é lida.
-        </p>
-      </div>
     </div>
 
-    <form class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]" @submit.prevent="submit">
+    <form class="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]" @submit.prevent="submit">
       <div class="space-y-6">
-        <section class="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm">
+        <section class="rounded-xl border border-slate-700/80 bg-slate-800/70 p-5">
           <div class="mb-5 flex items-start justify-between gap-4">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Realidade atual</p>
@@ -229,31 +285,41 @@ const submit = () => {
             </div>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-2">
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+          <div class="grid gap-3 md:grid-cols-2">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Ticker</label>
               <div class="rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-white">
                 {{ investiment.name }}
               </div>
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Preço por ação</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.current_price_per_share" type="number" step="0.01" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.current_price_per_share"
+                  type="text"
+                  inputmode="decimal"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.current_price_per_share" />
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Número total de ações</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.total_shares" type="number" step="0.01" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.total_shares"
+                  type="text"
+                  inputmode="decimal"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.total_shares" />
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Market cap estimado</label>
               <div class="rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 font-semibold text-sky-200">
                 {{ formatCurrency(marketCap) }}
@@ -262,46 +328,66 @@ const submit = () => {
           </div>
         </section>
 
-        <section class="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm">
+        <section class="rounded-xl border border-slate-700/80 bg-slate-800/70 p-5">
           <div class="mb-5">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Premissas</p>
             <h2 class="mt-1 text-xl font-semibold text-white">Parâmetros da análise</h2>
           </div>
 
-          <div class="grid gap-4 md:grid-cols-2">
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+          <div class="grid gap-3 md:grid-cols-2">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Lucro líquido atual</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.current_fcf" type="number" step="0.01" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.current_fcf"
+                  type="text"
+                  inputmode="decimal"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.current_fcf" />
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Taxa de desconto (%)</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.discount_rate" type="number" step="0.01" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.discount_rate"
+                  type="text"
+                  inputmode="decimal"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.discount_rate" />
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Payout (%)</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.payout" type="number" step="0.01" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.payout"
+                  type="text"
+                  inputmode="decimal"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.payout" />
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">ROE (%)</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.roe" type="number" step="0.01" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.roe"
+                  type="text"
+                  inputmode="decimal"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.roe" />
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Crescimento base estimado</label>
               <div class="rounded-lg border border-sky-500/40 bg-sky-500/10 px-3 py-2 font-semibold text-sky-200">
                 {{ formatPercent(baseGrowthRate) }}
@@ -309,63 +395,73 @@ const submit = () => {
               <p class="mt-2 text-xs text-slate-400">ROE x (1 - payout)</p>
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Crescimento na perpetuidade (%)</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.terminal_growth_rate" type="number" step="0.01" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.terminal_growth_rate"
+                  type="text"
+                  inputmode="decimal"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.terminal_growth_rate" />
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
+            <div class="rounded-lg border border-slate-700/70 bg-slate-900/60 p-3">
               <label class="mb-2 block text-sm font-medium text-slate-300">Anos de projeção</label>
               <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
-                <Input v-model="form.projection_years" type="number" step="1" class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0" />
+                <Input
+                  v-model="form.projection_years"
+                  type="text"
+                  inputmode="numeric"
+                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
+                />
               </div>
               <InputError :message="form.errors.projection_years" />
             </div>
           </div>
         </section>
 
-        <section class="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm">
+        <section class="rounded-xl border border-slate-700/80 bg-slate-800/70 p-5">
           <div class="mb-5 flex items-start justify-between gap-4">
             <div>
               <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Projeção</p>
               <h2 class="mt-1 text-xl font-semibold text-white">Crescimento por ano</h2>
             </div>
             <div class="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-400">
-              {{ projectionYearIndexes.length }} ano(s)
+              {{ projectionYearIndexes.length }} ano(s) a partir de {{ currentCalendarYear }}
             </div>
           </div>
 
-          <div class="overflow-hidden rounded-2xl border border-slate-700">
+          <div class="overflow-hidden rounded-xl border border-slate-700/80">
             <table class="min-w-full divide-y divide-slate-700 text-sm">
               <thead class="bg-slate-900 text-slate-300">
                 <tr>
-                  <th class="px-4 py-3 text-left font-semibold">Ano</th>
+                  <th class="px-4 py-3 text-left font-semibold">Ano-calendário</th>
                   <th class="px-4 py-3 text-left font-semibold">Crescimento (%)</th>
                   <th class="px-4 py-3 text-right font-semibold">Lucro projetado</th>
                   <th class="px-4 py-3 text-right font-semibold">Valor presente</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-800 bg-slate-900/60">
-                <tr v-for="yearIndex in projectionYearIndexes" :key="yearIndex" class="hover:bg-slate-800/80">
-                  <td class="px-4 py-4 font-medium text-slate-200">Ano {{ yearIndex + 1 }}</td>
+                <tr v-for="forecast in yearlyForecasts" :key="forecast.yearIndex" class="hover:bg-slate-800/80">
+                  <td class="px-4 py-4 font-medium text-slate-200">{{ forecast.calendarYear }}</td>
                   <td class="px-4 py-4">
                     <div class="rounded-lg border border-emerald-500/40 bg-emerald-500/15 px-3 py-2">
                       <Input
-                        v-model="form.growth_rates[yearIndex]"
-                        type="number"
-                        step="0.01"
-                        class="border-0 bg-transparent p-0 text-white shadow-none focus-visible:ring-0"
+                        v-model="form.growth_rates[forecast.yearIndex]"
+                        type="text"
+                        inputmode="decimal"
+                        class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-white shadow-none focus-visible:ring-0"
                       />
                     </div>
                   </td>
                   <td class="px-4 py-4 text-right text-slate-200">
-                    {{ yearlyForecasts[yearIndex].forecast ? formatCurrency(yearlyForecasts[yearIndex].forecast!.projected_fcf) : '—' }}
+                    {{ forecast.forecast ? formatCurrency(forecast.forecast.projected_fcf) : '—' }}
                   </td>
                   <td class="px-4 py-4 text-right font-semibold text-cyan-300">
-                    {{ yearlyForecasts[yearIndex].forecast ? formatCurrency(yearlyForecasts[yearIndex].forecast!.present_value) : '—' }}
+                    {{ forecast.forecast ? formatCurrency(forecast.forecast.present_value) : '—' }}
                   </td>
                 </tr>
               </tbody>
@@ -375,17 +471,17 @@ const submit = () => {
       </div>
 
       <aside class="space-y-6">
-        <section class="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm">
+        <section class="rounded-xl border border-slate-700/80 bg-slate-800/70 p-5">
           <div class="mb-5">
             <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Resultado</p>
             <h2 class="mt-1 text-xl font-semibold text-white">Resumo do valuation</h2>
           </div>
 
-          <div v-if="valuation" class="grid gap-4">
+          <div v-if="valuation" class="grid gap-3">
             <div
               v-for="card in summaryCards"
               :key="card.label"
-              class="rounded-xl border border-slate-700 px-4 py-4"
+              class="rounded-lg border border-slate-700/80 px-4 py-3"
               :class="{
                 'bg-sky-500/10': card.tone === 'sky',
                 'bg-emerald-500/10': card.tone === 'emerald',
@@ -397,7 +493,7 @@ const submit = () => {
               <p class="mt-2 text-lg font-semibold text-white">{{ card.value }}</p>
             </div>
 
-            <div class="rounded-xl border border-slate-700 bg-slate-900/80 p-4">
+            <div class="rounded-lg border border-slate-700/80 bg-slate-900/70 p-4">
               <p class="text-xs uppercase tracking-wide text-slate-400">Margem de segurança</p>
               <p class="mt-2 text-2xl font-bold text-cyan-400">
                 {{ formatPercent(valuation.summary.margin_of_safety) }}
@@ -408,19 +504,9 @@ const submit = () => {
             </div>
           </div>
 
-          <div v-else class="rounded-xl border border-dashed border-slate-700 bg-slate-900/40 p-5 text-sm text-slate-400">
+          <div v-else class="rounded-lg border border-dashed border-slate-700/80 bg-slate-900/40 p-4 text-sm text-slate-400">
             Preencha os dados e clique em calcular para ver o resumo aqui.
           </div>
-        </section>
-
-        <section class="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-sm">
-          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-cyan-300">Guia visual</p>
-          <h3 class="mt-1 text-lg font-semibold text-white">Como a tela foi organizada</h3>
-          <ul class="mt-4 space-y-3 text-sm text-slate-300">
-            <li class="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3">Entradas principais no bloco superior esquerdo, como numa planilha.</li>
-            <li class="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3">Premissas logo abaixo, separadas da projeção anual.</li>
-            <li class="rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-3">Resumo e resultado ficam em painel lateral à direita.</li>
-          </ul>
         </section>
       </aside>
 

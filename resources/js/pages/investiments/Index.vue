@@ -97,7 +97,7 @@ const formatCurrency = (value: number) => {
               <TableHead class="text-slate-300 font-semibold">Ticker</TableHead>
               <TableHead class="text-slate-300 font-semibold">Tipo</TableHead>
               <TableHead class="text-slate-300 font-semibold">Cotação</TableHead>
-              <TableHead class="text-right text-slate-300 font-semibold">
+              <TableHead class="w-[22rem] text-center text-slate-300 font-semibold">
                 Ações
               </TableHead>
             </TableRow>
@@ -125,30 +125,33 @@ const formatCurrency = (value: number) => {
                   {{ formatCurrency(investment.value) }}
                 </TableCell>
 
-                <TableCell class="text-right py-4">
-                  <div class="flex justify-end gap-2">
+                <TableCell class="py-4">
+                  <div class="flex w-full items-center justify-center gap-2">
                     <button
-                      class="p-2 text-slate-400 hover:text-amber-400 hover:bg-slate-700 rounded-lg transition"
+                      class="inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-100 transition hover:border-amber-400/70 hover:bg-amber-500/20"
                       @click="valuateInvestment(investment)"
                       title="Calcular valuation"
                     >
                       <Calculator class="h-4 w-4" />
+                      Valuation
                     </button>
 
                     <button
-                      class="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition"
+                      class="inline-flex items-center gap-1.5 rounded-md border border-slate-600/70 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-500/60 hover:bg-slate-700 hover:text-cyan-300"
                       @click="editInvestment(investment)"
                       title="Editar"
                     >
                       <Pencil class="h-4 w-4" />
+                      Editar
                     </button>
 
                     <button
-                      class="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition"
+                      class="inline-flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-xs font-medium text-red-200 transition hover:border-red-400/70 hover:bg-red-500/20 hover:text-red-100"
                       @click="deleteInvestment(investment)"
                       title="Deletar"
                     >
                       <Trash2 class="h-4 w-4" />
+                      Excluir
                     </button>
                   </div>
                 </TableCell>

@@ -8,6 +8,7 @@ use App\Http\Requests\InvestimentUpdateRequest;
 use App\Http\Requests\InvestimentValuationRequest;
 use App\Models\Category;
 use App\Models\Investiment;
+use App\Models\InvestimentValuation;
 use App\Services\DcfValuationService;
 use Inertia\Inertia;
 
@@ -62,20 +63,19 @@ class InvestimentController extends Controller
      */
     public function show(Investiment $investiment)
     {
+        /** @var InvestimentValuation|null $lastValuation */
+        $lastValuation = $investiment->valuations()
+            ->latest('calculated_at')
+            ->first();
+
         return Inertia::render('investiments/Valuation', [
             'investiment' => $investiment->load(['category']),
-            'valuation' => null,
-            'defaultAssumptions' => [
-                'current_fcf' => '',
-                'discount_rate' => '12',
-                'terminal_growth_rate' => '3',
-                'projection_years' => '5',
-                'total_shares' => '',
-                'payout' => '75',
-                'roe' => '24',
-                'current_price_per_share' => (string) $investiment->value,
-                'growth_rates' => array_fill(0, 5, '6'),
-            ],
+            'valuation' => $lastValuation ? [
+                'assumptions' => $lastValuation->assumptions,
+                'projected_cash_flows' => $lastValuation->projected_cash_flows,
+                'summary' => $lastValuation->summary,
+            ] : null,
+            'defaultAssumptions' => $this->buildDefaultAssumptions($investiment, $lastValuation),
         ]);
     }
 
@@ -85,10 +85,18 @@ class InvestimentController extends Controller
         DcfValuationService $valuationService,
     ) {
         $validated = $request->validated();
+        $calculatedValuation = $valuationService->calculate($validated);
+
+        $investiment->valuations()->create([
+            'assumptions' => $calculatedValuation['assumptions'],
+            'projected_cash_flows' => $calculatedValuation['projected_cash_flows'],
+            'summary' => $calculatedValuation['summary'],
+            'calculated_at' => now(),
+        ]);
 
         return Inertia::render('investiments/Valuation', [
             'investiment' => $investiment->load(['category']),
-            'valuation' => $valuationService->calculate($validated),
+            'valuation' => $calculatedValuation,
             'defaultAssumptions' => collect($validated)->map(function (mixed $value): mixed {
                 if (is_array($value)) {
                     return array_map(
@@ -100,6 +108,42 @@ class InvestimentController extends Controller
                 return $value === null ? '' : (string) $value;
             })->all(),
         ]);
+    }
+
+    private function buildDefaultAssumptions(
+        Investiment $investiment,
+        ?InvestimentValuation $lastValuation,
+    ): array {
+        if ($lastValuation) {
+            $assumptions = $lastValuation->assumptions;
+
+            return [
+                'current_fcf' => (string) ($assumptions['current_fcf'] ?? ''),
+                'discount_rate' => (string) ($assumptions['discount_rate'] ?? '12'),
+                'terminal_growth_rate' => (string) ($assumptions['terminal_growth_rate'] ?? '3'),
+                'projection_years' => (string) ($assumptions['projection_years'] ?? '5'),
+                'total_shares' => (string) ($assumptions['total_shares'] ?? ''),
+                'payout' => (string) ($assumptions['payout'] ?? '75'),
+                'roe' => (string) ($assumptions['roe'] ?? '24'),
+                'current_price_per_share' => (string) ($assumptions['current_price_per_share'] ?? $investiment->value),
+                'growth_rates' => array_map(
+                    static fn (mixed $value): string => (string) $value,
+                    $assumptions['growth_rates'] ?? array_fill(0, 5, '6'),
+                ),
+            ];
+        }
+
+        return [
+            'current_fcf' => '',
+            'discount_rate' => '12',
+            'terminal_growth_rate' => '3',
+            'projection_years' => '5',
+            'total_shares' => '',
+            'payout' => '75',
+            'roe' => '24',
+            'current_price_per_share' => (string) $investiment->value,
+            'growth_rates' => array_fill(0, 5, '6'),
+        ];
     }
 
     /**

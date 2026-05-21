@@ -27,4 +27,9 @@ class Investiment extends Model
     {
         return $this->belongsTo(Category::class, 'type');
     }
+
+    public function valuations()
+    {
+        return $this->hasMany(InvestimentValuation::class);
+    }
 }
