@@ -5,11 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BankStoreRequest;
 use App\Http\Requests\BankUpdateRequest;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
 use App\Models\Bank;
 use Inertia\Inertia;
 
-class BankController
+class BankController extends Controller
 {
     /**
      * List of banks has created
@@ -22,7 +21,7 @@ class BankController
 
         $banks->getCollection()->transform(function ($bank) {
             $bank->logo_url = $bank->logo
-                ? asset('storage/' . $bank->logo)  // storage/banks/filename.png
+                ? asset('storage/' . $bank->logo)
                 : null;
             return $bank;
         });
@@ -47,25 +46,24 @@ class BankController
     {
         $data = $request->validated();
 
-        if ($request->hasFile('logo'))
-        {
+        if ($request->hasFile('logo')) {
             $data['logo'] = $request->file('logo')->store('banks', 'public');
+        } else {
+            $data['logo'] = '';
         }
 
         $save = Bank::create([
-            'name' => $request->name,
+            'name' => $data['name'],
             'logo' => $data['logo'],
         ]);
 
-        if(!$save)
-        {
+        if (!$save) {
             return redirect()->route('banks.index')
                 ->with('sucess', 'Erro ao cadastrar banco');
-        }else{
-            return redirect()->route('banks.index')
-                ->with('sucess', 'Banco cadastrado com sucesso');
         }
 
+        return redirect()->route('banks.index')
+            ->with('sucess', 'Banco cadastrado com sucesso');
     }
 
     /**
@@ -90,29 +88,24 @@ class BankController
         $data = $request->validated();
 
         if ($request->hasFile('logo')) {
-            $data['logo'] = $request->file('logo')->store('banks', 'public');
-        } else {
-            unset($data['logo']);
-        }
-
-        if ($request->hasFile('logo')) {
             if ($bank->logo) {
                 Storage::disk('public')->delete($bank->logo);
             }
 
             $data['logo'] = $request->file('logo')->store('banks', 'public');
+        } else {
+            unset($data['logo']);
         }
 
         $update = $bank->update($data);
 
-        if(!$update)
-        {
+        if (!$update) {
             return redirect()->route('banks.index')
                 ->with('success', 'Erro ao atualizar banco');
-        }else{
-            return redirect()->route('banks.index')
-                ->with('success', 'Banco atualizado com sucesso');
         }
+
+        return redirect()->route('banks.index')
+            ->with('success', 'Banco atualizado com sucesso');
     }
 
     /**
