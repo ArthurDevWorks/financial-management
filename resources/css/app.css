@@ -59,6 +59,9 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    --color-surface: var(--surface);
+    --color-revenue: var(--revenue);
+    --color-investment: var(--investment);
 }
 
 /*
@@ -80,8 +83,12 @@
 }
 
 @layer utilities {
-    body,
     html {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+    }
+
+    body {
         --font-sans:
             'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
             'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
@@ -89,77 +96,45 @@
     }
 }
 
-:root {
-    --background: hsl(224 35% 8%);
-    --foreground: hsl(0 0% 98%);
-    --card: hsl(224 32% 12%);
-    --card-foreground: hsl(0 0% 98%);
-    --popover: hsl(224 32% 12%);
-    --popover-foreground: hsl(0 0% 98%);
-    --primary: hsl(180 100% 50%);
-    --primary-foreground: hsl(224 35% 8%);
-    --secondary: hsl(224 32% 18%);
-    --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(224 20% 25%);
-    --muted-foreground: hsl(224 10% 62%);
-    --accent: hsl(180 100% 50%);
-    --accent-foreground: hsl(224 35% 8%);
-    --destructive: hsl(0 84.2% 60.2%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(224 32% 18%);
-    --input: hsl(224 32% 18%);
-    --ring: hsl(180 100% 50%);
-    --chart-1: hsl(180 100% 50%);
-    --chart-2: hsl(120 100% 50%);
-    --chart-3: hsl(260 90% 50%);
-    --chart-4: hsl(40 100% 50%);
-    --chart-5: hsl(340 100% 50%);
-    --radius: 0.5rem;
-    --sidebar-background: hsl(220 32% 10%);
-    --sidebar-foreground: hsl(0 0% 98%);
-    --sidebar-primary: hsl(180 100% 50%);
-    --sidebar-primary-foreground: hsl(224 35% 8%);
-    --sidebar-accent: hsl(224 32% 18%);
-    --sidebar-accent-foreground: hsl(180 100% 50%);
-    --sidebar-border: hsl(224 32% 18%);
-    --sidebar-ring: hsl(180 100% 50%);
-    --sidebar: hsl(220 32% 10%);
-}
-
+:root,
 .dark {
-    --background: hsl(224 35% 8%);
-    --foreground: hsl(0 0% 98%);
-    --card: hsl(224 32% 12%);
-    --card-foreground: hsl(0 0% 98%);
-    --popover: hsl(224 32% 12%);
-    --popover-foreground: hsl(0 0% 98%);
-    --primary: hsl(180 100% 50%);
-    --primary-foreground: hsl(224 35% 8%);
-    --secondary: hsl(224 32% 18%);
-    --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(224 20% 25%);
-    --muted-foreground: hsl(224 10% 62%);
-    --accent: hsl(180 100% 50%);
-    --accent-foreground: hsl(224 35% 8%);
-    --destructive: hsl(0 84% 60%);
-    --destructive-foreground: hsl(0 0% 98%);
-    --border: hsl(224 32% 18%);
-    --input: hsl(224 32% 18%);
-    --ring: hsl(180 100% 50%);
-    --chart-1: hsl(180 100% 50%);
-    --chart-2: hsl(120 100% 50%);
-    --chart-3: hsl(260 90% 50%);
-    --chart-4: hsl(40 100% 50%);
-    --chart-5: hsl(340 100% 50%);
-    --sidebar-background: hsl(220 32% 10%);
-    --sidebar-foreground: hsl(0 0% 98%);
-    --sidebar-primary: hsl(180 100% 50%);
-    --sidebar-primary-foreground: hsl(224 35% 8%);
-    --sidebar-accent: hsl(224 32% 18%);
-    --sidebar-accent-foreground: hsl(180 100% 50%);
-    --sidebar-border: hsl(224 32% 18%);
-    --sidebar-ring: hsl(180 100% 50%);
-    --sidebar: hsl(220 32% 10%);
+    --background: hsl(228 28% 5%);
+    --foreground: hsl(210 20% 96%);
+    --card: hsl(228 22% 9%);
+    --card-foreground: hsl(210 20% 96%);
+    --popover: hsl(228 22% 9%);
+    --popover-foreground: hsl(210 20% 96%);
+    --primary: hsl(168 75% 42%);
+    --primary-foreground: hsl(210 20% 98%);
+    --secondary: hsl(228 18% 14%);
+    --secondary-foreground: hsl(210 20% 90%);
+    --muted: hsl(228 12% 20%);
+    --muted-foreground: hsl(220 10% 55%);
+    --accent: hsl(42 80% 52%);
+    --accent-foreground: hsl(228 28% 5%);
+    --destructive: hsl(0 75% 55%);
+    --destructive-foreground: hsl(210 20% 98%);
+    --border: hsl(228 15% 14%);
+    --input: hsl(228 15% 14%);
+    --ring: hsl(168 75% 42%);
+    --chart-1: hsl(168 75% 42%);
+    --chart-2: hsl(42 80% 52%);
+    --chart-3: hsl(220 80% 55%);
+    --chart-4: hsl(142 70% 50%);
+    --chart-5: hsl(0 75% 55%);
+    --radius: 0.625rem;
+    --sidebar-background: hsl(228 25% 6%);
+    --sidebar-foreground: hsl(210 20% 90%);
+    --sidebar-primary: hsl(168 75% 42%);
+    --sidebar-primary-foreground: hsl(210 20% 98%);
+    --sidebar-accent: hsl(228 18% 14%);
+    --sidebar-accent-foreground: hsl(42 80% 52%);
+    --sidebar-border: hsl(228 15% 10%);
+    --sidebar-ring: hsl(168 75% 42%);
+    --sidebar: hsl(228 25% 6%);
+    --surface: hsl(228 20% 12%);
+    --revenue: hsl(142 70% 50%);
+    --investment: hsl(220 80% 55%);
 }
 
 @layer base {
@@ -169,15 +144,41 @@
     body {
         @apply bg-background text-foreground;
     }
-}
 
-@layer components {
-    .btn-primary {
-        @apply px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold rounded-lg transition-colors;
+    ::placeholder {
+        color: hsl(220 10% 55%);
     }
-    
-    .btn-secondary {
-        @apply px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-colors;
+
+    select:not([multiple]) {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%237e8594'%3e%3cpath d='M4 6l4 4 4-4'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px;
+        padding-right: 2.5rem;
+    }
+
+    select:required:invalid {
+        color: hsl(220 10% 55%);
+    }
+
+    ::selection {
+        background-color: hsl(168 75% 42% / 0.2);
+        color: var(--foreground);
+    }
+
+    ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.16);
     }
 }
-

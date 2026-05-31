@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ArrowLeft, Tags } from 'lucide-vue-next'
 import AppLayout from '@/layouts/AppLayout.vue'
-import { Button } from '@/components/ui/button'
+import FormPageLayout from '@/components/FormPageLayout.vue'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
 
@@ -37,40 +37,24 @@ const goBack = () => {
 
 <template>
   <AppLayout>
-    <!-- PAGE HEADER -->
-    <div class="mb-8">
-      <button
-        class="mb-4 inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-medium transition"
-        @click="goBack"
-      >
-        <ArrowLeft class="h-4 w-4" />
-        Voltar
-      </button>
-
-      <div class="flex items-center gap-3 mb-2">
-        <Tags class="h-8 w-8 text-cyan-400" />
-        <h1 class="text-3xl font-bold text-white">
-          Editar Categoria
-        </h1>
-      </div>
-      <p class="mt-1 text-slate-300">
-        Modifique os dados da categoria
-      </p>
-    </div>
-
-    <!-- FORM CARD -->
-    <div class="rounded-lg border border-slate-700 bg-slate-800 p-8 shadow-lg">
-      <form @submit.prevent="submit" class="space-y-6">
-        <!-- TYPE -->
+    <FormPageLayout
+      title="Editar Categoria"
+      description="Modifique os dados da categoria"
+      :processing="form.processing"
+      submit-label="Atualizar Categoria"
+      processing-label="Atualizando..."
+      @submit="submit"
+      @cancel="goBack"
+    >
+      <div class="grid grid-cols-2 gap-6">
         <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Tipo de Categoria
-          </label>
+          <Label>Tipo de Categoria</Label>
           <select
             v-model="form.type"
-            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:border-cyan-500 focus:ring-cyan-500"
+            required
+            class="h-9 w-full rounded-md border border-border bg-surface pl-3 pr-10 py-1 text-sm text-foreground outline-none transition-all focus:border-ring focus:ring-[3px] focus:ring-primary/20 [color-scheme:dark]"
           >
-            <option value="">Selecione um tipo</option>
+            <option value="" disabled>Selecione um tipo</option>
             <option v-for="(label, value) in types" :key="value" :value="value">
               {{ label }}
             </option>
@@ -78,35 +62,12 @@ const goBack = () => {
           <InputError :message="form.errors.type" />
         </div>
 
-        <!-- NAME -->
         <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Nome da Categoria
-          </label>
-          <Input
-            v-model="form.name"
-            type="text"
-            placeholder="Ex: Salário, Alimentação, Ações"
-            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
-          />
+          <Label>Nome da Categoria</Label>
+          <Input v-model="form.name" type="text" placeholder="Digite o nome da categoria" />
           <InputError :message="form.errors.name" />
         </div>
-
-        <!-- BUTTONS -->
-        <div class="flex justify-end gap-3 pt-6 border-t border-slate-700">
-          <Button
-            type="button"
-            variant="outline"
-            @click="goBack"
-            class="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" :disabled="form.processing" class="bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold">
-            {{ form.processing ? 'Atualizando...' : 'Atualizar Categoria' }}
-          </Button>
-        </div>
-      </form>
-    </div>
+      </div>
+    </FormPageLayout>
   </AppLayout>
 </template>

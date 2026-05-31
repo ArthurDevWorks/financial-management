@@ -13,103 +13,101 @@ import { Form, Head } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 
 defineProps<{
-    status?: string;
-    canResetPassword: boolean;
-    canRegister: boolean;
+  status?: string;
+  canResetPassword: boolean;
+  canRegister: boolean;
 }>();
 </script>
 
 <template>
-    <AuthBase
-        title="Bem-vindo de volta"
-        description="Acesse sua conta para gerenciar suas finanças"
-    >
-        <Head title="Log in" />
+  <AuthBase
+    title="Bem-vindo de volta"
+    description="Acesse sua conta para gerenciar suas finanças"
+  >
+    <Head title="Log in" />
 
-        <div
-            v-if="status"
-            class="mb-6 p-4 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-center text-sm font-medium text-cyan-300"
-        >
-            {{ status }}
+    <div
+      v-if="status"
+      class="mb-6 rounded-lg border border-primary/20 bg-primary/10 p-4 text-center text-sm font-medium text-primary"
+    >
+      {{ status }}
+    </div>
+
+    <Form
+      v-bind="store.form()"
+      :reset-on-success="['password']"
+      v-slot="{ errors, processing }"
+      class="flex flex-col gap-6"
+    >
+      <div class="grid gap-6">
+        <div class="grid gap-2">
+          <Label for="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            name="email"
+            required
+            autofocus
+            :tabindex="1"
+            autocomplete="email"
+            placeholder="seu@email.com"
+          />
+          <InputError :message="errors.email" />
         </div>
 
-        <Form
-            v-bind="store.form()"
-            :reset-on-success="['password']"
-            v-slot="{ errors, processing }"
-            class="flex flex-col gap-6"
-        >
-            <div class="grid gap-6">
-                <div class="grid gap-2">
-                    <Label for="email" class="text-slate-200 font-semibold">Email</Label>
-                    <Input
-                        id="email"
-                        type="email"
-                        name="email"
-                        required
-                        autofocus
-                        :tabindex="1"
-                        autocomplete="email"
-                        placeholder="seu@email.com"
-                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
-                    />
-                    <InputError :message="errors.email" />
-                </div>
-
-                <div class="grid gap-2">
-                    <div class="flex items-center justify-between">
-                        <Label for="password" class="text-slate-200 font-semibold">Senha</Label>
-                        <TextLink
-                            v-if="canResetPassword"
-                            :href="request()"
-                            class="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition"
-                            :tabindex="5"
-                        >
-                            Esqueceu a senha?
-                        </TextLink>
-                    </div>
-                    <Input
-                        id="password"
-                        type="password"
-                        name="password"
-                        required
-                        :tabindex="2"
-                        autocomplete="current-password"
-                        placeholder="Sua senha"
-                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
-                    />
-                    <InputError :message="errors.password" />
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <Label for="remember" class="flex items-center gap-3 cursor-pointer">
-                        <Checkbox id="remember" name="remember" :tabindex="3" />
-                        <span class="text-sm text-slate-200">Manter-me conectado</span>
-                    </Label>
-                </div>
-
-                <Button
-                    type="submit"
-                    class="mt-4 w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg transition-colors"
-                    :tabindex="4"
-                    :disabled="processing"
-                    data-test="login-button"
-                >
-                    <LoaderCircle
-                        v-if="processing"
-                        class="h-4 w-4 animate-spin mr-2"
-                    />
-                    {{ processing ? 'Acessando...' : 'Acessar Conta' }}
-                </Button>
-            </div>
-
-            <div
-                class="text-center text-sm text-slate-300"
-                v-if="canRegister"
+        <div class="grid gap-2">
+          <div class="flex items-center justify-between">
+            <Label for="password">Senha</Label>
+            <TextLink
+              v-if="canResetPassword"
+              :href="request()"
+              class="text-sm font-medium text-primary transition hover:text-primary/80"
+              :tabindex="5"
             >
-                Não tem uma conta?
-                <TextLink :href="register()" class="text-cyan-400 hover:text-cyan-300 font-semibold transition" :tabindex="5">Cadastrar-se</TextLink>
-            </div>
-        </Form>
-    </AuthBase>
+              Esqueceu a senha?
+            </TextLink>
+          </div>
+          <Input
+            id="password"
+            type="password"
+            name="password"
+            required
+            :tabindex="2"
+            autocomplete="current-password"
+            placeholder="Sua senha"
+          />
+          <InputError :message="errors.password" />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <Label for="remember" class="flex cursor-pointer items-center gap-3">
+            <Checkbox id="remember" name="remember" :tabindex="3" />
+            <span class="text-sm">Manter-me conectado</span>
+          </Label>
+        </div>
+
+        <Button
+          type="submit"
+          class="mt-4 h-11 w-full"
+          :tabindex="4"
+          :disabled="processing"
+          data-test="login-button"
+        >
+          <LoaderCircle
+            v-if="processing"
+            class="mr-2 h-4 w-4 animate-spin"
+          />
+          {{ processing ? 'Acessando...' : 'Acessar Conta' }}
+        </Button>
+      </div>
+
+      <div
+        v-if="canRegister"
+        class="text-center text-sm text-muted-foreground"
+      >
+        Não tem uma conta?
+        <TextLink :href="register()" class="font-semibold text-primary transition hover:text-primary/80" :tabindex="5">Cadastrar-se</TextLink>
+      </div>
+    </Form>
+  </AuthBase>
 </template>

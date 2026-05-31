@@ -1,95 +1,80 @@
 <script setup lang="ts">
-import SidebarItem from '@/components/SidebarItem.vue'
+import AppLogo from '@/components/AppLogo.vue';
+import SidebarItem from '@/components/SidebarItem.vue';
 
 import {
-    LayoutDashboard,
-    Landmark,
-    Wallet,
-    ArrowRightLeft,
-    Tags,
-    PiggyBank,
-    Settings,
-    LogOut,
-} from 'lucide-vue-next'
-
+  LayoutDashboard,
+  Landmark,
+  Wallet,
+  ArrowRightLeft,
+  Tags,
+  PiggyBank,
+  ChartNoAxesCombined,
+  Settings,
+  LogOut,
+} from 'lucide-vue-next';
 </script>
 
 <template>
-    <aside class="flex h-full w-64 flex-col bg-[#0F223A] text-white">
-        <!-- LOGO -->
-        <div class="flex items-center gap-3 px-6 py-5 border-b border-white/10">
-            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-500">
-                <PiggyBank class="h-6 w-6 text-white" />
-            </div>
+  <aside
+    class="flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar"
+  >
+    <!-- LOGO -->
+    <div class="border-b border-sidebar-border px-5 py-5">
+      <AppLogo />
+    </div>
 
-            <div>
-                <h1 class="text-lg font-bold leading-none">
-                    Fidax
-                </h1>
-                <div class="mt-1 text-sm text-white/60 leading-tight">
-                    <p>Fé no caminho.</p>
-                    <p>Paz no destino.</p>
-                </div>
-            </div>
-        </div>
+    <!-- MENU -->
+    <nav class="flex-1 overflow-y-auto px-3 py-5">
+      <p
+        class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-muted-foreground"
+      >
+        Financeiro
+      </p>
 
-        <!-- MENU -->
-        <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-2">
-            <p class="px-2 text-xs font-semibold uppercase text-white/40">
-                Financeiro
-            </p>
+      <div class="space-y-0.5">
+        <SidebarItem
+          label="Dashboard"
+          :icon="LayoutDashboard"
+          href="/dashboard"
+        />
+        <SidebarItem label="Bancos" :icon="Landmark" href="/banks" />
+        <SidebarItem label="Contas" :icon="Wallet" href="/accounts" />
+        <SidebarItem
+          label="Lançamentos"
+          :icon="ArrowRightLeft"
+          href="/releases"
+        />
+        <SidebarItem label="Categorias" :icon="Tags" href="/categories" />
+        <SidebarItem
+          label="Investimentos"
+          :icon="PiggyBank"
+          href="/investiments"
+        />
+        <SidebarItem
+          label="Valuations"
+          :icon="ChartNoAxesCombined"
+          href="/valuations"
+        />
+      </div>
+    </nav>
 
-            <SidebarItem
-                label="Dashboard"
-                :icon="LayoutDashboard"
-                href="/dashboard"
-            />
-
-            <SidebarItem
-                label="Bancos"
-                :icon="Landmark"
-                href="/banks"
-            />
-
-            <SidebarItem
-                label="Contas"
-                :icon="Wallet"
-                href="/accounts"
-            />
-
-            <SidebarItem
-                label="Lançamentos"
-                :icon="ArrowRightLeft"
-                href="/releases"
-            />
-
-            <SidebarItem
-                label="Categorias"
-                :icon="Tags"
-                href="/categories"
-            />
-            <SidebarItem
-                label="Investimentos"
-                :icon="PiggyBank"
-                href="/investiments"
-            />
-        </nav>
-
-        <!-- FOOTER -->
-        <div class="px-4 py-4 border-t border-white/10 space-y-2">
-            <SidebarItem
-                label="Configurações"
-                :icon="Settings"
-                href="/settings"
-            />
-
-            <SidebarItem
-                label="Sair"
-                :icon="LogOut"
-                href="/logout"
-                method="post"
-                danger
-            />
-        </div>
-    </aside>
+    <!-- FOOTER -->
+    <div class="border-t border-sidebar-border px-3 py-3">
+      <div class="space-y-0.5">
+        <SidebarItem
+          label="Configurações"
+          :icon="Settings"
+          href="/settings"
+        />
+        <SidebarItem
+          label="Sair"
+          :icon="LogOut"
+          href="/logout"
+          method="post"
+          danger
+        />
+      </div>
+    </div>
+  </aside>
 </template>

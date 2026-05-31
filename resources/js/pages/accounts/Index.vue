@@ -1,189 +1,144 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-
-import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, Plus, Wallet } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import AppLayout from '@/layouts/AppLayout.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import SectionCard from '@/components/SectionCard.vue';
+import StatBadge from '@/components/StatBadge.vue';
+import { Button } from '@/components/ui/button';
+import { Plus, Wallet } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
 
 interface Account {
-  id: number
-  type: string
-  agency: string
-  account: string
-  total: number
-  current_balance: number
-  bank: { id: number; name: string }
+  id: number;
+  account: string;
+  total: number;
+  current_balance: number;
+  type: string;
+  bank: { id: number; name: string };
 }
 
 defineProps<{
   accounts: {
-    data: Account[]
-  }
-}>()
+    data: Account[];
+  };
+}>();
 
 const editAccount = (account: Account) => {
-  router.visit(`/accounts/${account.id}/edit`)
-}
+  router.visit(`/accounts/${account.id}/edit`);
+};
 
 const deleteAccount = (account: Account) => {
-  if (confirm(`Deseja excluir a conta bancária?`)) {
-    router.delete(`/accounts/${account.id}`)
+  if (confirm(`Deseja excluir a conta "${account.account}"?`)) {
+    router.delete(`/accounts/${account.id}`);
   }
-}
+};
 
 const createAccount = () => {
-  router.visit('/accounts/create')
-}
+  router.visit('/accounts/create');
+};
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number | null | undefined) => {
+  if (value === null || value === undefined || Number.isNaN(value)) return 'R$ 0,00';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(value)
-}
-
-const typeLabel: Record<string, string> = {
-  'corrente': 'Conta Corrente',
-  'poupanca': 'Poupança',
-  'digital': 'Conta Digital',
-  'investimento': 'Conta de Investimento',
-  'salario': 'Conta Salário',
-}
+  }).format(value);
+};
 </script>
 
 <template>
   <AppLayout>
-    <!-- PAGE HEADER -->
-    <div class="mb-8 flex items-center justify-between">
-      <div>
-        <div class="flex items-center gap-3 mb-2">
-          <h1 class="text-3xl font-bold text-white">
-            Contas
-          </h1>
-        </div>
-        <p class="mt-1 text-slate-400">
-          Gerencie suas contas bancárias e controle seus saldos
-        </p>
-      </div>
+    <div class="p-8">
+      <PageHeader
+        title="Contas"
+        description="Gerencie suas contas bancárias"
+      >
+        <template #actions>
+          <Button @click="createAccount">
+            <Plus class="h-4 w-4" />
+            Nova Conta
+          </Button>
+        </template>
+      </PageHeader>
 
-      <Button class="gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold" @click="createAccount">
-        <Plus class="h-4 w-4" />
-        Nova Conta
-      </Button>
-    </div>
-
-    <!-- CARD -->
-    <div class="rounded-2xl border border-slate-700 bg-slate-800 shadow-sm overflow-hidden">
-      <!-- CARD HEADER -->
-      <div class="border-b border-slate-700 px-8 py-6 bg-slate-800">
-        <h2 class="text-lg font-semibold text-white">
-          Contas Cadastradas
-        </h2>
-        <p class="text-sm text-slate-400 mt-1">
-          {{ accounts.data.length }} conta(s) encontrada(s)
-        </p>
-      </div>
-
-      <!-- TABLE -->
-      <div class="px-8 py-6">
-        <Table>
-          <TableHeader>
-            <TableRow class="border-b border-slate-700 hover:bg-transparent">
-              <TableHead class="text-slate-300 font-semibold">Banco</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Tipo</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Agência</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Conta</TableHead>
-              <TableHead class="text-right text-slate-300 font-semibold">Saldo Inicial</TableHead>
-              <TableHead class="text-right text-slate-300 font-semibold">Saldo Atual</TableHead>
-              <TableHead class="text-center w-52 text-slate-300 font-semibold">
-                Ações
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            <!-- COM DADOS -->
-            <template v-if="accounts.data.length">
-              <TableRow
+      <SectionCard
+        title="Contas Cadastradas"
+        :description="`${accounts.data.length} conta(s) encontrada(s)`"
+      >
+        <div v-if="accounts.data.length" class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-border">
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Banco
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Conta
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tipo
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Saldo Inicial
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Saldo Atual
+                </th>
+                <th class="w-52 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
                 v-for="account in accounts.data"
                 :key="account.id"
-                class="hover:bg-slate-700/50 border-b border-slate-700 transition"
+                class="border-b border-border transition-colors hover:bg-surface/50"
               >
-                <TableCell class="font-semibold text-white py-4">
-                  <span class="text-base">{{ account.bank.name }}</span>
-                </TableCell>
-
-                <TableCell class="py-4">
-                  <span class="text-slate-300">{{ typeLabel[account.type] }}</span>
-                </TableCell>
-
-                <TableCell class="py-4">
-                  <span class="text-slate-300 font-mono">{{ account.agency }}</span>
-                </TableCell>
-
-                <TableCell class="py-4">
-                  <span class="text-slate-300 font-mono">{{ account.account }}</span>
-                </TableCell>
-
-                <TableCell class="text-right font-semibold text-slate-400 py-4">
+                <td class="px-4 py-4 font-medium text-foreground">
+                  {{ account.bank?.name }}
+                </td>
+                <td class="px-4 py-4 text-foreground">
+                  {{ account.account }}
+                </td>
+                <td class="px-4 py-4">
+                  <StatBadge variant="default">
+                    {{ account.type }}
+                  </StatBadge>
+                </td>
+                <td class="px-4 py-4 text-right text-muted-foreground">
                   {{ formatCurrency(account.total) }}
-                </TableCell>
-
-                <TableCell class="text-right font-semibold py-4" :class="account.current_balance >= 0 ? 'text-cyan-400' : 'text-red-400'">
-                  {{ formatCurrency(account.current_balance) }}
-                </TableCell>
-
-                <TableCell class="py-4">
-                  <div class="flex w-full items-center justify-center gap-2">
-                    <button
-                      class="inline-flex items-center gap-1.5 rounded-md border border-slate-600/70 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-500/60 hover:bg-slate-700 hover:text-cyan-300"
-                      @click="editAccount(account)"
-                      title="Editar"
-                    >
-                      <Pencil class="h-4 w-4" />
-                      Editar
-                    </button>
-
-                    <button
-                      class="inline-flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-xs font-medium text-red-200 transition hover:border-red-400/70 hover:bg-red-500/20 hover:text-red-100"
-                      @click="deleteAccount(account)"
-                      title="Deletar"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                      Excluir
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </template>
-
-            <!-- SEM DADOS -->
-            <template v-else>
-              <TableRow>
-                <TableCell
-                  colspan="6"
-                  class="py-12 text-center text-slate-400"
+                </td>
+                <td
+                  class="px-4 py-4 text-right font-semibold"
+                  :class="account.current_balance >= 0 ? 'text-primary' : 'text-destructive'"
                 >
-                  <div class="flex flex-col items-center justify-center">
-                    <Wallet class="h-12 w-12 text-slate-600 mb-3" />
-                    <p class="font-medium">Nenhuma conta cadastrada</p>
-                    <p class="text-sm">Comece criando uma nova conta</p>
+                  {{ formatCurrency(account.current_balance) }}
+                </td>
+                <td class="px-4 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    <Button variant="secondary" size="sm" class="gap-1.5" @click="editAccount(account)">
+                      Editar
+                    </Button>
+                    <Button variant="destructive" size="sm" class="gap-1.5" @click="deleteAccount(account)">
+                      Excluir
+                    </Button>
                   </div>
-                </TableCell>
-              </TableRow>
-            </template>
-          </TableBody>
-        </Table>
-      </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-else class="flex flex-col items-center justify-center py-16 text-center">
+          <Wallet class="mb-4 h-16 w-16 text-muted-foreground opacity-15" />
+          <p class="font-medium text-muted-foreground">Nenhuma conta cadastrada</p>
+          <p class="mt-1 text-sm text-muted-foreground">Crie uma conta bancária para começar</p>
+          <Button class="mt-6" @click="createAccount">
+            <Plus class="h-4 w-4" />
+            Nova Conta
+          </Button>
+        </div>
+      </SectionCard>
     </div>
   </AppLayout>
 </template>

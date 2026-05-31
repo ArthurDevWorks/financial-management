@@ -1,181 +1,247 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-
-import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, Plus, TrendingUp, Calculator } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import PageHeader from '@/components/PageHeader.vue';
+import SectionCard from '@/components/SectionCard.vue';
+import StatBadge from '@/components/StatBadge.vue';
+import SummaryCard from '@/components/SummaryCard.vue';
+import { Button } from '@/components/ui/button';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { router } from '@inertiajs/vue3';
+import { PieChart, PiggyBank, Plus, TrendingDown, TrendingUp, Wallet } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface Investment {
-  id: number
-  name: string
-  value: number
-  type: number
-  profitability: number
-  dt_investment: string
-  category?: { id: number; name: string }
+  id: number;
+  name: string;
+  type: string;
+  type_label: string;
+  portfolio_class: string;
+  quantity: number;
+  average_price: number;
+  current_balance: number;
+  invested_amount: number;
+  gain_loss: number;
+  profitability_percentage: number;
 }
 
-defineProps<{
+interface DistributionItem {
+  class: string;
+  total: number;
+  percentage: number;
+}
+
+interface PortfolioSummary {
+  totalInvested: number;
+  currentBalance: number;
+  totalGainLoss: number;
+  totalProfitability: number;
+  distributionByClass: DistributionItem[];
+}
+
+const props = defineProps<{
   investiments: {
-    data: Investment[]
-  }
-}>()
+    data: Investment[];
+  };
+  portfolioSummary?: PortfolioSummary;
+  totalInvested?: number;
+  totalCurrent?: number;
+  totalProfitability?: number;
+}>();
+
+const emptyPortfolioSummary: PortfolioSummary = {
+  totalInvested: 0,
+  currentBalance: 0,
+  totalGainLoss: 0,
+  totalProfitability: 0,
+  distributionByClass: [],
+};
+
+const portfolioSummary = computed(() => props.portfolioSummary ?? emptyPortfolioSummary);
 
 const editInvestment = (investment: Investment) => {
-  router.visit(`/investiments/${investment.id}/edit`)
-}
-
-const valuateInvestment = (investment: Investment) => {
-  router.visit(`/investiments/${investment.id}`)
-}
+  router.visit(`/investiments/${investment.id}/edit`);
+};
 
 const deleteInvestment = (investment: Investment) => {
-  if (confirm(`Deseja excluir o investimento?`)) {
-    router.delete(`/investiments/${investment.id}`)
+  if (confirm(`Deseja excluir o investimento "${investment.name}"?`)) {
+    router.delete(`/investiments/${investment.id}`);
   }
-}
+};
 
 const createInvestment = () => {
-  router.visit('/investiments/create')
-}
+  router.visit('/investiments/create');
+};
 
-const formatCurrency = (value: number) => {
+const formatCurrency = (value: number | null | undefined) => {
+  if (value === null || value === undefined || Number.isNaN(value)) return 'R$ 0,00';
+
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(value)
-}
+  }).format(value);
+};
+
+const formatQuantity = (value: number | null | undefined) => {
+  if (value === null || value === undefined || Number.isNaN(value)) return '0';
+
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 8,
+  }).format(value);
+};
+
+const formatPercent = (value: number | null | undefined) => {
+  const percent = value ?? 0;
+  return `${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+};
 </script>
 
 <template>
   <AppLayout>
-    <!-- PAGE HEADER -->
-    <div class="mb-8 flex items-center justify-between">
-      <div>
-        <div class="flex items-center gap-3 mb-2">
-          <h1 class="text-3xl font-bold text-white">
-            Investimentos
-          </h1>
+    <div class="p-8">
+      <PageHeader title="Carteira de Investimentos" description="Acompanhe patrimônio, aportes e distribuição por classe de ativo">
+        <template #actions>
+          <Button @click="createInvestment">
+            <Plus class="h-4 w-4" />
+            Novo Investimento
+          </Button>
+        </template>
+      </PageHeader>
+
+      <div class="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard
+          label="Patrimônio Investido"
+          :value="formatCurrency(portfolioSummary.currentBalance)"
+          variant="investment"
+          :icon="Wallet"
+          :trend="portfolioSummary.totalProfitability"
+        />
+        <SummaryCard
+          label="Total Aportado"
+          :value="formatCurrency(portfolioSummary.totalInvested)"
+          variant="default"
+          :icon="PiggyBank"
+        />
+        <SummaryCard
+          label="Ganho/Perda Total"
+          :value="formatCurrency(portfolioSummary.totalGainLoss)"
+          :variant="portfolioSummary.totalGainLoss >= 0 ? 'profit' : 'expense'"
+          :icon="portfolioSummary.totalGainLoss >= 0 ? TrendingUp : TrendingDown"
+        />
+        <SummaryCard
+          label="Rentabilidade Total"
+          :value="formatPercent(portfolioSummary.totalProfitability)"
+          :variant="portfolioSummary.totalProfitability >= 0 ? 'profit' : 'expense'"
+          :icon="TrendingUp"
+          :trend="portfolioSummary.totalProfitability"
+        />
+      </div>
+
+      <SectionCard title="Distribuição por Classe" description="Composição consolidada da carteira" class="mb-8">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div
+            v-for="item in portfolioSummary.distributionByClass"
+            :key="item.class"
+            class="rounded-xl border border-border bg-surface p-4"
+          >
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <PieChart class="h-4 w-4 text-primary" />
+                <p class="font-semibold text-foreground">{{ item.class }}</p>
+              </div>
+              <span class="text-sm font-semibold text-primary">{{ item.percentage.toFixed(2) }}%</span>
+            </div>
+            <div class="h-2 overflow-hidden rounded-full bg-muted">
+              <div class="h-full rounded-full bg-primary" :style="{ width: `${Math.min(item.percentage, 100)}%` }" />
+            </div>
+            <p class="mt-2 text-sm text-muted-foreground">{{ formatCurrency(item.total) }}</p>
+          </div>
         </div>
-        <p class="mt-1 text-slate-400">
-          Controle as posicoes atuais da sua carteira
-        </p>
-      </div>
+      </SectionCard>
 
-      <Button class="gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold" @click="createInvestment">
-        <Plus class="h-4 w-4" />
-        Novo Investimento
-      </Button>
-    </div>
-
-    <!-- CARD -->
-    <div class="rounded-2xl border border-slate-700 bg-slate-800 shadow-sm overflow-hidden">
-      <!-- CARD HEADER -->
-      <div class="border-b border-slate-700 px-8 py-6 bg-slate-800">
-        <h2 class="text-lg font-semibold text-white">
-          Investimentos Cadastrados
-        </h2>
-        <p class="text-sm text-slate-400 mt-1">
-          {{ investiments.data.length }} investimento(s) encontrado(s)
-        </p>
-      </div>
-
-      <!-- TABLE -->
-      <div class="px-8 py-6">
-        <Table>
-          <TableHeader>
-            <TableRow class="border-b border-slate-700 hover:bg-transparent">
-              <TableHead class="text-slate-300 font-semibold">Ticker</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Tipo</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Cotação</TableHead>
-              <TableHead class="w-[22rem] text-center text-slate-300 font-semibold">
-                Ações
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            <!-- COM DADOS -->
-            <template v-if="investiments.data.length">
-              <TableRow
+      <SectionCard title="Ativos da Carteira" :description="`${investiments.data.length} ativo(s) encontrado(s)`">
+        <div v-if="investiments.data.length" class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-border">
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ativo
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Tipo
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Quantidade
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Preço Médio
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Saldo
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Rentabilidade
+                </th>
+                <th class="w-52 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
                 v-for="investment in investiments.data"
                 :key="investment.id"
-                class="hover:bg-slate-700/50 border-b border-slate-700 transition"
+                class="border-b border-border transition-colors hover:bg-surface/50"
               >
-                <TableCell class="font-semibold text-white py-4">
-                  <span class="text-base">{{ investment.name }}</span>
-                </TableCell>
-
-                <TableCell class="py-4">
-                  <span class="inline-flex items-center rounded-full px-4 py-2 text-xs font-semibold bg-slate-600/30 text-slate-300 border border-slate-500/50">
-                    {{ investment.category?.name || `Categoria ${investment.type}` }}
-                  </span>
-                </TableCell>
-
-                <TableCell class="font-semibold text-cyan-400 py-4">
-                  {{ formatCurrency(investment.value) }}
-                </TableCell>
-
-                <TableCell class="py-4">
-                  <div class="flex w-full items-center justify-center gap-2">
-                    <button
-                      class="inline-flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-1.5 text-xs font-medium text-amber-100 transition hover:border-amber-400/70 hover:bg-amber-500/20"
-                      @click="valuateInvestment(investment)"
-                      title="Calcular valuation"
-                    >
-                      <Calculator class="h-4 w-4" />
-                      Valuation
-                    </button>
-
-                    <button
-                      class="inline-flex items-center gap-1.5 rounded-md border border-slate-600/70 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-500/60 hover:bg-slate-700 hover:text-cyan-300"
-                      @click="editInvestment(investment)"
-                      title="Editar"
-                    >
-                      <Pencil class="h-4 w-4" />
-                      Editar
-                    </button>
-
-                    <button
-                      class="inline-flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-xs font-medium text-red-200 transition hover:border-red-400/70 hover:bg-red-500/20 hover:text-red-100"
-                      @click="deleteInvestment(investment)"
-                      title="Deletar"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                      Excluir
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </template>
-
-            <!-- SEM DADOS -->
-            <template v-else>
-              <TableRow>
-                <TableCell
-                  colspan="4"
-                  class="py-12 text-center text-slate-400"
+                <td class="px-4 py-4">
+                  <p class="font-medium text-foreground">{{ investment.name }}</p>
+                  <p class="text-xs text-muted-foreground">Aportado: {{ formatCurrency(investment.invested_amount) }}</p>
+                </td>
+                <td class="px-4 py-4">
+                  <StatBadge variant="investment">
+                    {{ investment.type_label }}
+                  </StatBadge>
+                  <p class="mt-1 text-xs text-muted-foreground">{{ investment.portfolio_class }}</p>
+                </td>
+                <td class="px-4 py-4 text-right text-muted-foreground">
+                  {{ formatQuantity(investment.quantity) }}
+                </td>
+                <td class="px-4 py-4 text-right text-muted-foreground">
+                  {{ formatCurrency(investment.average_price) }}
+                </td>
+                <td class="px-4 py-4 text-right font-semibold text-primary">
+                  {{ formatCurrency(investment.current_balance) }}
+                </td>
+                <td
+                  class="px-4 py-4 text-right font-semibold"
+                  :class="investment.profitability_percentage >= 0 ? 'text-revenue' : 'text-destructive'"
                 >
-                  <div class="flex flex-col items-center justify-center">
-                    <TrendingUp class="h-12 w-12 text-slate-600 mb-3" />
-                    <p class="font-medium">Nenhum investimento cadastrado</p>
-                    <p class="text-sm">Comece registrando seu primeiro investimento</p>
+                  {{ formatPercent(investment.profitability_percentage) }}
+                </td>
+                <td class="px-4 py-4">
+                  <div class="flex items-center justify-center gap-2">
+                    <Button variant="secondary" size="sm" class="gap-1.5" @click="editInvestment(investment)">
+                      Editar
+                    </Button>
+                    <Button variant="destructive" size="sm" class="gap-1.5" @click="deleteInvestment(investment)">
+                      Excluir
+                    </Button>
                   </div>
-                </TableCell>
-              </TableRow>
-            </template>
-          </TableBody>
-        </Table>
-      </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div v-else class="flex flex-col items-center justify-center py-16 text-center">
+          <PiggyBank class="mb-4 h-16 w-16 text-muted-foreground opacity-15" />
+          <p class="font-medium text-muted-foreground">Nenhum investimento cadastrado</p>
+          <p class="mt-1 text-sm text-muted-foreground">Registre seus ativos para acompanhar patrimônio, saldo e rentabilidade</p>
+          <Button class="mt-6" @click="createInvestment">
+            <Plus class="h-4 w-4" />
+            Novo Investimento
+          </Button>
+        </div>
+      </SectionCard>
     </div>
   </AppLayout>
 </template>

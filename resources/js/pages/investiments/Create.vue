@@ -1,125 +1,186 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import InputError from '@/components/InputError.vue'
-import { useForm } from '@inertiajs/vue3'
-import { ArrowLeft, TrendingUp } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import FormPageLayout from '@/components/FormPageLayout.vue';
+import InputError from '@/components/InputError.vue';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { router, useForm } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
 
-interface Category {
-  id: number
-  name: string
+interface AssetTypeOption {
+  value: string;
+  label: string;
+  portfolio_class: string;
+  is_fixed_income: boolean;
 }
 
-defineProps<{
-  categories: Category[]
-}>()
+interface Option {
+  value: string;
+  label: string;
+}
+
+const props = defineProps<{
+  assetTypes: AssetTypeOption[];
+  fixedIncomeProfitabilityTypes: Option[];
+  fixedIncomeIndexers: Option[];
+}>();
 
 const form = useForm({
   name: '',
-  value: '',
   type: '',
-})
+  quantity: '',
+  average_price: '',
+  current_balance: '',
+  profitability_type: '',
+  indexer: '',
+  contracted_rate: '',
+  maturity_date: '',
+  liquidity: '',
+});
+
+const selectedAssetType = computed(() => props.assetTypes.find((assetType) => assetType.value === form.type));
+const isFixedIncome = computed(() => selectedAssetType.value?.is_fixed_income ?? false);
+
+watch(isFixedIncome, (fixedIncome) => {
+  if (!fixedIncome) {
+    form.profitability_type = '';
+    form.indexer = '';
+    form.contracted_rate = '';
+    form.maturity_date = '';
+    form.liquidity = '';
+  }
+});
 
 const submit = () => {
-  form.post('/investiments')
-}
+  form.post('/investiments');
+};
 
 const goBack = () => {
-  router.visit('/investiments')
-}
+  router.visit('/investiments');
+};
 </script>
 
 <template>
   <AppLayout>
-    <!-- PAGE HEADER -->
-    <div class="mb-8">
-      <button
-        class="mb-4 inline-flex items-center gap-2 text-cyan-400 hover:text-cyan-300 font-medium transition"
-        @click="goBack"
-      >
-        <ArrowLeft class="h-4 w-4" />
-        Voltar
-      </button>
-
-      <div class="flex items-center gap-3 mb-2">
-        <TrendingUp class="h-8 w-8 text-cyan-400" />
-        <h1 class="text-3xl font-bold text-white">
-          Novo Investimento
-        </h1>
-      </div>
-      <p class="mt-1 text-slate-400">
-        Registre uma posicao inicial da sua carteira
-      </p>
-    </div>
-
-    <!-- FORM CARD -->
-    <div class="rounded-lg border border-slate-700 bg-slate-800 p-8 shadow-lg">
-      <form @submit.prevent="submit" class="space-y-6">
-        <!-- NAME -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Nome (ticker)
-          </label>
-          <Input
-            v-model="form.name"
-            type="text"
-            placeholder="Ex: PETR4, IVVB11, HGLG11"
-            class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
-          />
-          <InputError :message="form.errors.name" />
-        </div>
-
-        <!-- CATEGORY -->
-        <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Tipo do ativo
-          </label>
-          <select
-            v-model="form.type"
-            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:border-cyan-500 focus:ring-cyan-500"
-          >
-            <option value="">Selecione o tipo</option>
-            <option v-for="category in categories" :key="category.id" :value="category.id">
-              {{ category.name }}
-            </option>
-          </select>
-          <InputError :message="form.errors.type" />
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-slate-200 mb-3">
-            Cotação do ticker
-          </label>
-          <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">R$</span>
-            <Input
-              v-model="form.value"
-              type="number"
-              placeholder="0,00"
-              step="0.01"
-              class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500 pl-8 ml-2"
-            />
+    <FormPageLayout
+      title="Novo Investimento"
+      description="Registre uma posição da carteira por tipo de ativo"
+      :processing="form.processing"
+      submit-label="Cadastrar Investimento"
+      processing-label="Cadastrando..."
+      @submit="submit"
+      @cancel="goBack"
+    >
+      <div class="space-y-6">
+        <div class="grid gap-6 md:grid-cols-2">
+          <div>
+            <Label>Ativo / Ticker</Label>
+            <Input v-model="form.name" type="text" placeholder="Ex.: PETR4, HGLG11, CDB Banco X" />
+            <InputError :message="form.errors.name" />
           </div>
-          <InputError :message="form.errors.value" />
+
+          <div>
+            <Label>Tipo do ativo</Label>
+            <select
+              v-model="form.type"
+              required
+              class="h-9 w-full rounded-md border border-border bg-surface py-1 pl-3 pr-10 text-sm text-foreground outline-none transition-all [color-scheme:dark] focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+            >
+              <option value="" disabled>Selecione o tipo</option>
+              <option v-for="assetType in assetTypes" :key="assetType.value" :value="assetType.value">
+                {{ assetType.label }} · {{ assetType.portfolio_class }}
+              </option>
+            </select>
+            <InputError :message="form.errors.type" />
+          </div>
         </div>
 
-        <!-- BUTTONS -->
-        <div class="flex justify-end gap-3 pt-6 border-t border-slate-700">
-          <Button
-            type="button"
-            variant="outline"
-            @click="goBack"
-            class="bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" :disabled="form.processing" class="bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold">
-            {{ form.processing ? 'Cadastrando...' : 'Cadastrar Investimento' }}
-          </Button>
+        <div class="grid gap-6 md:grid-cols-3">
+          <div>
+            <Label>Quantidade</Label>
+            <Input v-model="form.quantity" type="number" min="0" step="0.00000001" placeholder="100" />
+            <InputError :message="form.errors.quantity" />
+          </div>
+
+          <div>
+            <Label>Preço Médio</Label>
+            <div class="relative">
+              <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+              <Input v-model="form.average_price" type="number" min="0" step="0.01" placeholder="32,50" class="pl-8" />
+            </div>
+            <InputError :message="form.errors.average_price" />
+          </div>
+
+          <div>
+            <Label>Saldo Atual</Label>
+            <div class="relative">
+              <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
+              <Input v-model="form.current_balance" type="number" min="0" step="0.01" placeholder="3.800,00" class="pl-8" />
+            </div>
+            <p class="mt-1 text-xs text-muted-foreground">Se vazio, será usado Quantidade × Preço Médio.</p>
+            <InputError :message="form.errors.current_balance" />
+          </div>
         </div>
-      </form>
-    </div>
+
+        <section v-if="isFixedIncome" class="rounded-xl border border-border bg-surface p-5">
+          <div class="mb-4">
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Renda Fixa</p>
+            <h2 class="mt-1 text-lg font-semibold text-foreground">Condições contratadas</h2>
+            <p class="mt-1 text-sm text-muted-foreground">Campos específicos para CDB, LCI, LCA, LF, Debêntures e Tesouro Direto.</p>
+          </div>
+
+          <div class="grid gap-6 md:grid-cols-2">
+            <div>
+              <Label>Tipo de Rentabilidade</Label>
+              <select
+                v-model="form.profitability_type"
+                required
+                class="h-9 w-full rounded-md border border-border bg-surface py-1 pl-3 pr-10 text-sm text-foreground outline-none transition-all [color-scheme:dark] focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+              >
+                <option value="" disabled>Selecione</option>
+                <option v-for="type in fixedIncomeProfitabilityTypes" :key="type.value" :value="type.value">
+                  {{ type.label }}
+                </option>
+              </select>
+              <InputError :message="form.errors.profitability_type" />
+            </div>
+
+            <div>
+              <Label>Indexador</Label>
+              <select
+                v-model="form.indexer"
+                required
+                class="h-9 w-full rounded-md border border-border bg-surface py-1 pl-3 pr-10 text-sm text-foreground outline-none transition-all [color-scheme:dark] focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+              >
+                <option value="" disabled>Selecione</option>
+                <option v-for="indexer in fixedIncomeIndexers" :key="indexer.value" :value="indexer.value">
+                  {{ indexer.label }}
+                </option>
+              </select>
+              <InputError :message="form.errors.indexer" />
+            </div>
+
+            <div>
+              <Label>Taxa Contratada</Label>
+              <Input v-model="form.contracted_rate" type="number" min="0" step="0.0001" placeholder="Ex.: 110, 95, 6 ou 13" />
+              <p class="mt-1 text-xs text-muted-foreground">Use 110 para 110% do CDI, 6 para IPCA + 6% ou 13 para 13% a.a.</p>
+              <InputError :message="form.errors.contracted_rate" />
+            </div>
+
+            <div>
+              <Label>Vencimento</Label>
+              <Input v-model="form.maturity_date" type="date" />
+              <InputError :message="form.errors.maturity_date" />
+            </div>
+
+            <div class="md:col-span-2">
+              <Label>Liquidez</Label>
+              <Input v-model="form.liquidity" type="text" placeholder="Ex.: D+0, D+1, no vencimento" />
+              <InputError :message="form.errors.liquidity" />
+            </div>
+          </div>
+        </section>
+      </div>
+    </FormPageLayout>
   </AppLayout>
 </template>

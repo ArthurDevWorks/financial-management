@@ -83,21 +83,21 @@ const codeValue = computed<string>(() => code.value.join(''));
                                         :index="index"
                                         :disabled="processing"
                                         autofocus
-                                        class="border-slate-600 focus:border-cyan-500 focus:ring-cyan-500"
+                                        class="border-border focus:border-ring focus:ring-primary/20"
                                     />
                                 </PinInputGroup>
                             </PinInput>
                         </div>
                         <InputError :message="errors.code" />
                     </div>
-                    <Button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg" :disabled="processing"
+                    <Button type="submit" variant="default" class="w-full" :disabled="processing"
                         >Continuar</Button
                     >
-                    <div class="text-center text-sm text-slate-600">
+                    <div class="text-center text-sm text-muted-foreground">
                         <span>ou </span>
                         <button
                             type="button"
-                            class="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-4"
+                            class="text-primary hover:text-primary/80 font-semibold underline underline-offset-4"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}
@@ -119,18 +119,17 @@ const codeValue = computed<string>(() => code.value.join(''));
                         placeholder="Digite seu código de recuperação"
                         :autofocus="showRecoveryInput"
                         required
-                        class="bg-slate-700 border-slate-600 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:ring-cyan-500"
                     />
                     <InputError :message="errors.recovery_code" />
-                    <Button type="submit" class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg" :disabled="processing"
+                    <Button type="submit" variant="default" class="w-full" :disabled="processing"
                         >Continuar</Button
                     >
 
-                    <div class="text-center text-sm text-slate-600">
+                    <div class="text-center text-sm text-muted-foreground">
                         <span>ou </span>
                         <button
                             type="button"
-                            class="text-cyan-400 hover:text-cyan-300 font-semibold underline underline-offset-4"
+                            class="text-primary hover:text-primary/80 font-semibold underline underline-offset-4"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}

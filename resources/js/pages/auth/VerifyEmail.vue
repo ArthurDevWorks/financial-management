@@ -21,7 +21,7 @@ defineProps<{
 
         <div
             v-if="status === 'verification-link-sent'"
-            class="mb-6 p-4 rounded-lg bg-cyan-500/20 border border-cyan-500/50 text-center text-sm font-medium text-cyan-300"
+            class="mb-6 p-4 rounded-lg bg-primary/20 border border-primary/50 text-center text-sm font-medium text-primary"
         >
             Um novo link de verificação foi enviado para o email fornecido durante o cadastro.
         </div>
@@ -32,7 +32,8 @@ defineProps<{
             v-slot="{ processing }"
         >
             <Button 
-                class="w-full bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold h-11 rounded-lg"
+                variant="default"
+                class="w-full"
                 :disabled="processing"
             >
                 <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin mr-2" />
@@ -42,7 +43,7 @@ defineProps<{
             <TextLink
                 :href="logout()"
                 as="button"
-                class="mx-auto block text-sm text-slate-400 hover:text-cyan-400 font-medium"
+                class="mx-auto block text-sm text-muted-foreground hover:text-primary font-medium"
             >
                 Sair
             </TextLink>

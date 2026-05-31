@@ -1,200 +1,159 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-import { Pencil, Trash2, Plus, ArrowRightLeft } from 'lucide-vue-next'
-import { router } from '@inertiajs/vue3'
+import AppLayout from '@/layouts/AppLayout.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import SectionCard from '@/components/SectionCard.vue';
+import StatBadge from '@/components/StatBadge.vue';
+import CrudActions from '@/components/CrudActions.vue';
+import EmptyState from '@/components/EmptyState.vue';
+import { Button } from '@/components/ui/button';
+import { Plus, ArrowRightLeft } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
 
 interface Release {
-  id: number
-  title: string
-  amount: number
-  date: string
-  type: 'revenue' | 'expense'
-  account: { id: number; account: string; bank?: { name: string } } | null
-  category: { id: number; name: string } | null
+  id: number;
+  title: string;
+  amount: number;
+  date: string;
+  type: 'revenue' | 'expense';
+  account: { id: number; account: string; bank?: { name: string } } | null;
+  category: { id: number; name: string } | null;
 }
 
 defineProps<{
   releases: {
-    data: Release[]
-  }
-}>()
+    data: Release[];
+  };
+}>();
 
 const editRelease = (release: Release) => {
-  router.visit(`/releases/${release.id}/edit`)
-}
+  router.visit(`/releases/${release.id}/edit`);
+};
 
 const deleteRelease = (release: Release) => {
   if (confirm(`Deseja excluir o lançamento "${release.title}"?`)) {
-    router.delete(`/releases/${release.id}`)
+    router.delete(`/releases/${release.id}`);
   }
-}
+};
 
 const createRelease = () => {
-  router.visit('/releases/create')
-}
+  router.visit('/releases/create');
+};
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(value)
-}
+  }).format(value);
+};
 
 const formatDate = (date: string) => {
-  if (!date) return ''
-
-  const [ano, mes, dia] = date.split('-')
-
-  if (!ano || !mes || !dia) {
-    return date
-  }
-
-  return `${dia}/${mes}/${ano}`
-}
+  if (!date) return '';
+  const [ano, mes, dia] = date.split('-');
+  if (!ano || !mes || !dia) return date;
+  return `${dia}/${mes}/${ano}`;
+};
 </script>
 
 <template>
   <AppLayout>
-    <!-- PAGE HEADER -->
-    <div class="mb-8 flex items-center justify-between">
-      <div>
-        <div class="flex items-center gap-3 mb-2">
-          <h1 class="text-3xl font-bold text-white">
-            Lançamentos
-          </h1>
-        </div>
-        <p class="mt-1 text-slate-400">
-          Controle centralizado de suas receitas e despesas
-        </p>
-      </div>
+    <div class="p-8">
+      <PageHeader
+        title="Lançamentos"
+        description="Controle centralizado de suas receitas e despesas"
+      >
+        <template #actions>
+          <Button @click="createRelease">
+            <Plus class="h-4 w-4" />
+            Novo Lançamento
+          </Button>
+        </template>
+      </PageHeader>
 
-      <Button class="gap-2 bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-semibold" @click="createRelease">
-        <Plus class="h-4 w-4" />
-        Novo Lançamento
-      </Button>
-    </div>
-
-    <!-- CARD -->
-    <div class="rounded-2xl border border-slate-700 bg-slate-800 shadow-sm overflow-hidden">
-      <!-- CARD HEADER -->
-      <div class="border-b border-slate-700 px-8 py-6 bg-slate-800">
-        <h2 class="text-lg font-semibold text-white">
-          Lançamentos Cadastrados
-        </h2>
-        <p class="text-sm text-slate-400 mt-1">
-          {{ releases?.data?.length || 0 }} lançamento(s) encontrado(s)
-        </p>
-      </div>
-
-      <!-- TABLE -->
-      <div class="px-8 py-6">
-        <Table>
-          <TableHeader>
-            <TableRow class="border-b border-slate-700 hover:bg-transparent">
-              <TableHead class="text-slate-300 font-semibold">Descrição</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Categoria</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Conta</TableHead>
-              <TableHead class="text-slate-300 font-semibold">Data</TableHead>
-              <TableHead class="text-right text-slate-300 font-semibold">Valor</TableHead>
-              <TableHead class="text-center w-52 text-slate-300 font-semibold">
-                Ações
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            <!-- COM DADOS -->
-            <template v-if="releases?.data?.length">
-              <TableRow
+      <SectionCard
+        title="Lançamentos Cadastrados"
+        :description="`${releases?.data?.length || 0} lançamento(s) encontrado(s)`"
+      >
+        <div v-if="releases?.data?.length" class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-border">
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Descrição
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Categoria
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Conta
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Data
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Valor
+                </th>
+                <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
                 v-for="release in releases.data"
                 :key="release.id"
-                class="hover:bg-slate-700/50 border-b border-slate-700 transition"
+                class="border-b border-border transition-colors hover:bg-surface/50"
               >
-                <TableCell class="font-semibold text-white py-4">
+                <td class="px-4 py-4 font-medium text-foreground">
                   {{ release.title }}
-                </TableCell>
-
-                <TableCell class="py-4">
-                  <span
-                    :class="[
-                      'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border',
-                      release.type === 'revenue'
-                        ? 'bg-green-500/20 text-green-400 border-green-500/50'
-                        : 'bg-red-500/20 text-red-400 border-red-500/50'
-                    ]"
-                  >
+                </td>
+                <td class="px-4 py-4">
+                  <StatBadge :variant="release.type === 'revenue' ? 'revenue' : 'expense'">
                     {{ release.category?.name ?? 'Sem Categoria' }}
-                  </span>
-                </TableCell>
-
-                <TableCell class="text-slate-600 py-4">
-                  {{ release.account?.bank ? `${release.account.bank.name} - ${release.account.account}` : (release.account?.account ?? 'Sem Conta') }}
-                </TableCell>
-
-                <TableCell class="text-slate-600 py-4">
+                  </StatBadge>
+                </td>
+                <td class="px-4 py-4 text-muted-foreground">
+                  {{
+                    release.account?.bank
+                      ? `${release.account.bank.name} - ${release.account.account}`
+                      : release.account?.account ?? 'Sem Conta'
+                  }}
+                </td>
+                <td class="px-4 py-4 text-muted-foreground">
                   {{ formatDate(release.date) }}
-                </TableCell>
-
-                <TableCell
-                  :class="[
-                    'text-right font-semibold py-4',
-                    release.type === 'revenue' ? 'text-green-400' : 'text-red-400'
-                  ]"
+                </td>
+                <td
+                  class="px-4 py-4 text-right font-semibold"
+                  :class="release.type === 'revenue' ? 'text-revenue' : 'text-destructive'"
                 >
-                  {{ release.type === 'revenue' ? '+' : '-' }} {{ formatCurrency(release.amount) }}
-                </TableCell>
+                  {{ release.type === 'revenue' ? '+' : '-' }}
+                  {{ formatCurrency(release.amount) }}
+                </td>
+                <td class="px-4 py-4">
+                  <CrudActions
+                    @edit="editRelease(release)"
+                    @delete="deleteRelease(release)"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-                <TableCell class="py-4">
-                  <div class="flex w-full items-center justify-center gap-2">
-                    <button
-                      class="inline-flex items-center gap-1.5 rounded-md border border-slate-600/70 bg-slate-800 px-2.5 py-1.5 text-xs font-medium text-slate-200 transition hover:border-cyan-500/60 hover:bg-slate-700 hover:text-cyan-300"
-                      @click="editRelease(release)"
-                      title="Editar"
-                    >
-                      <Pencil class="h-4 w-4" />
-                      Editar
-                    </button>
-
-                    <button
-                      class="inline-flex items-center gap-1.5 rounded-md border border-red-500/40 bg-red-500/10 px-2.5 py-1.5 text-xs font-medium text-red-200 transition hover:border-red-400/70 hover:bg-red-500/20 hover:text-red-100"
-                      @click="deleteRelease(release)"
-                      title="Deletar"
-                    >
-                      <Trash2 class="h-4 w-4" />
-                      Excluir
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
+        <div v-else>
+          <EmptyState
+            :icon="ArrowRightLeft"
+            title="Nenhum lançamento cadastrado"
+            description="Comece criando um novo lançamento financeiro"
+          >
+            <template #actions>
+              <Button @click="createRelease">
+                <Plus class="h-4 w-4" />
+                Novo Lançamento
+              </Button>
             </template>
-
-            <!-- SEM DADOS -->
-            <template v-else>
-              <TableRow>
-                <TableCell
-                  colspan="6"
-                  class="py-12 text-center text-slate-400"
-                >
-                  <div class="flex flex-col items-center justify-center">
-                    <ArrowRightLeft class="h-12 w-12 text-slate-500 mb-3" />
-                    <p class="font-medium">Nenhum lançamento cadastrado</p>
-                    <p class="text-sm">Comece criando um novo lançamento financeiro</p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </template>
-          </TableBody>
-        </Table>
-      </div>
+          </EmptyState>
+        </div>
+      </SectionCard>
     </div>
   </AppLayout>
 </template>
