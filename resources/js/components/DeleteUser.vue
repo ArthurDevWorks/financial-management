@@ -26,22 +26,22 @@ const passwordInput = ref<InstanceType<typeof Input> | null>(null);
 <template>
     <div class="space-y-6">
         <HeadingSmall
-            title="Delete account"
-            description="Delete your account and all of its resources"
+            title="Apagar conta"
+            description="Apagar conta e todos os seus dados"
         />
         <div
             class="space-y-4 rounded-lg border border-destructive/20 bg-destructive/10 p-4"
         >
             <div class="relative space-y-0.5 text-destructive">
-                <p class="font-medium">Warning</p>
+                <p class="font-medium">Atenção</p>
                 <p class="text-sm">
-                    Please proceed with caution, this cannot be undone.
+                    Tenha certeza, esta ação é irreversível.
                 </p>
             </div>
             <Dialog>
                 <DialogTrigger as-child>
                     <Button variant="destructive" data-test="delete-user-button"
-                        >Delete account</Button
+                        >Apagar conta</Button
                     >
                 </DialogTrigger>
                 <DialogContent>
@@ -104,7 +104,7 @@ const passwordInput = ref<InstanceType<typeof Input> | null>(null);
                                 :disabled="processing"
                                 data-test="confirm-delete-user-button"
                             >
-                                Delete account
+                                Apagar conta
                             </Button>
                         </DialogFooter>
                     </Form>
