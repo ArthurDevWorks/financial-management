@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\Investiment;
 use App\Models\Release;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -77,18 +78,18 @@ class DashboardController extends Controller
         // Total Base
         $accounts = Account::query()
             ->with('bank')
-            ->withSum(['releases as revenue_sum' => fn($query) => $query->where('type', 'revenue')], 'amount')
-            ->withSum(['releases as expense_sum' => fn($query) => $query->where('type', 'expense')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')], 'amount')
             ->where('user_id', $user_id)
             ->get();
 
         $totalInitialBalance = $accounts->sum('total');
-        
+
         $accountsEvolution = $accounts->map(function ($acc) {
             $accRevenues = (float) ($acc->revenue_sum ?? 0);
             $accExpenses = (float) ($acc->expense_sum ?? 0);
             $saldoInicial = (float) $acc->total;
-            
+
             return [
                 'account' => $acc->account,
                 'bank' => $acc->bank ? $acc->bank->name : 'Outro',
@@ -98,6 +99,14 @@ class DashboardController extends Controller
         })->values()->all();
 
         $totalBalance = collect($accountsEvolution)->sum('balance');
+
+        $investiments = Investiment::query()->get();
+        $totalInvestment = round($investiments->sum(fn (Investiment $investiment): float => $investiment->balance()), 2);
+        $totalInvested = round($investiments->sum(fn (Investiment $investiment): float => $investiment->investedAmount()), 2);
+        $totalInvestmentGainLoss = $totalInvestment - $totalInvested;
+        $totalProfitability = $totalInvested > 0
+            ? round(($totalInvestmentGainLoss / $totalInvested) * 100, 2)
+            : 0;
 
         return Inertia::render('Dashboard', [
             'period' => $period,
@@ -110,9 +119,9 @@ class DashboardController extends Controller
                 'totalInitialBalance' => $totalInitialBalance,
                 'totalRevenue' => $totalRevenue,
                 'totalExpense' => $totalExpense,
-                'totalInvestment' => 0, // Mock for now or implement if there is Investment Model
+                'totalInvestment' => $totalInvestment,
                 'netBalance' => $netBalance,
-                'totalProfitability' => 0,
+                'totalProfitability' => $totalProfitability,
             ],
             'revenuesByCategory' => $revenuesByCategory,
             'expensesByCategory' => $expensesByCategory,

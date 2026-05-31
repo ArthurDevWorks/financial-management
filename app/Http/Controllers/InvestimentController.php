@@ -2,38 +2,37 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\CategoryType;
+use App\Enums\FixedIncomeIndexer;
+use App\Enums\FixedIncomeProfitabilityType;
+use App\Enums\InvestmentAssetType;
 use App\Http\Requests\InvestimentStoreRequest;
 use App\Http\Requests\InvestimentUpdateRequest;
 use App\Http\Requests\InvestimentValuationRequest;
-use App\Models\Category;
 use App\Models\Investiment;
 use App\Models\InvestimentValuation;
 use App\Services\DcfValuationService;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 
 class InvestimentController extends Controller
 {
-    private const ALLOWED_CATEGORY_NAMES = [
-        'ETF',
-        'Etf',
-        'Ações',
-        'Acoes',
-        'FIIs',
-        'FII',
-        'Fiis',
-    ];
-
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        $allInvestiments = Investiment::query()->get();
+        $portfolioSummary = $this->buildPortfolioSummary($allInvestiments);
+
         return Inertia::render('investiments/Index', [
             'investiments' => Investiment::query()
-                ->with(['category'])
                 ->orderBy('dt_investment', 'desc')
                 ->paginate(10)
+                ->through(fn (Investiment $investiment): array => $this->investmentPayload($investiment)),
+            'portfolioSummary' => $portfolioSummary,
+            'totalInvested' => $portfolioSummary['totalInvested'],
+            'totalCurrent' => $portfolioSummary['currentBalance'],
+            'totalProfitability' => $portfolioSummary['totalProfitability'],
         ]);
     }
 
@@ -42,9 +41,7 @@ class InvestimentController extends Controller
      */
     public function create()
     {
-        return Inertia::render('investiments/Create', [
-            'categories' => $this->investmentCategories(),
-        ]);
+        return Inertia::render('investiments/Create', $this->formOptions());
     }
 
     /**
@@ -69,7 +66,7 @@ class InvestimentController extends Controller
             ->first();
 
         return Inertia::render('investiments/Valuation', [
-            'investiment' => $investiment->load(['category']),
+            'investiment' => $this->investmentPayload($investiment),
             'valuation' => $lastValuation ? [
                 'assumptions' => $lastValuation->assumptions,
                 'projected_cash_flows' => $lastValuation->projected_cash_flows,
@@ -95,7 +92,7 @@ class InvestimentController extends Controller
         ]);
 
         return Inertia::render('investiments/Valuation', [
-            'investiment' => $investiment->load(['category']),
+            'investiment' => $this->investmentPayload($investiment),
             'valuation' => $calculatedValuation,
             'defaultAssumptions' => collect($validated)->map(function (mixed $value): mixed {
                 if (is_array($value)) {
@@ -114,6 +111,8 @@ class InvestimentController extends Controller
         Investiment $investiment,
         ?InvestimentValuation $lastValuation,
     ): array {
+        $currentPricePerShare = (string) ($investiment->average_price ?? $investiment->value ?? 0);
+
         if ($lastValuation) {
             $assumptions = $lastValuation->assumptions;
 
@@ -125,7 +124,7 @@ class InvestimentController extends Controller
                 'total_shares' => (string) ($assumptions['total_shares'] ?? ''),
                 'payout' => (string) ($assumptions['payout'] ?? '75'),
                 'roe' => (string) ($assumptions['roe'] ?? '24'),
-                'current_price_per_share' => (string) ($assumptions['current_price_per_share'] ?? $investiment->value),
+                'current_price_per_share' => (string) ($assumptions['current_price_per_share'] ?? $currentPricePerShare),
                 'growth_rates' => array_map(
                     static fn (mixed $value): string => (string) $value,
                     $assumptions['growth_rates'] ?? array_fill(0, 5, '6'),
@@ -141,7 +140,7 @@ class InvestimentController extends Controller
             'total_shares' => '',
             'payout' => '75',
             'roe' => '24',
-            'current_price_per_share' => (string) $investiment->value,
+            'current_price_per_share' => $currentPricePerShare,
             'growth_rates' => array_fill(0, 5, '6'),
         ];
     }
@@ -152,8 +151,8 @@ class InvestimentController extends Controller
     public function edit(Investiment $investiment)
     {
         return Inertia::render('investiments/Edit', [
-            'investiment' => $investiment->load(['category']),
-            'categories' => $this->investmentCategories(),
+            'investiment' => $this->investmentPayload($investiment),
+            ...$this->formOptions(),
         ]);
     }
 
@@ -179,12 +178,85 @@ class InvestimentController extends Controller
             ->with('success', 'Investimento removido com sucesso');
     }
 
-    private function investmentCategories()
+    private function formOptions(): array
     {
-        return Category::query()
-            ->where('type', CategoryType::INVESTMENT->value)
-            ->whereIn('name', self::ALLOWED_CATEGORY_NAMES)
-            ->orderBy('name')
-            ->get();
+        return [
+            'assetTypes' => InvestmentAssetType::options(),
+            'fixedIncomeProfitabilityTypes' => FixedIncomeProfitabilityType::options(),
+            'fixedIncomeIndexers' => FixedIncomeIndexer::options(),
+        ];
+    }
+
+    private function buildPortfolioSummary(Collection $investiments): array
+    {
+        $totalInvested = round($investiments->sum(fn (Investiment $investiment): float => $investiment->investedAmount()), 2);
+        $currentBalance = round($investiments->sum(fn (Investiment $investiment): float => $investiment->balance()), 2);
+        $totalGainLoss = round($currentBalance - $totalInvested, 2);
+        $totalProfitability = $totalInvested > 0
+            ? round(($totalGainLoss / $totalInvested) * 100, 2)
+            : 0;
+
+        return [
+            'totalInvested' => $totalInvested,
+            'currentBalance' => $currentBalance,
+            'totalGainLoss' => $totalGainLoss,
+            'totalProfitability' => $totalProfitability,
+            'distributionByClass' => $this->distributionByClass($investiments, $currentBalance),
+        ];
+    }
+
+    private function distributionByClass(Collection $investiments, float $currentBalance): array
+    {
+        return collect(['Ações', 'FIIs', 'ETFs', 'Renda Fixa', 'Cripto', 'Outros'])
+            ->map(function (string $portfolioClass) use ($investiments, $currentBalance): array {
+                $total = round($investiments
+                    ->filter(fn (Investiment $investiment): bool => $investiment->type?->portfolioClass() === $portfolioClass)
+                    ->sum(fn (Investiment $investiment): float => $investiment->balance()), 2);
+
+                return [
+                    'class' => $portfolioClass,
+                    'total' => $total,
+                    'percentage' => $currentBalance > 0 ? round(($total / $currentBalance) * 100, 2) : 0,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function investmentPayload(Investiment $investiment): array
+    {
+        $assetType = $investiment->type;
+        $profitabilityType = $investiment->profitability_type;
+        $indexer = $investiment->indexer;
+        $averagePrice = (float) ($investiment->average_price ?? $investiment->value ?? 0);
+        $balance = $investiment->balance();
+        $profitabilityPercentage = $investiment->profitabilityPercentage();
+
+        return [
+            'id' => $investiment->id,
+            'name' => $investiment->name,
+            'dt_investment' => $investiment->dt_investment?->format('Y-m-d'),
+            'type' => $assetType?->value,
+            'type_label' => $assetType?->label() ?? 'Não classificado',
+            'portfolio_class' => $assetType?->portfolioClass() ?? 'Outros',
+            'is_fixed_income' => $assetType?->isFixedIncome() ?? false,
+            'quantity' => (float) ($investiment->quantity ?? 0),
+            'average_price' => $averagePrice,
+            'current_balance' => $balance,
+            'current_value' => $balance,
+            'initial_value' => $averagePrice,
+            'value' => $averagePrice,
+            'invested_amount' => $investiment->investedAmount(),
+            'gain_loss' => $investiment->gainLoss(),
+            'profitability' => $profitabilityPercentage,
+            'profitability_percentage' => $profitabilityPercentage,
+            'profitability_type' => $profitabilityType?->value,
+            'profitability_type_label' => $profitabilityType?->label(),
+            'indexer' => $indexer?->value,
+            'indexer_label' => $indexer?->label(),
+            'contracted_rate' => $investiment->contracted_rate !== null ? (float) $investiment->contracted_rate : null,
+            'maturity_date' => $investiment->maturity_date?->format('Y-m-d'),
+            'liquidity' => $investiment->liquidity,
+        ];
     }
 }
