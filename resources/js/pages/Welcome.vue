@@ -3,6 +3,7 @@ import { dashboard, login, register } from '@/routes';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import { Button } from '@/components/ui/button';
+import { Toaster } from 'vue-sonner';
 import {
   Banknote,
   TrendingUp,
@@ -27,6 +28,14 @@ withDefaults(
 
 <template>
   <Head title="Fidax - Gestão Financeira Inteligente">
+    <Toaster
+      richColors
+      closeButton
+      position="top-right"
+      :toast-options="{
+        class: '!font-sans',
+      }"
+    />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />

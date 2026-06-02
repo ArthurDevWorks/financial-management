@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import FormPageLayout from '@/components/FormPageLayout.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
+import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
 
@@ -16,6 +18,8 @@ defineProps<{
   banks: Bank[]
   accountTypes: Record<string, string>
 }>()
+
+const showUnsavedDialog = ref(false)
 
 const form = useForm({
   bank_id: '',
@@ -40,8 +44,10 @@ const goBack = () => {
       title="Nova Conta"
       description="Cadastre uma nova conta bancária"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Cadastrar Conta"
       processing-label="Cadastrando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >
@@ -92,10 +98,7 @@ const goBack = () => {
 
         <div>
           <Label>Saldo Inicial</Label>
-          <div class="relative">
-            <Input v-model="form.total" type="number" placeholder="R$ 0,00" step="0.01" />
-          </div>
-          <InputError :message="form.errors.total" />
+          <CurrencyInput v-model="form.total" :error="form.errors.total" placeholder="0,00" />
         </div>
       </div>
     </FormPageLayout>

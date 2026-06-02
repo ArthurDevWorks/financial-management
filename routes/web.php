@@ -24,24 +24,29 @@ Route::get('dashboard', [DashboardController::class, 'index'])
 
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('banks/export', [BankController::class, 'export'])->name('banks.export');
     Route::resource('banks', BankController::class);
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('accounts/export', [AccountController::class, 'export'])->name('accounts.export');
     Route::resource('accounts', AccountController::class);
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('releases/export', [ReleaseController::class, 'export'])->name('releases.export');
     Route::resource('releases', ReleaseController::class);
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('categories/export', [CategoryController::class, 'export'])->name('categories.export');
     Route::resource('categories', CategoryController::class);
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
     Route::post('investiments/{investiment}/valuation', [InvestimentController::class, 'valuation'])
         ->name('investiments.valuation');
+    Route::get('investiments/export', [InvestimentController::class, 'export'])->name('investiments.export');
     Route::resource('investiments', InvestimentController::class);
 })->middleware(['auth', 'verified']);
 

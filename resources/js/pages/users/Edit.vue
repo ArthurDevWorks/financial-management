@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 
 interface User {
   id: number
@@ -15,6 +16,8 @@ interface User {
 const props = defineProps<{
   user: User
 }>()
+
+const showUnsavedDialog = ref(false)
 
 const form = useForm({
   name: props.user.name,
@@ -38,8 +41,10 @@ const goBack = () => {
       title="Editar Usuário"
       description="Modifique os dados do usuário"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Atualizar Usuário"
       processing-label="Atualizando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >

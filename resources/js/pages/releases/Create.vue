@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import FormPageLayout from '@/components/FormPageLayout.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm, router } from '@inertiajs/vue3'
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 interface Account {
   id: number
@@ -23,6 +24,8 @@ const props = defineProps<{
   accounts: Account[]
   categories: Category[]
 }>()
+
+const showUnsavedDialog = ref(false)
 
 const form = useForm({
   type: 'expense',
@@ -58,8 +61,10 @@ watch(() => form.type, () => {
       title="Novo Lançamento"
       description="Cadastre uma nova receita ou despesa no sistema"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Cadastrar Lançamento"
       processing-label="Cadastrando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >
@@ -124,11 +129,7 @@ watch(() => form.type, () => {
           </div>
           <div>
             <Label>Valor</Label>
-            <div class="relative">
-              <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">R$</span>
-              <Input v-model="form.amount" type="number" placeholder="0,00" step="0.01" class="pl-8 pr-10" />
-            </div>
-            <InputError :message="form.errors.amount" />
+            <CurrencyInput v-model="form.amount" :error="form.errors.amount" placeholder="0,00" />
           </div>
         </div>
 

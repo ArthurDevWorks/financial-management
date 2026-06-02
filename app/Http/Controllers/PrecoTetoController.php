@@ -15,6 +15,9 @@ class PrecoTetoController extends Controller
             'investiment' => $investimentId
                 ? Investiment::find((int) $investimentId, ['id', 'name', 'value'])
                 : null,
+            'investiments' => Investiment::query()
+                ->orderBy('name')
+                ->get(['id', 'name', 'value']),
         ]);
     }
 }

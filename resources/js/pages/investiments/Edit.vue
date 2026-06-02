@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import FormPageLayout from '@/components/FormPageLayout.vue';
+import CurrencyInput from '@/components/CurrencyInput.vue';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router, useForm } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface AssetTypeOption {
   value: string;
@@ -40,6 +41,8 @@ const props = defineProps<{
   fixedIncomeProfitabilityTypes: Option[];
   fixedIncomeIndexers: Option[];
 }>();
+
+const showUnsavedDialog = ref(false);
 
 const form = useForm({
   name: props.investiment.name,
@@ -82,8 +85,10 @@ const goBack = () => {
       title="Editar Investimento"
       description="Atualize a posição e as características do ativo"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Salvar Alterações"
       processing-label="Salvando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >
@@ -120,20 +125,12 @@ const goBack = () => {
 
           <div>
             <Label>Preço Médio</Label>
-            <div class="relative">
-              <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-              <Input v-model="form.average_price" type="number" min="0" step="0.01" placeholder="32,50" class="pl-8" />
-            </div>
-            <InputError :message="form.errors.average_price" />
+            <CurrencyInput v-model="form.average_price" :error="form.errors.average_price" placeholder="32,50" />
           </div>
 
           <div>
             <Label>Saldo Atual</Label>
-            <div class="relative">
-              <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-              <Input v-model="form.current_balance" type="number" min="0" step="0.01" placeholder="3.800,00" class="pl-8" />
-            </div>
-            <InputError :message="form.errors.current_balance" />
+            <CurrencyInput v-model="form.current_balance" :error="form.errors.current_balance" placeholder="3.800,00" />
           </div>
         </div>
 

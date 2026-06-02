@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import FormPageLayout from '@/components/FormPageLayout.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm, router } from '@inertiajs/vue3'
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 interface Account {
   id: number
@@ -35,6 +36,8 @@ const props = defineProps<{
   accounts: Account[]
   categories: Category[]
 }>()
+
+const showUnsavedDialog = ref(false)
 
 const form = useForm({
   type: props.release.type,
@@ -72,8 +75,10 @@ watch(() => form.type, (newType, oldType) => {
       title="Editar Lançamento"
       description="Atualize os dados deste lançamento financeiro"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Salvar Alterações"
       processing-label="Salvando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >
@@ -138,8 +143,7 @@ watch(() => form.type, (newType, oldType) => {
           </div>
           <div>
             <Label>Valor</Label>
-            <Input v-model="form.amount" type="number" placeholder="0,00" step="0.01" class="pr-10" />
-            <InputError :message="form.errors.amount" />
+            <CurrencyInput v-model="form.amount" :error="form.errors.amount" placeholder="0,00" />
           </div>
         </div>
 

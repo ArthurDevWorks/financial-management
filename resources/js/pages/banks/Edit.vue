@@ -19,6 +19,7 @@ const props = defineProps<{
   bank: Bank
 }>()
 
+const showUnsavedDialog = ref(false)
 const logoPreview = ref<string | null>(null)
 
 const form = useForm({
@@ -54,8 +55,10 @@ const handleFileSelect = (event: Event) => {
       title="Editar Banco"
       description="Atualize as informações do banco"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Salvar Alterações"
       processing-label="Salvando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >

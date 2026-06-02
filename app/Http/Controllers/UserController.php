@@ -6,14 +6,20 @@ use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Response;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         return Inertia::render('users/Index', [
             'users' => User::query()
+                ->when($request->search, fn($q, $search) => $q->where(function($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                }))
                 ->orderBy('name')
                 ->paginate(10)
         ]);
@@ -58,6 +64,35 @@ class UserController extends Controller
 
         return redirect()->route('users.index')
             ->with('success', 'Usuário atualizado com sucesso');
+    }
+
+    public function export()
+    {
+        $users = User::query()
+            ->orderBy('name')
+            ->get();
+
+        $callback = function () use ($users) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, ['ID', 'Nome', 'Email', 'Verificado em']);
+
+            foreach ($users as $user) {
+                fputcsv($handle, [
+                    $user->id,
+                    $user->name,
+                    $user->email,
+                    $user->email_verified_at?->format('d/m/Y H:i') ?? 'Não verificado',
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return Response::stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="usuarios.csv"',
+        ]);
     }
 
     public function destroy(User $user)

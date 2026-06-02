@@ -8,6 +8,7 @@ import { useForm } from '@inertiajs/vue3'
 import { Upload, CheckCircle } from 'lucide-vue-next'
 import { ref } from 'vue'
 
+const showUnsavedDialog = ref(false)
 const logoPreview = ref<string | null>(null)
 
 const form = useForm({
@@ -43,8 +44,10 @@ const handleFileSelect = (event: Event) => {
       title="Novo Banco"
       description="Cadastre um novo banco para gerenciar suas contas"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Cadastrar Banco"
       processing-label="Cadastrando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >

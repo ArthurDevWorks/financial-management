@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-vue-next';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 
 interface Props {
   editUrl?: string;
@@ -20,11 +22,7 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 
-function handleDelete() {
-  if (confirm(props.deleteConfirmMessage)) {
-    emit('delete');
-  }
-}
+const showDeleteDialog = ref(false);
 </script>
 
 <template>
@@ -43,10 +41,18 @@ function handleDelete() {
       variant="destructive"
       size="sm"
       class="gap-1.5"
-      @click="handleDelete"
+      @click="showDeleteDialog = true"
     >
       <Trash2 class="h-3.5 w-3.5" />
       Excluir
     </Button>
+    <ConfirmDialog
+      v-model:open="showDeleteDialog"
+      :description="props.deleteConfirmMessage"
+      confirm-label="Sim, excluir"
+      variant="destructive"
+      @confirm="emit('delete'); showDeleteDialog = false"
+      @cancel="showDeleteDialog = false"
+    />
   </div>
 </template>

@@ -1,15 +1,27 @@
 <script setup lang="ts">
 import { home } from '@/routes';
 import { Link } from '@inertiajs/vue3';
+import { Toaster } from 'vue-sonner';
+import { useFlashMessages } from '@/composables/useToast';
 
 defineProps<{
   title?: string;
   description?: string;
 }>();
+
+useFlashMessages();
 </script>
 
 <template>
   <div class="flex min-h-screen items-center justify-center bg-background p-4 md:p-6">
+    <Toaster
+      richColors
+      closeButton
+      position="top-right"
+      :toast-options="{
+        class: '!font-sans',
+      }"
+    />
     <div class="w-full max-w-sm">
       <div class="overflow-hidden rounded-xl border border-border bg-card shadow-lg">
         <div class="border-b border-border px-8 py-8">

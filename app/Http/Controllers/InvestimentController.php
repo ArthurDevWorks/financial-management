@@ -11,21 +11,24 @@ use App\Http\Requests\InvestimentValuationRequest;
 use App\Models\Investiment;
 use App\Models\InvestimentValuation;
 use App\Services\DcfValuationService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Response;
 
 class InvestimentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $allInvestiments = Investiment::query()->get();
         $portfolioSummary = $this->buildPortfolioSummary($allInvestiments);
 
         return Inertia::render('investiments/Index', [
             'investiments' => Investiment::query()
+                ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
                 ->orderBy('dt_investment', 'desc')
                 ->paginate(10)
                 ->through(fn (Investiment $investiment): array => $this->investmentPayload($investiment)),
@@ -33,6 +36,40 @@ class InvestimentController extends Controller
             'totalInvested' => $portfolioSummary['totalInvested'],
             'totalCurrent' => $portfolioSummary['currentBalance'],
             'totalProfitability' => $portfolioSummary['totalProfitability'],
+        ]);
+    }
+
+    public function export()
+    {
+        $investiments = Investiment::query()
+            ->orderBy('dt_investment', 'desc')
+            ->get()
+            ->map(fn (Investiment $i): array => $this->investmentPayload($i));
+
+        $callback = function () use ($investiments) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, ['ID', 'Ativo', 'Tipo', 'Classe', 'Quantidade', 'Preço Médio', 'Saldo Atual', 'Rentabilidade %']);
+
+            foreach ($investiments as $i) {
+                fputcsv($handle, [
+                    $i['id'],
+                    $i['name'],
+                    $i['type_label'],
+                    $i['portfolio_class'],
+                    $i['quantity'],
+                    number_format($i['average_price'], 2, ',', '.'),
+                    number_format($i['current_balance'], 2, ',', '.'),
+                    number_format($i['profitability_percentage'], 2, ',', '.'),
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return Response::stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="investimentos.csv"',
         ]);
     }
 

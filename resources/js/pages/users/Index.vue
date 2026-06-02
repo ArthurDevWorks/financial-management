@@ -2,9 +2,21 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
+import CrudActions from '@/components/CrudActions.vue';
+import SearchInput from '@/components/SearchInput.vue';
+import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
 import { Plus, Users } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
+
+interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  from: number;
+  to: number;
+  total: number;
+  links: { url: string | null; label: string; active: boolean }[];
+}
 
 interface User {
   id: number;
@@ -15,6 +27,7 @@ interface User {
 defineProps<{
   users: {
     data: User[];
+    meta: PaginationMeta;
   };
 }>();
 
@@ -23,9 +36,7 @@ const editUser = (user: User) => {
 };
 
 const deleteUser = (user: User) => {
-  if (confirm(`Deseja excluir o usuário "${user.name}"?`)) {
-    router.delete(`/users/${user.id}`);
-  }
+  router.delete(`/users/${user.id}`);
 };
 
 const createUser = () => {
@@ -50,8 +61,12 @@ const createUser = () => {
 
       <SectionCard
         title="Usuários Cadastrados"
-        :description="`${users.data.length} usuário(s) encontrado(s)`"
+        :description="`${users.meta?.total || users.data.length} usuário(s) encontrado(s)`"
       >
+        <template #header-actions>
+          <SearchInput placeholder="Buscar usuários..." route-name="/users" />
+        </template>
+
         <div v-if="users.data.length" class="overflow-x-auto">
           <table class="w-full">
             <thead>
@@ -80,18 +95,17 @@ const createUser = () => {
                   {{ user.email }}
                 </td>
                 <td class="px-4 py-4">
-                  <div class="flex items-center justify-center gap-2">
-                    <Button variant="secondary" size="sm" @click="editUser(user)">
-                      Editar
-                    </Button>
-                    <Button variant="destructive" size="sm" @click="deleteUser(user)">
-                      Excluir
-                    </Button>
-                  </div>
+                  <CrudActions
+                    delete-confirm-message="Tem certeza que deseja excluir este usuário?"
+                    @edit="editUser(user)"
+                    @delete="deleteUser(user)"
+                  />
                 </td>
               </tr>
             </tbody>
           </table>
+
+          <PaginationLinks v-if="users.meta" :meta="users.meta" />
         </div>
 
         <div v-else class="flex flex-col items-center justify-center py-16 text-center">

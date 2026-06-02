@@ -6,17 +6,20 @@ use App\Http\Requests\BankStoreRequest;
 use App\Http\Requests\BankUpdateRequest;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Bank;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Response;
 
 class BankController extends Controller
 {
     /**
      * List of banks has created
      */
-    public function index()
+    public function index(Request $request)
     {
         $banks = Bank::query()
             ->withCount('accounts')
+            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
             ->paginate(10);
 
         $banks->getCollection()->transform(function ($bank) {
@@ -106,6 +109,35 @@ class BankController extends Controller
 
         return redirect()->route('banks.index')
             ->with('success', 'Banco atualizado com sucesso');
+    }
+
+    public function export()
+    {
+        $banks = Bank::query()
+            ->withCount('accounts')
+            ->orderBy('name')
+            ->get();
+
+        $callback = function () use ($banks) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fputcsv($handle, ['ID', 'Nome', 'Contas Vinculadas']);
+
+            foreach ($banks as $bank) {
+                fputcsv($handle, [
+                    $bank->id,
+                    $bank->name,
+                    $bank->accounts_count,
+                ]);
+            }
+
+            fclose($handle);
+        };
+
+        return Response::stream($callback, 200, [
+            'Content-Type' => 'text/csv; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="bancos.csv"',
+        ]);
     }
 
     /**

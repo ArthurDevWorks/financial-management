@@ -96,7 +96,46 @@
     }
 }
 
-:root,
+:root {
+    --background: hsl(210 20% 98%);
+    --foreground: hsl(228 30% 10%);
+    --card: hsl(0 0% 100%);
+    --card-foreground: hsl(228 30% 10%);
+    --popover: hsl(0 0% 100%);
+    --popover-foreground: hsl(228 30% 10%);
+    --primary: hsl(168 65% 35%);
+    --primary-foreground: hsl(0 0% 100%);
+    --secondary: hsl(210 15% 94%);
+    --secondary-foreground: hsl(228 30% 20%);
+    --muted: hsl(210 15% 92%);
+    --muted-foreground: hsl(228 10% 50%);
+    --accent: hsl(42 75% 45%);
+    --accent-foreground: hsl(0 0% 100%);
+    --destructive: hsl(0 70% 50%);
+    --destructive-foreground: hsl(0 0% 100%);
+    --border: hsl(210 15% 88%);
+    --input: hsl(210 15% 88%);
+    --ring: hsl(168 65% 35%);
+    --chart-1: hsl(168 65% 35%);
+    --chart-2: hsl(42 75% 45%);
+    --chart-3: hsl(220 70% 50%);
+    --chart-4: hsl(142 65% 45%);
+    --chart-5: hsl(0 70% 50%);
+    --radius: 0.625rem;
+    --sidebar-background: hsl(228 25% 6%);
+    --sidebar-foreground: hsl(210 20% 90%);
+    --sidebar-primary: hsl(168 75% 42%);
+    --sidebar-primary-foreground: hsl(210 20% 98%);
+    --sidebar-accent: hsl(228 18% 14%);
+    --sidebar-accent-foreground: hsl(42 80% 52%);
+    --sidebar-border: hsl(228 15% 10%);
+    --sidebar-ring: hsl(168 75% 42%);
+    --sidebar: hsl(228 25% 6%);
+    --surface: hsl(210 15% 96%);
+    --revenue: hsl(142 65% 45%);
+    --investment: hsl(220 70% 50%);
+}
+
 .dark {
     --background: hsl(228 28% 5%);
     --foreground: hsl(210 20% 96%);
@@ -182,3 +221,82 @@
         background: rgba(255, 255, 255, 0.16);
     }
 }
+
+@keyframes fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scale-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slide-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fade-in-up 0.4s ease-out both;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out both;
+}
+
+.animate-scale-in {
+    animation: scale-in 0.3s ease-out both;
+}
+
+.animate-slide-in-right {
+    animation: slide-in-right 0.3s ease-out both;
+}
+
+.animate-stagger-1 { animation-delay: 0.04s; }
+.animate-stagger-2 { animation-delay: 0.08s; }
+.animate-stagger-3 { animation-delay: 0.12s; }
+.animate-stagger-4 { animation-delay: 0.16s; }
+.animate-stagger-5 { animation-delay: 0.20s; }
+.animate-stagger-6 { animation-delay: 0.24s; }
+.animate-stagger-7 { animation-delay: 0.28s; }
+.animate-stagger-8 { animation-delay: 0.32s; }
+.animate-stagger-9 { animation-delay: 0.36s; }
+.animate-stagger-10 { animation-delay: 0.40s; }
+
+tr.animate-row {
+    animation: fade-in-up 0.3s ease-out both;
+}
+tr.animate-row:nth-child(1) { animation-delay: 0.02s; }
+tr.animate-row:nth-child(2) { animation-delay: 0.04s; }
+tr.animate-row:nth-child(3) { animation-delay: 0.06s; }
+tr.animate-row:nth-child(4) { animation-delay: 0.08s; }
+tr.animate-row:nth-child(5) { animation-delay: 0.10s; }
+tr.animate-row:nth-child(6) { animation-delay: 0.12s; }
+tr.animate-row:nth-child(7) { animation-delay: 0.14s; }
+tr.animate-row:nth-child(8) { animation-delay: 0.16s; }
+tr.animate-row:nth-child(9) { animation-delay: 0.18s; }
+tr.animate-row:nth-child(10) { animation-delay: 0.20s; }

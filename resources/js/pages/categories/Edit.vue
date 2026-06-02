@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
 
 interface Category {
   id: number
@@ -20,6 +21,8 @@ const props = defineProps<{
   category: Category
   types: TypeOption
 }>()
+
+const showUnsavedDialog = ref(false)
 
 const form = useForm({
   type: props.category.type,
@@ -41,8 +44,10 @@ const goBack = () => {
       title="Editar Categoria"
       description="Modifique os dados da categoria"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Atualizar Categoria"
       processing-label="Atualizando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >

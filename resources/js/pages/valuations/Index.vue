@@ -2,11 +2,20 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
-import StatBadge from '@/components/StatBadge.vue';
 import { Button } from '@/components/ui/button';
+import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, ChartNoAxesCombined } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
+
+interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  from: number;
+  to: number;
+  total: number;
+  links: { url: string | null; label: string; active: boolean }[];
+}
 
 interface ValuationSummary {
   fair_value?: number;
@@ -30,6 +39,7 @@ interface Valuation {
 defineProps<{
   valuations: {
     data: Valuation[];
+    meta: PaginationMeta;
   };
 }>();
 
@@ -67,7 +77,7 @@ const createValuation = () => {
 
       <SectionCard
         title="Cálculos Realizados"
-        :description="`${valuations.data.length} valuation(ões) encontrado(s)`"
+        :description="`${valuations.meta?.total || valuations.data.length} valuation(ões) encontrado(s)`"
       >
         <div v-if="valuations.data.length" class="overflow-x-auto">
           <Table>
@@ -113,6 +123,8 @@ const createValuation = () => {
               </TableRow>
             </TableBody>
           </Table>
+
+          <PaginationLinks v-if="valuations.meta" :meta="valuations.meta" />
         </div>
 
         <div v-else class="flex flex-col items-center justify-center py-16 text-center">

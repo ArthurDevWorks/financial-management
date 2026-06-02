@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm } from '@inertiajs/vue3'
+import { ref } from 'vue'
+
+const showUnsavedDialog = ref(false)
 
 const form = useForm({
   name: '',
@@ -28,8 +31,10 @@ const goBack = () => {
       title="Novo Usuário"
       description="Cadastre um novo usuário no sistema"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Cadastrar Usuário"
       processing-label="Cadastrando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >

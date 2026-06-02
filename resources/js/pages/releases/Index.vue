@@ -1,13 +1,23 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
-import SectionCard from '@/components/SectionCard.vue';
+import DataTable from '@/components/DataTable.vue';
 import StatBadge from '@/components/StatBadge.vue';
 import CrudActions from '@/components/CrudActions.vue';
-import EmptyState from '@/components/EmptyState.vue';
+import SearchInput from '@/components/SearchInput.vue';
+import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
-import { Plus, ArrowRightLeft } from 'lucide-vue-next';
+import { Plus, ArrowRightLeft, Download } from 'lucide-vue-next';
 import { router } from '@inertiajs/vue3';
+
+interface PaginationMeta {
+  current_page: number;
+  last_page: number;
+  from: number;
+  to: number;
+  total: number;
+  links: { url: string | null; label: string; active: boolean }[];
+}
 
 interface Release {
   id: number;
@@ -22,6 +32,10 @@ interface Release {
 defineProps<{
   releases: {
     data: Release[];
+    meta: PaginationMeta;
+  };
+  filters?: {
+    search?: string;
   };
 }>();
 
@@ -30,9 +44,7 @@ const editRelease = (release: Release) => {
 };
 
 const deleteRelease = (release: Release) => {
-  if (confirm(`Deseja excluir o lançamento "${release.title}"?`)) {
-    router.delete(`/releases/${release.id}`);
-  }
+  router.delete(`/releases/${release.id}`);
 };
 
 const createRelease = () => {
@@ -69,91 +81,99 @@ const formatDate = (date: string) => {
         </template>
       </PageHeader>
 
-      <SectionCard
+      <DataTable
         title="Lançamentos Cadastrados"
-        :description="`${releases?.data?.length || 0} lançamento(s) encontrado(s)`"
+        :description="`${releases?.meta?.total || 0} lançamento(s) encontrado(s)`"
+        :total="releases?.meta?.total"
+        :empty="!releases?.data?.length"
+        empty-title="Nenhum lançamento cadastrado"
+        empty-description="Comece criando um novo lançamento financeiro"
+        :empty-icon="ArrowRightLeft"
       >
-        <div v-if="releases?.data?.length" class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr class="border-b border-border">
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Descrição
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Categoria
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Conta
-                </th>
-                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Data
-                </th>
-                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Valor
-                </th>
-                <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="release in releases.data"
-                :key="release.id"
-                class="border-b border-border transition-colors hover:bg-surface/50"
-              >
-                <td class="px-4 py-4 font-medium text-foreground">
-                  {{ release.title }}
-                </td>
-                <td class="px-4 py-4">
-                  <StatBadge :variant="release.type === 'revenue' ? 'revenue' : 'expense'">
-                    {{ release.category?.name ?? 'Sem Categoria' }}
-                  </StatBadge>
-                </td>
-                <td class="px-4 py-4 text-muted-foreground">
-                  {{
-                    release.account?.bank
-                      ? `${release.account.bank.name} - ${release.account.account}`
-                      : release.account?.account ?? 'Sem Conta'
-                  }}
-                </td>
-                <td class="px-4 py-4 text-muted-foreground">
-                  {{ formatDate(release.date) }}
-                </td>
-                <td
-                  class="px-4 py-4 text-right font-semibold"
-                  :class="release.type === 'revenue' ? 'text-revenue' : 'text-destructive'"
-                >
-                  {{ release.type === 'revenue' ? '+' : '-' }}
-                  {{ formatCurrency(release.amount) }}
-                </td>
-                <td class="px-4 py-4">
-                  <CrudActions
-                    @edit="editRelease(release)"
-                    @delete="deleteRelease(release)"
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div v-else>
-          <EmptyState
-            :icon="ArrowRightLeft"
-            title="Nenhum lançamento cadastrado"
-            description="Comece criando um novo lançamento financeiro"
-          >
-            <template #actions>
-              <Button @click="createRelease">
-                <Plus class="h-4 w-4" />
-                Novo Lançamento
+        <template #header-actions>
+          <div class="flex items-center gap-2">
+            <a href="/releases/export">
+              <Button variant="outline" size="icon" title="Exportar CSV">
+                <Download class="h-4 w-4" />
               </Button>
-            </template>
-          </EmptyState>
-        </div>
-      </SectionCard>
+            </a>
+            <SearchInput placeholder="Buscar lançamentos..." route-name="/releases" />
+          </div>
+        </template>
+
+        <template #empty-actions>
+          <Button class="mt-6" @click="createRelease">
+            <Plus class="h-4 w-4" />
+            Novo Lançamento
+          </Button>
+        </template>
+
+        <template #head>
+          <tr class="border-b border-border">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Descrição
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Categoria
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Conta
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Data
+            </th>
+            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Valor
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Ações
+            </th>
+          </tr>
+        </template>
+
+        <template #body>
+          <tr
+            v-for="release in releases.data"
+            :key="release.id"
+            class="border-b border-border transition-colors hover:bg-surface/50"
+          >
+            <td class="px-4 py-4 font-medium text-foreground">
+              {{ release.title }}
+            </td>
+            <td class="px-4 py-4">
+              <StatBadge :variant="release.type === 'revenue' ? 'revenue' : 'expense'">
+                {{ release.category?.name ?? 'Sem Categoria' }}
+              </StatBadge>
+            </td>
+            <td class="px-4 py-4 text-muted-foreground">
+              {{
+                release.account?.bank
+                  ? `${release.account.bank.name} - ${release.account.account}`
+                  : release.account?.account ?? 'Sem Conta'
+              }}
+            </td>
+            <td class="px-4 py-4 text-muted-foreground">
+              {{ formatDate(release.date) }}
+            </td>
+            <td
+              class="px-4 py-4 text-right font-semibold"
+              :class="release.type === 'revenue' ? 'text-revenue' : 'text-destructive'"
+            >
+              {{ release.type === 'revenue' ? '+' : '-' }}
+              {{ formatCurrency(release.amount) }}
+            </td>
+            <td class="px-4 py-4">
+              <CrudActions
+                delete-confirm-message="Tem certeza que deseja excluir este lançamento?"
+                @edit="editRelease(release)"
+                @delete="deleteRelease(release)"
+              />
+            </td>
+          </tr>
+        </template>
+
+        <PaginationLinks v-if="releases.meta" :meta="releases.meta" />
+      </DataTable>
     </div>
   </AppLayout>
 </template>

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import FormPageLayout from '@/components/FormPageLayout.vue'
+import CurrencyInput from '@/components/CurrencyInput.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
+import { ref } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import { router } from '@inertiajs/vue3'
 
@@ -26,6 +28,8 @@ const props = defineProps<{
   banks: Bank[]
   accountTypes: Record<string, string>
 }>()
+
+const showUnsavedDialog = ref(false)
 
 const form = useForm({
   bank_id: props.account.bank_id.toString(),
@@ -50,8 +54,10 @@ const goBack = () => {
       title="Editar Conta"
       description="Atualize as informações da conta bancária"
       :processing="form.processing"
+      :dirty="form.isDirty"
       submit-label="Salvar Alterações"
       processing-label="Salvando..."
+      v-model:showUnsavedDialog="showUnsavedDialog"
       @submit="submit"
       @cancel="goBack"
     >
@@ -102,11 +108,7 @@ const goBack = () => {
 
         <div>
           <Label>Saldo Inicial</Label>
-          <div class="relative">
-            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground">R$</span>
-            <Input v-model="form.total" type="number" placeholder="0,00" step="0.01" class="pl-8 pr-10" />
-          </div>
-          <InputError :message="form.errors.total" />
+          <CurrencyInput v-model="form.total" :error="form.errors.total" placeholder="0,00" />
         </div>
       </div>
     </FormPageLayout>
