@@ -83,7 +83,7 @@ const formatCurrency = (value: number | null | undefined) => {
         <template #header-actions>
           <div class="flex items-center gap-2">
             <a href="/accounts/export">
-              <Button variant="outline" size="icon" title="Exportar CSV">
+              <Button variant="outline" size="icon" title="Exportar XLSX">
                 <Download class="h-4 w-4" />
               </Button>
             </a>

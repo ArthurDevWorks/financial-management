@@ -42,7 +42,7 @@ const goBack = () => {
   <AppLayout>
     <FormPageLayout
       title="Nova Conta"
-      description="Cadastre uma nova conta bancária"
+      description="Cadastre uma conta"
       :processing="form.processing"
       :dirty="form.isDirty"
       submit-label="Cadastrar Conta"
@@ -86,12 +86,12 @@ const goBack = () => {
         <div class="grid grid-cols-2 gap-6">
           <div>
             <Label>Agência</Label>
-            <Input v-model="form.agency" type="text" placeholder="Digite a agência" />
+            <Input v-model="form.agency" type="text" placeholder="Agência" />
             <InputError :message="form.errors.agency" />
           </div>
           <div>
             <Label>Número da Conta</Label>
-            <Input v-model="form.account" type="text" placeholder="Digite o número da conta" />
+            <Input v-model="form.account" type="text" placeholder="Conta" />
             <InputError :message="form.errors.account" />
           </div>
         </div>

@@ -4,7 +4,7 @@ import FormPageLayout from '@/components/FormPageLayout.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
-import { useForm } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 interface Category {
@@ -34,7 +34,7 @@ const submit = () => {
 }
 
 const goBack = () => {
-  window.history.back()
+  router.visit('/categories')
 }
 </script>
 
@@ -42,7 +42,7 @@ const goBack = () => {
   <AppLayout>
     <FormPageLayout
       title="Editar Categoria"
-      description="Modifique os dados da categoria"
+      description="Atualize os dados da categoria"
       :processing="form.processing"
       :dirty="form.isDirty"
       submit-label="Atualizar Categoria"
@@ -69,7 +69,7 @@ const goBack = () => {
 
         <div>
           <Label>Nome da Categoria</Label>
-          <Input v-model="form.name" type="text" placeholder="Digite o nome da categoria" />
+          <Input v-model="form.name" type="text" placeholder="Nome da categoria" />
           <InputError :message="form.errors.name" />
         </div>
       </div>

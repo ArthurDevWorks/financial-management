@@ -93,7 +93,7 @@ const formatDate = (date: string) => {
         <template #header-actions>
           <div class="flex items-center gap-2">
             <a href="/releases/export">
-              <Button variant="outline" size="icon" title="Exportar CSV">
+              <Button variant="outline" size="icon" title="Exportar XLSX">
                 <Download class="h-4 w-4" />
               </Button>
             </a>

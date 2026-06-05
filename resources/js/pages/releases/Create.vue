@@ -59,7 +59,7 @@ watch(() => form.type, () => {
   <AppLayout>
     <FormPageLayout
       title="Novo Lançamento"
-      description="Cadastre uma nova receita ou despesa no sistema"
+      description="Cadastre uma receita ou despesa"
       :processing="form.processing"
       :dirty="form.isDirty"
       submit-label="Cadastrar Lançamento"
@@ -76,15 +76,13 @@ watch(() => form.type, () => {
               <input type="radio" v-model="form.type" value="revenue" class="peer sr-only" />
               <div class="rounded-lg border border-border bg-surface p-4 text-center transition hover:bg-secondary peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary">
                 <span class="block font-semibold">Receita</span>
-                <span class="mt-1 block text-xs text-muted-foreground">Entrada de dinheiro</span>
-              </div>
+                              </div>
             </label>
             <label class="flex-1 cursor-pointer">
               <input type="radio" v-model="form.type" value="expense" class="peer sr-only" />
               <div class="rounded-lg border border-border bg-surface p-4 text-center transition hover:bg-secondary peer-checked:border-destructive peer-checked:bg-destructive/10 peer-checked:text-destructive">
                 <span class="block font-semibold">Despesa</span>
-                <span class="mt-1 block text-xs text-muted-foreground">Saída de dinheiro</span>
-              </div>
+                              </div>
             </label>
           </div>
           <InputError :message="form.errors.type" />
@@ -124,7 +122,7 @@ watch(() => form.type, () => {
         <div class="grid grid-cols-2 gap-6">
           <div>
             <Label>Descrição</Label>
-            <Input v-model="form.title" type="text" placeholder="Digite descrição" />
+            <Input v-model="form.title" type="text" placeholder="Título" />
             <InputError :message="form.errors.title" />
           </div>
           <div>
@@ -141,7 +139,7 @@ watch(() => form.type, () => {
           </div>
           <div>
             <Label>Observação</Label>
-            <Input v-model="form.description" type="text" placeholder="Digite observação" />
+            <Input v-model="form.description" type="text" placeholder="Observação" />
             <InputError :message="form.errors.description" />
           </div>
         </div>

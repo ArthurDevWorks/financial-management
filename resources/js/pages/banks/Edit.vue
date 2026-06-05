@@ -4,7 +4,7 @@ import FormPageLayout from '@/components/FormPageLayout.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
-import { useForm } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 import { Upload, CheckCircle } from 'lucide-vue-next'
 import { ref } from 'vue'
 
@@ -32,7 +32,7 @@ const submit = () => {
 }
 
 const goBack = () => {
-  window.history.back()
+  router.visit('/banks')
 }
 
 const handleFileSelect = (event: Event) => {
@@ -53,7 +53,7 @@ const handleFileSelect = (event: Event) => {
   <AppLayout>
     <FormPageLayout
       title="Editar Banco"
-      description="Atualize as informações do banco"
+      description="Atualize os dados do banco"
       :processing="form.processing"
       :dirty="form.isDirty"
       submit-label="Salvar Alterações"
@@ -65,7 +65,7 @@ const handleFileSelect = (event: Event) => {
       <div class="space-y-6">
         <div>
           <Label>Nome do Banco</Label>
-          <Input v-model="form.name" type="text" placeholder="Digite nome do banco" />
+          <Input v-model="form.name" type="text" placeholder="Nome do banco" />
           <InputError :message="form.errors.name" />
         </div>
 
@@ -93,7 +93,7 @@ const handleFileSelect = (event: Event) => {
               <Upload v-if="!logoPreview" class="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
               <CheckCircle v-else class="mx-auto mb-2 h-8 w-8 text-primary" />
               <p class="font-semibold text-foreground">{{ logoPreview ? 'Nova logo carregada' : 'Clique para alterar a logo' }}</p>
-              <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, JPEG, SVG, WebP (máx. 2MB)</p>
+              <p class="mt-1 text-xs text-muted-foreground">PNG, JPG, JPEG, SVG ou WebP até 2 MB</p>
             </div>
           </label>
           <InputError :message="form.errors.logo" />

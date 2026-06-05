@@ -4,7 +4,7 @@ import FormPageLayout from '@/components/FormPageLayout.vue'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
-import { useForm } from '@inertiajs/vue3'
+import { router, useForm } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 interface User {
@@ -31,7 +31,7 @@ const submit = () => {
 }
 
 const goBack = () => {
-  window.history.back()
+  router.visit('/users')
 }
 </script>
 
@@ -39,7 +39,7 @@ const goBack = () => {
   <AppLayout>
     <FormPageLayout
       title="Editar Usuário"
-      description="Modifique os dados do usuário"
+      description="Atualize os dados do usuário"
       :processing="form.processing"
       :dirty="form.isDirty"
       submit-label="Atualizar Usuário"
@@ -51,13 +51,13 @@ const goBack = () => {
       <div class="space-y-6">
         <div>
           <Label>Nome Completo</Label>
-          <Input v-model="form.name" type="text" placeholder="Digite nome completo" />
+          <Input v-model="form.name" type="text" placeholder="Nome completo" />
           <InputError :message="form.errors.name" />
         </div>
 
         <div>
           <Label>Email</Label>
-          <Input v-model="form.email" type="email" placeholder="Digite seu email" />
+          <Input v-model="form.email" type="email" placeholder="Email" />
           <InputError :message="form.errors.email" />
         </div>
 
