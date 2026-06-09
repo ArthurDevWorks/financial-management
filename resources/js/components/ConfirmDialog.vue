@@ -35,7 +35,7 @@ const open = defineModel<boolean>('open', { required: true });
 </script>
 
 <template>
-  <Dialog :open="open" @update:open="emit('cancel')">
+  <Dialog v-model:open="open" @update:open="emit('cancel')">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
         <div class="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">

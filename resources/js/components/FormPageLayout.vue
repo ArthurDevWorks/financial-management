@@ -13,7 +13,7 @@ interface Props {
   dirty?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   processing: false,
   submitLabel: 'Salvar',
   processingLabel: 'Salvando...',

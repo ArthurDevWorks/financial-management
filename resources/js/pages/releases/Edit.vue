@@ -41,10 +41,10 @@ const showUnsavedDialog = ref(false)
 
 const form = useForm({
   type: props.release.type,
-  account_id: props.release.account_id,
-  category_id: props.release.category_id,
+  account_id: props.release.account_id?.toString() ?? '',
+  category_id: props.release.category_id?.toString() ?? '',
   title: props.release.title,
-  amount: props.release.amount,
+  amount: props.release.amount?.toString() ?? '',
   date: props.release.date,
   description: props.release.description || '',
 })
