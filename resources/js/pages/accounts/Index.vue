@@ -48,7 +48,7 @@ const createAccount = () => {
 };
 
 const formatCurrency = (value: number | null | undefined) => {
-  if (value === null || value === undefined || Number.isNaN(value)) return 'R$ 0,00';
+  if (value === null || value === undefined || Number.isNaN(value)) return '0,00';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',

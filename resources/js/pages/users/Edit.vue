@@ -50,13 +50,13 @@ const goBack = () => {
     >
       <div class="space-y-6">
         <div>
-          <Label>Nome Completo</Label>
+          <Label required>Nome Completo</Label>
           <Input v-model="form.name" type="text" placeholder="Nome completo" />
           <InputError :message="form.errors.name" />
         </div>
 
         <div>
-          <Label>Email</Label>
+          <Label required>Email</Label>
           <Input v-model="form.email" type="email" placeholder="Email" />
           <InputError :message="form.errors.email" />
         </div>

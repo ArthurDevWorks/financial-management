@@ -49,7 +49,7 @@ const user = page.props.auth.user;
                         v-slot="{ errors, processing, recentlySuccessful }"
                     >
                         <div class="grid gap-2">
-                            <Label for="name">Nome</Label>
+                            <Label for="name" required>Nome</Label>
                             <Input
                                 id="name"
                                 class="mt-1 block w-full"
@@ -63,7 +63,7 @@ const user = page.props.auth.user;
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="email">E-mail</Label>
+                            <Label for="email" required>E-mail</Label>
                             <Input
                                 id="email"
                                 type="email"

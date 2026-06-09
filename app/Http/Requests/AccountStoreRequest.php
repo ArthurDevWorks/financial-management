@@ -49,4 +49,19 @@ class AccountStoreRequest extends FormRequest
             'total.min' => 'O saldo não pode ser negativo',
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        $total = $this->input('total');
+
+        if (is_string($total) && $total !== '') {
+            $normalized = str_contains($total, ',')
+                ? str_replace(['.', ','], ['', '.'], $total)
+                : $total;
+
+            $this->merge([
+                'total' => (float) $normalized,
+            ]);
+        }
+    }
 }

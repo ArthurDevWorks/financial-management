@@ -53,7 +53,7 @@ const handleFileSelect = (event: Event) => {
     >
       <div class="space-y-6">
         <div>
-          <Label>Nome do Banco</Label>
+          <Label required>Nome do Banco</Label>
           <Input v-model="form.name" type="text" placeholder="Nome do banco" />
           <InputError :message="form.errors.name" />
         </div>

@@ -26,7 +26,7 @@ import { LoaderCircle } from 'lucide-vue-next';
     >
       <div class="grid gap-6">
         <div class="grid gap-2">
-          <Label for="name">Nome Completo</Label>
+          <Label for="name" required>Nome Completo</Label>
           <Input
             id="name"
             type="text"
@@ -41,7 +41,7 @@ import { LoaderCircle } from 'lucide-vue-next';
         </div>
 
         <div class="grid gap-2">
-          <Label for="email">Email</Label>
+          <Label for="email" required>Email</Label>
           <Input
             id="email"
             type="email"
@@ -55,7 +55,7 @@ import { LoaderCircle } from 'lucide-vue-next';
         </div>
 
         <div class="grid gap-2">
-          <Label for="password">Senha</Label>
+          <Label for="password" required>Senha</Label>
           <Input
             id="password"
             type="password"
@@ -69,7 +69,7 @@ import { LoaderCircle } from 'lucide-vue-next';
         </div>
 
         <div class="grid gap-2">
-          <Label for="password_confirmation">Confirmar Senha</Label>
+          <Label for="password_confirmation" required>Confirmar Senha</Label>
           <Input
             id="password_confirmation"
             type="password"

@@ -24,7 +24,7 @@ import { LoaderCircle } from 'lucide-vue-next';
         >
             <div class="space-y-6">
                 <div class="grid gap-2">
-                    <Label htmlFor="password">Senha</Label>
+                    <Label htmlFor="password" required>Senha</Label>
                     <Input
                         id="password"
                         type="password"

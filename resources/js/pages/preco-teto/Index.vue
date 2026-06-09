@@ -2,6 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SummaryCard from '@/components/SummaryCard.vue';
+import CurrencyInput from '@/components/CurrencyInput.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { computed, ref, watch } from 'vue';
@@ -175,13 +176,7 @@ const goBack = () => {
                       <Info class="h-3.5 w-3.5 text-muted-foreground" />
                     </span>
                   </div>
-                  <Input
-                    v-model="lucroProjetivo"
-                    type="number"
-                    step="0.01"
-                    placeholder="Ex: 8.50"
-                    class="mt-1.5"
-                  />
+                  <CurrencyInput v-model="lucroProjetivo" placeholder="0,00" />
                 </div>
                 <div>
                   <Label>Projeção de Crescimento (%)</Label>
@@ -195,13 +190,7 @@ const goBack = () => {
                 </div>
                 <div>
                   <Label>Cotação Atual — R$</Label>
-                  <Input
-                    v-model="cotacaoAtual"
-                    type="number"
-                    step="0.01"
-                    placeholder="Ex: 35.00"
-                    class="mt-1.5"
-                  />
+                  <CurrencyInput v-model="cotacaoAtual" placeholder="0,00" />
                 </div>
               </div>
             </div>

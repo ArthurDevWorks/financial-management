@@ -89,7 +89,7 @@ const methods: { value: ValuationMethod; label: string; description: string; ico
       <form v-else @submit.prevent="submit" class="space-y-6">
         <SectionCard title="Selecione o Ativo">
           <div>
-            <Label>Ativo</Label>
+            <Label required>Ativo</Label>
             <select
               v-model="form.investiment_id"
               required

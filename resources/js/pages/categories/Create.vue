@@ -46,7 +46,7 @@ const goBack = () => {
     >
       <div class="grid grid-cols-2 gap-6">
         <div>
-          <Label>Tipo de Categoria</Label>
+          <Label required>Tipo de Categoria</Label>
           <select
             v-model="form.type"
             required
@@ -61,7 +61,7 @@ const goBack = () => {
         </div>
 
         <div>
-          <Label>Nome da Categoria</Label>
+          <Label required>Nome da Categoria</Label>
           <Input v-model="form.name" type="text" placeholder="Nome da categoria" />
           <InputError :message="form.errors.name" />
         </div>

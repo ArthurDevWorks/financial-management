@@ -40,25 +40,25 @@ const goBack = () => {
     >
       <div class="space-y-6">
         <div>
-          <Label>Nome Completo</Label>
+          <Label required>Nome Completo</Label>
           <Input v-model="form.name" type="text" placeholder="Nome completo" />
           <InputError :message="form.errors.name" />
         </div>
 
         <div>
-          <Label>Email</Label>
+          <Label required>Email</Label>
           <Input v-model="form.email" type="email" placeholder="Email" />
           <InputError :message="form.errors.email" />
         </div>
 
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <Label>Senha</Label>
+            <Label required>Senha</Label>
             <Input v-model="form.password" type="password" />
             <InputError :message="form.errors.password" />
           </div>
           <div>
-            <Label>Confirmar Senha</Label>
+            <Label required>Confirmar Senha</Label>
             <Input v-model="form.password_confirmation" type="password" />
             <InputError :message="form.errors.password_confirmation" />
           </div>

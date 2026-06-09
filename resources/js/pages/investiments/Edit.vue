@@ -95,13 +95,13 @@ const goBack = () => {
       <div class="space-y-6">
         <div class="grid gap-6 md:grid-cols-2">
           <div>
-            <Label>Ativo / Ticker</Label>
+            <Label required>Ativo / Ticker</Label>
             <Input v-model="form.name" type="text" placeholder="Ex.: PETR4, HGLG11, CDB Banco X" />
             <InputError :message="form.errors.name" />
           </div>
 
           <div>
-            <Label>Tipo do ativo</Label>
+            <Label required>Tipo do ativo</Label>
             <select
               v-model="form.type"
               required
@@ -118,13 +118,13 @@ const goBack = () => {
 
         <div class="grid gap-6 md:grid-cols-3">
           <div>
-            <Label>Quantidade</Label>
+            <Label required>Quantidade</Label>
             <Input v-model="form.quantity" type="number" min="0" step="0.00000001" placeholder="100" />
             <InputError :message="form.errors.quantity" />
           </div>
 
           <div>
-            <Label>Preço Médio</Label>
+            <Label required>Preço Médio</Label>
             <CurrencyInput v-model="form.average_price" :error="form.errors.average_price" placeholder="32,50" />
           </div>
 

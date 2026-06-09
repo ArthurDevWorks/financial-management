@@ -70,7 +70,7 @@ watch(() => form.type, () => {
     >
       <div class="space-y-6">
         <div>
-          <Label>Tipo de Lançamento</Label>
+          <Label required>Tipo de Lançamento</Label>
           <div class="mt-3 flex gap-4">
             <label class="flex-1 cursor-pointer">
               <input type="radio" v-model="form.type" value="revenue" class="peer sr-only" />
@@ -90,7 +90,7 @@ watch(() => form.type, () => {
 
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <Label>Conta</Label>
+            <Label required>Conta</Label>
             <select
               v-model="form.account_id"
               required
@@ -104,7 +104,7 @@ watch(() => form.type, () => {
             <InputError :message="form.errors.account_id" />
           </div>
           <div>
-            <Label>Categoria</Label>
+            <Label required>Categoria</Label>
             <select
               v-model="form.category_id"
               required
@@ -121,19 +121,19 @@ watch(() => form.type, () => {
 
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <Label>Descrição</Label>
+            <Label required>Descrição</Label>
             <Input v-model="form.title" type="text" placeholder="Título" />
             <InputError :message="form.errors.title" />
           </div>
           <div>
-            <Label>Valor</Label>
+            <Label required>Valor</Label>
             <CurrencyInput v-model="form.amount" :error="form.errors.amount" placeholder="0,00" />
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <Label>Data</Label>
+            <Label required>Data</Label>
             <Input v-model="form.date" type="date" />
             <InputError :message="form.errors.date" />
           </div>

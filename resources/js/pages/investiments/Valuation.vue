@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Button } from '@/components/ui/button'
+import CurrencyInput from '@/components/CurrencyInput.vue'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm, router } from '@inertiajs/vue3'
 import { ArrowLeft, Calculator } from 'lucide-vue-next'
@@ -291,20 +293,12 @@ const submit = () => {
             </div>
 
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">Preço atual por ação</label>
-              <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
-                <Input
-                  v-model="form.current_price_per_share"
-                  type="text"
-                  inputmode="decimal"
-                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-foreground shadow-none focus-visible:ring-0"
-                />
-              </div>
-              <InputError :message="form.errors.current_price_per_share" />
+              <Label class="mb-2 block text-sm font-medium text-muted-foreground">Preço atual por ação</Label>
+              <CurrencyInput v-model="form.current_price_per_share" :error="form.errors.current_price_per_share" placeholder="0,00" />
             </div>
 
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">Número total de ações</label>
+              <Label required class="mb-2 block text-sm font-medium text-muted-foreground">Número total de ações</Label>
               <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
                 <Input
                   v-model="form.total_shares"
@@ -333,20 +327,12 @@ const submit = () => {
 
           <div class="grid gap-3 md:grid-cols-2">
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">Lucro líquido atual</label>
-              <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
-                <Input
-                  v-model="form.current_fcf"
-                  type="text"
-                  inputmode="decimal"
-                  class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-foreground shadow-none focus-visible:ring-0"
-                />
-              </div>
-              <InputError :message="form.errors.current_fcf" />
+              <Label required class="mb-2 block text-sm font-medium text-muted-foreground">Lucro líquido atual</Label>
+              <CurrencyInput v-model="form.current_fcf" :error="form.errors.current_fcf" placeholder="0,00" />
             </div>
 
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">Taxa de desconto (%)</label>
+              <Label required class="mb-2 block text-sm font-medium text-muted-foreground">Taxa de desconto (%)</Label>
               <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
                 <Input
                   v-model="form.discount_rate"
@@ -359,7 +345,7 @@ const submit = () => {
             </div>
 
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">Payout (%)</label>
+              <Label required class="mb-2 block text-sm font-medium text-muted-foreground">Payout (%)</Label>
               <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
                 <Input
                   v-model="form.payout"
@@ -372,7 +358,7 @@ const submit = () => {
             </div>
 
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">ROE (%)</label>
+              <Label required class="mb-2 block text-sm font-medium text-muted-foreground">ROE (%)</Label>
               <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
                 <Input
                   v-model="form.roe"
@@ -393,7 +379,7 @@ const submit = () => {
             </div>
 
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">Crescimento na perpetuidade (%)</label>
+              <Label required class="mb-2 block text-sm font-medium text-muted-foreground">Crescimento na perpetuidade (%)</Label>
               <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
                 <Input
                   v-model="form.terminal_growth_rate"
@@ -406,7 +392,7 @@ const submit = () => {
             </div>
 
             <div class="rounded-lg border border-border bg-surface p-3">
-              <label class="mb-2 block text-sm font-medium text-muted-foreground">Anos de projeção</label>
+              <Label required class="mb-2 block text-sm font-medium text-muted-foreground">Anos de projeção</Label>
               <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
                 <Input
                   v-model="form.projection_years"

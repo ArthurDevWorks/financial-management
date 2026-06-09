@@ -64,7 +64,7 @@ const goBack = () => {
       <div class="space-y-6">
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <Label>Banco</Label>
+            <Label required>Banco</Label>
             <select
               v-model="form.bank_id"
               required
@@ -78,7 +78,7 @@ const goBack = () => {
             <InputError :message="form.errors.bank_id" />
           </div>
           <div>
-            <Label>Tipo de Conta</Label>
+            <Label required>Tipo de Conta</Label>
             <select
               v-model="form.type"
               required
@@ -95,19 +95,19 @@ const goBack = () => {
 
         <div class="grid grid-cols-2 gap-6">
           <div>
-            <Label>Agência</Label>
+            <Label required>Agência</Label>
             <Input v-model="form.agency" type="text" placeholder="Agência" />
             <InputError :message="form.errors.agency" />
           </div>
           <div>
-            <Label>Número da Conta</Label>
+            <Label required>Número da Conta</Label>
             <Input v-model="form.account" type="text" placeholder="Conta" />
             <InputError :message="form.errors.account" />
           </div>
         </div>
 
         <div>
-          <Label>Saldo Inicial</Label>
+          <Label required>Saldo Inicial</Label>
           <CurrencyInput v-model="form.total" :error="form.errors.total" placeholder="0,00" />
         </div>
       </div>
