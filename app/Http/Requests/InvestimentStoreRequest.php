@@ -2,11 +2,12 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\FixedIncomeIndexer;
-use App\Enums\FixedIncomeProfitabilityType;
 use App\Enums\InvestmentAssetType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use App\Enums\CategoryType;
 
 class InvestimentStoreRequest extends FormRequest
 {
@@ -17,56 +18,83 @@ class InvestimentStoreRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        $quantity = $this->normalizeDecimal($this->input('quantity', 1)) ?? '1';
-        $averagePrice = $this->normalizeDecimal($this->input('average_price', $this->input('value', 0))) ?? '0';
-        $currentBalance = $this->normalizeDecimal($this->input('current_balance'));
-        $investedAmount = (float) $quantity * (float) $averagePrice;
-        $currentBalance ??= number_format($investedAmount, 2, '.', '');
-        $assetType = InvestmentAssetType::tryFrom((string) $this->input('type'));
-        $isFixedIncome = $assetType?->isFixedIncome() ?? false;
-        $profitability = $investedAmount > 0
-            ? (((float) $currentBalance - $investedAmount) / $investedAmount) * 100
-            : 0;
+        $currentBalance = $this->normalizeDecimal($this->input('current_balance')) ?? '0';
 
         $this->merge([
-            'dt_investment' => $this->input('dt_investment', now()->toDateTimeString()),
-            'quantity' => $quantity,
-            'average_price' => $averagePrice,
-            'current_balance' => $currentBalance,
-            'value' => $averagePrice,
-            'profitability' => round($profitability, 2),
-            'profitability_type' => $isFixedIncome ? $this->input('profitability_type') : null,
-            'indexer' => $isFixedIncome ? $this->input('indexer') : null,
-            'contracted_rate' => $isFixedIncome ? $this->normalizeDecimal($this->input('contracted_rate')) : null,
-            'maturity_date' => $isFixedIncome ? $this->input('maturity_date') : null,
-            'liquidity' => $isFixedIncome ? $this->input('liquidity') : null,
+            'value' => $currentBalance,
+            'dt_investment' => now()->toDateTimeString(),
         ]);
+        
+            $typeInput = $this->input('type');
+        
+            if ($typeInput !== null && !is_numeric($typeInput)) {
+                try {
+                    $columnType = Schema::getColumnType('investiments', 'type');
+                } catch (\Throwable $e) {
+                    $columnType = null;
+                }
+            
+                if ($columnType !== 'string') {
+                    $category = DB::table('categories')
+                        ->get()
+                        ->first(function (object $cat) use ($typeInput) {
+                            // Match by normalized legacy category name
+                            if (InvestmentAssetType::fromLegacyCategoryName($cat->name)->value === $typeInput) {
+                                return true;
+                            }
+
+                            // Match by enum label (e.g. 'Ações')
+                            $labels = array_map(fn($c) => $c->label(), InvestmentAssetType::cases());
+                            if (in_array($typeInput, $labels, true)) {
+                                return strcasecmp($cat->name, $typeInput) === 0;
+                            }
+
+                            // Match by enum value stored in name
+                            return strcasecmp($cat->name, $typeInput) === 0;
+                        });
+
+                    if (! $category) {
+                        // Fallback: create a new category row for this asset type
+                        $enum = collect(InvestmentAssetType::cases())->first(fn($c) => $c->value === $typeInput);
+                        $name = $enum?->label() ?? ucfirst($typeInput);
+
+                        $newId = DB::table('categories')->insertGetId([
+                            'type' => CategoryType::INVESTMENT->value,
+                            'name' => $name,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+
+                        $this->merge(['type' => $newId]);
+                    } else {
+                        $this->merge(['type' => $category->id]);
+                    }
+                }
+            }
     }
 
     public function rules(): array
     {
-        $isFixedIncome = $this->assetTypeIsFixedIncome();
-
         return [
             'name' => 'required|string|max:255',
-            'type' => ['required', Rule::enum(InvestmentAssetType::class)],
-            'quantity' => 'required|numeric|min:0.00000001',
-            'average_price' => 'required|numeric|min:0',
-            'current_balance' => 'nullable|numeric|min:0',
-            'value' => 'nullable|numeric|min:0',
-            'dt_investment' => 'nullable|date',
-            'profitability' => 'nullable|numeric|min:-100',
-            'profitability_type' => [Rule::requiredIf($isFixedIncome), 'nullable', Rule::enum(FixedIncomeProfitabilityType::class)],
-            'indexer' => [Rule::requiredIf($isFixedIncome), 'nullable', Rule::enum(FixedIncomeIndexer::class)],
-            'contracted_rate' => [Rule::requiredIf($isFixedIncome), 'nullable', 'numeric', 'min:0'],
-            'maturity_date' => 'nullable|date',
-            'liquidity' => 'nullable|string|max:255',
+            'type' => ['required', function ($attribute, $value, $fail) {
+                if (is_numeric($value)) {
+                    if (! DB::table('categories')->where('id', $value)->exists()) {
+                        $fail('Tipo inválido.');
+                    }
+                    return;
+                }
+                
+                $valid = collect(InvestmentAssetType::cases())->contains(fn($c) => $c->value === $value);
+                
+                if (! $valid) {
+                    $fail('Tipo inválido.');
+                }
+            }],
+            'current_balance' => 'sometimes',
+            'value' => 'required|numeric|min:0',
+            'dt_investment' => 'required|date',
         ];
-    }
-
-    private function assetTypeIsFixedIncome(): bool
-    {
-        return InvestmentAssetType::tryFrom((string) $this->input('type'))?->isFixedIncome() ?? false;
     }
 
     private function normalizeDecimal(mixed $value): ?string

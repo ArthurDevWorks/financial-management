@@ -44,9 +44,6 @@ Route::middleware(['auth'])->group(function () {
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('investiments/{investiment}/valuation', [InvestimentController::class, 'valuation'])
-        ->name('investiments.valuation');
-    Route::get('investiments/export', [InvestimentController::class, 'export'])->name('investiments.export');
     Route::resource('investiments', InvestimentController::class);
 })->middleware(['auth', 'verified']);
 
