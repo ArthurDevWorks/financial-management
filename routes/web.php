@@ -44,6 +44,8 @@ Route::middleware(['auth'])->group(function () {
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
+    Route::post('investiments/{investiment}/valuation', [InvestimentController::class, 'valuation'])
+        ->name('investiments.valuation');
     Route::resource('investiments', InvestimentController::class);
 })->middleware(['auth', 'verified']);
 

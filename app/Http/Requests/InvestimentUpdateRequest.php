@@ -6,9 +6,7 @@ use App\Enums\InvestmentAssetType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use App\Enums\CategoryType;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class InvestimentUpdateRequest extends FormRequest
