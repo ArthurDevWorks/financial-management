@@ -57,18 +57,15 @@ watch(numberValue, (valorAtual) => {
 
 <template>
   <div class="relative mt-1.5">
-    <div class="relative">
-      <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-sm text-muted-foreground">R$</span>
-      <input
-        :id="id"
-        ref="inputRef"
-        :value="formattedValue"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        class="flex h-9 w-full rounded-md border border-border bg-surface pl-8 pr-3 py-1 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-[3px] focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
-        :class="{ 'border-destructive ring-destructive/20': error }"
-      />
-    </div>
+    <input
+      :id="id"
+      ref="inputRef"
+      :value="formattedValue"
+      :placeholder="placeholder"
+      :disabled="disabled"
+      class="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-ring focus:ring-[3px] focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+      :class="{ 'border-destructive ring-destructive/20': error }"
+    />
     <InputError :message="error" />
   </div>
 </template>
