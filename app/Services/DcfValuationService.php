@@ -31,6 +31,16 @@ class DcfValuationService
 
         $projectedCashFlows = [];
         $presentValueOfCashFlows = 0.0;
+
+        $projectedCashFlows[] = [
+            'year' => 0,
+            'growth_rate' => 0,
+            'projected_fcf' => round($currentFcf, 2),
+            'discount_factor' => 1.0,
+            'present_value' => round($currentFcf, 2),
+        ];
+        $presentValueOfCashFlows += $currentFcf;
+
         $projectedFcf = $currentFcf;
 
         for ($year = 1; $year <= $projectionYears; $year++) {

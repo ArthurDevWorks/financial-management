@@ -52,6 +52,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('valuations', [ValuationController::class, 'index'])->name('valuations.index');
     Route::get('valuations/create', [ValuationController::class, 'create'])->name('valuations.create');
+    Route::get('valuations/{valuation}', [ValuationController::class, 'show'])->name('valuations.show');
     Route::get('preco-teto', [PrecoTetoController::class, 'index'])->name('preco-teto.index');
 })->middleware(['auth', 'verified']);
 

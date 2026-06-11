@@ -52,6 +52,28 @@ class InvestimentController extends Controller
      */
     public function show(Investiment $investiment)
     {
+        $valuationId = request()->query('valuation_id');
+
+        if ($valuationId) {
+            /** @var InvestimentValuation|null $specificValuation */
+            $specificValuation = $investiment->valuations()
+                ->where('id', $valuationId)
+                ->first();
+
+            return Inertia::render('investiments/Valuation', [
+                'investiment' => $this->investmentPayload($investiment),
+                'valuation' => $specificValuation ? [
+                    'assumptions' => $specificValuation->assumptions,
+                    'projected_cash_flows' => $specificValuation->projected_cash_flows,
+                    'summary' => $specificValuation->summary,
+                ] : null,
+                'defaultAssumptions' => $this->buildDefaultAssumptions(
+                    $investiment,
+                    $specificValuation,
+                ),
+            ]);
+        }
+
         /** @var InvestimentValuation|null $lastValuation */
         $lastValuation = $investiment->valuations()
             ->latest('calculated_at')

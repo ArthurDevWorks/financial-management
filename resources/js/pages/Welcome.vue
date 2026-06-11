@@ -205,7 +205,16 @@ withDefaults(
       <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div class="flex items-center gap-3">
-            <AppLogoIcon class="h-6 w-5 fill-current text-primary" />
+            <svg
+            viewBox="0 0 32 40"
+            fill="none"
+            class="h-7 w-7 shrink-0"
+            xmlns="http://www.w3.org/2000/svg"
+            >
+            <rect x="3" y="3" width="7" height="34" rx="3.5" class="fill-primary" />
+            <rect x="3" y="3" width="24" height="7" rx="3.5" class="fill-primary" />
+            <rect x="3" y="18" width="18" height="7" rx="3.5" class="fill-primary" />
+          </svg>
             <span class="text-sm font-semibold text-foreground">Fidax</span>
           </div>
           <div class="flex gap-6 text-sm text-muted-foreground">

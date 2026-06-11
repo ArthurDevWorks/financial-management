@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import InputError from '@/components/InputError.vue'
 import { useForm, router } from '@inertiajs/vue3'
-import { ArrowLeft, Calculator } from 'lucide-vue-next'
+import { ArrowLeft, Calculator, Moon, Sun } from 'lucide-vue-next'
 import { computed, watch } from 'vue'
+import { useAppearance } from '@/composables/useAppearance'
+
+const { appearance, updateAppearance } = useAppearance()
 
 interface Investment {
   id: number
@@ -152,11 +155,11 @@ const projectionYearsCount = computed(() => {
 })
 
 const projectionYearIndexes = computed(() =>
-  Array.from({ length: projectionYearsCount.value }, (_, index) => index),
+  Array.from({ length: projectionYearsCount.value + 1 }, (_, index) => index),
 )
 
 const projectionCalendarYears = computed(() =>
-  Array.from({ length: projectionYearsCount.value }, (_, index) => currentCalendarYear + index),
+  Array.from({ length: projectionYearsCount.value + 1 }, (_, index) => currentCalendarYear + index),
 )
 
 const currentPrice = computed(() => parseNumber(form.current_price_per_share || props.investiment.value))
@@ -257,16 +260,27 @@ const submit = () => {
           Voltar
         </button>
 
-        <div class="flex items-center gap-3">
-          <Calculator class="h-9 w-9 text-primary" />
-          <div>
-            <h1 class="text-3xl font-bold text-foreground">
-              Valuation por Fluxo de Caixa Descontado
-            </h1>
-            <p class="mt-1 max-w-3xl text-sm text-muted-foreground">
-              Preencha as premissas principais e veja o resultado consolidado ao lado.
-            </p>
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <Calculator class="h-9 w-9 text-primary" />
+            <div>
+              <h1 class="text-3xl font-bold text-foreground">
+                Valuation por Fluxo de Caixa Descontado
+              </h1>
+              <p class="mt-1 max-w-3xl text-sm text-muted-foreground">
+                Preencha as premissas principais e veja o resultado consolidado ao lado.
+              </p>
+            </div>
           </div>
+          <button
+            type="button"
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-all hover:border-primary hover:text-primary"
+            @click="updateAppearance(appearance === 'dark' ? 'light' : 'dark')"
+            :title="appearance === 'dark' ? 'Modo claro' : 'Modo escuro'"
+          >
+            <Sun v-if="appearance === 'dark'" class="h-4 w-4" />
+            <Moon v-else class="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -431,9 +445,12 @@ const submit = () => {
                 <tr v-for="forecast in yearlyForecasts" :key="forecast.yearIndex" class="hover:bg-surface/80">
                   <td class="px-4 py-4 font-medium text-muted-foreground">{{ forecast.calendarYear }}</td>
                   <td class="px-4 py-4">
-                    <div class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
+                    <div v-if="forecast.yearIndex === 0" class="px-3 py-2 text-center text-muted-foreground">
+                      —
+                    </div>
+                    <div v-else class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2">
                       <Input
-                        v-model="form.growth_rates[forecast.yearIndex]"
+                        v-model="form.growth_rates[forecast.yearIndex - 1]"
                         type="text"
                         inputmode="decimal"
                         class="border-0 bg-transparent p-0 text-right font-medium tabular-nums text-foreground shadow-none focus-visible:ring-0"

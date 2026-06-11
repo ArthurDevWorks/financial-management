@@ -18,7 +18,7 @@ interface PaginationMeta {
 }
 
 interface ValuationSummary {
-  fair_value?: number;
+  fair_value_per_share?: number;
   upside?: number;
   margin_of_safety?: number;
   current_price?: number;
@@ -101,7 +101,8 @@ const createValuation = () => {
               <TableRow
                 v-for="valuation in valuations.data"
                 :key="valuation.id"
-                class="border-b border-border transition-colors hover:bg-surface/50"
+                class="cursor-pointer border-b border-border transition-colors hover:bg-surface/50"
+                @click="router.visit(`/valuations/${valuation.id}`)"
               >
                 <TableCell class="font-medium text-foreground">
                   {{ valuation.investiment.name }}
@@ -110,7 +111,7 @@ const createValuation = () => {
                   {{ formatDate(valuation.calculated_at) }}
                 </TableCell>
                 <TableCell class="text-right text-muted-foreground">
-                  {{ formatCurrency(valuation.summary?.fair_value) }}
+                  {{ formatCurrency(valuation.summary?.fair_value_per_share) }}
                 </TableCell>
                 <TableCell class="text-right font-semibold"
                   :class="(valuation.summary?.upside ?? 0) >= 0 ? 'text-revenue' : 'text-destructive'"

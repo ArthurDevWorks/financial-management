@@ -34,7 +34,6 @@ class Investiment extends Model
     protected $casts = [
         'dt_investment' => 'date',
         'value' => 'decimal:2',
-        'type' => InvestmentAssetType::class,
         'quantity' => 'decimal:8',
         'average_price' => 'decimal:2',
         'current_balance' => 'decimal:2',

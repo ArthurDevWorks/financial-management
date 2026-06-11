@@ -92,7 +92,7 @@ const formatCurrency = (value: number | null | undefined) => {
             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Categoria
             </th>
-            <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Valor da Cotação
             </th>
             <th class="w-52 px-4 py-3 text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -113,7 +113,7 @@ const formatCurrency = (value: number | null | undefined) => {
             <td class="px-4 py-4">
               {{ investment.type_label }}
             </td>
-            <td class="px-4 py-4 text-right font-semibold text-primary">
+            <td class="px-4 py-4 text-left font-semibold text-primary">
               {{ formatCurrency(investment.current_balance) }}
             </td>
             <td class="px-4 py-4">

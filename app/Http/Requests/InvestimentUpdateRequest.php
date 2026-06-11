@@ -4,10 +4,7 @@ namespace App\Http\Requests;
 
 use App\Enums\InvestmentAssetType;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use App\Enums\CategoryType;
-use Illuminate\Support\Facades\Schema;
 
 class InvestimentUpdateRequest extends FormRequest
 {
@@ -29,14 +26,22 @@ class InvestimentUpdateRequest extends FormRequest
 
         $typeInput = $this->input('type');
 
-        if ($typeInput !== null && !is_numeric($typeInput)) {
-            try {
-                $columnType = Schema::getColumnType('investiments', 'type');
-            } catch (\Throwable $e) {
-                $columnType = null;
+        if ($typeInput !== null) {
+            $isValidEnum = collect(InvestmentAssetType::cases())
+                ->contains(fn($c) => $c->value === $typeInput);
+
+            if ($isValidEnum) {
+                return;
             }
 
-            if ($columnType !== 'string') {
+            $enum = null;
+
+            if (is_numeric($typeInput)) {
+                $category = DB::table('categories')->find((int) $typeInput);
+                if ($category) {
+                    $enum = InvestmentAssetType::fromLegacyCategoryName($category->name);
+                }
+            } else {
                 $category = DB::table('categories')
                     ->get()
                     ->first(function (object $cat) use ($typeInput) {
@@ -52,21 +57,15 @@ class InvestimentUpdateRequest extends FormRequest
                         return strcasecmp($cat->name, $typeInput) === 0;
                     });
 
-                if (! $category) {
-                    $enum = collect(InvestmentAssetType::cases())->first(fn($c) => $c->value === $typeInput);
-                    $name = $enum?->label() ?? ucfirst($typeInput);
-
-                    $newId = DB::table('categories')->insertGetId([
-                        'type' => CategoryType::INVESTMENT->value,
-                        'name' => $name,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    $this->merge(['type' => $newId]);
+                if ($category) {
+                    $enum = InvestmentAssetType::fromLegacyCategoryName($category->name);
                 } else {
-                    $this->merge(['type' => $category->id]);
+                    $enum = collect(InvestmentAssetType::cases())->first(fn($c) => $c->value === $typeInput);
                 }
+            }
+
+            if ($enum) {
+                $this->merge(['type' => $enum->value]);
             }
         }
     }
@@ -76,13 +75,6 @@ class InvestimentUpdateRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'type' => ['required', function ($attribute, $value, $fail) {
-                if (is_numeric($value)) {
-                    if (! DB::table('categories')->where('id', $value)->exists()) {
-                        $fail('Tipo inválido.');
-                    }
-                    return;
-                }
-
                 $valid = collect(InvestmentAssetType::cases())->contains(fn($c) => $c->value === $value);
 
                 if (! $valid) {

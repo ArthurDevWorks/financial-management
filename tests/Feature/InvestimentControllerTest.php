@@ -27,7 +27,7 @@ it('cadastra investimento com nome, categoria e valor da cotação', function ()
     $response = $this->post(route('investiments.store'), [
         'name' => 'PETR4',
         'type' => InvestmentAssetType::STOCK->value,
-        'current_balance' => '3.800,00',
+        'current_balance' => 3800.00,
     ]);
 
     $response->assertRedirect(route('investiments.index'));
