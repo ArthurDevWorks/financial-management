@@ -58,6 +58,7 @@ class InvestimentController extends Controller
             /** @var InvestimentValuation|null $specificValuation */
             $specificValuation = $investiment->valuations()
                 ->where('id', $valuationId)
+                ->where('method', InvestimentValuation::METHOD_DCF)
                 ->first();
 
             return Inertia::render('investiments/Valuation', [
@@ -66,7 +67,10 @@ class InvestimentController extends Controller
                     'assumptions' => $specificValuation->assumptions,
                     'projected_cash_flows' => $specificValuation->projected_cash_flows,
                     'summary' => $specificValuation->summary,
+                    'id' => $specificValuation->id,
+                    'method' => $specificValuation->method,
                 ] : null,
+                'editingValuationId' => $specificValuation?->id,
                 'defaultAssumptions' => $this->buildDefaultAssumptions(
                     $investiment,
                     $specificValuation,
@@ -76,6 +80,7 @@ class InvestimentController extends Controller
 
         /** @var InvestimentValuation|null $lastValuation */
         $lastValuation = $investiment->valuations()
+            ->where('method', InvestimentValuation::METHOD_DCF)
             ->latest('calculated_at')
             ->first();
 
@@ -85,7 +90,10 @@ class InvestimentController extends Controller
                 'assumptions' => $lastValuation->assumptions,
                 'projected_cash_flows' => $lastValuation->projected_cash_flows,
                 'summary' => $lastValuation->summary,
+                'id' => $lastValuation->id,
+                'method' => $lastValuation->method,
             ] : null,
+            'editingValuationId' => null,
             'defaultAssumptions' => $this->buildDefaultAssumptions($investiment, $lastValuation),
         ]);
     }
@@ -98,16 +106,21 @@ class InvestimentController extends Controller
         $validated = $request->validated();
         $calculatedValuation = $valuationService->calculate($validated);
 
-        $investiment->valuations()->create([
+        $valuation = $investiment->valuations()->create([
+            'method' => InvestimentValuation::METHOD_DCF,
             'assumptions' => $calculatedValuation['assumptions'],
             'projected_cash_flows' => $calculatedValuation['projected_cash_flows'],
             'summary' => $calculatedValuation['summary'],
             'calculated_at' => now(),
         ]);
 
+        $calculatedValuation['id'] = $valuation->id;
+        $calculatedValuation['method'] = $valuation->method;
+
         return Inertia::render('investiments/Valuation', [
             'investiment' => $this->investmentPayload($investiment),
             'valuation' => $calculatedValuation,
+            'editingValuationId' => null,
             'defaultAssumptions' => collect($validated)->map(function (mixed $value): mixed {
                 if (is_array($value)) {
                     return array_map(

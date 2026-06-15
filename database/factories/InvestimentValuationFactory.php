@@ -17,6 +17,7 @@ class InvestimentValuationFactory extends Factory
     {
         return [
             'investiment_id' => Investiment::factory(),
+            'method' => InvestimentValuation::METHOD_DCF,
             'assumptions' => [
                 'current_fcf' => 100,
                 'discount_rate' => 12,

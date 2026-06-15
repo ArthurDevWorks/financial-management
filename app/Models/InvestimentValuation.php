@@ -9,8 +9,13 @@ class InvestimentValuation extends Model
 {
     use HasFactory;
 
+    public const METHOD_DCF = 'dcf';
+
+    public const METHOD_PRECO_TETO = 'preco_teto';
+
     protected $fillable = [
         'investiment_id',
+        'method',
         'assumptions',
         'projected_cash_flows',
         'summary',
@@ -27,5 +32,13 @@ class InvestimentValuation extends Model
     public function investiment()
     {
         return $this->belongsTo(Investiment::class);
+    }
+
+    public function methodLabel(): string
+    {
+        return match ($this->method) {
+            self::METHOD_PRECO_TETO => 'Preço Teto Projetivo',
+            default => 'Fluxo de Caixa Descontado',
+        };
     }
 }
