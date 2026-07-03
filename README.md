@@ -47,6 +47,7 @@ Este repositório já contém uma base funcional com:
 ## Documentação
 
 - [Handbook do projeto](docs/fidax-handbook.md)
+- [PRD do produto](docs/prd.md)
 
 ## Estrutura geral
 
