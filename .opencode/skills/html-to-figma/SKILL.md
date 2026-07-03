@@ -10,7 +10,7 @@ description: Cria uma tela HTML com padrão de design de mercado (auto layout, t
 Esta skill define o fluxo obrigatório para criar telas/componentes UI e publicá-los diretamente no Figma.
 O fluxo é: **HTML bem estruturado → dev server local → script de captura Figma → insert no arquivo Figma alvo**.
 
-> **Skill inversa:** `figma-implement-design` faz o caminho contrário (Figma → código).
+> **Nota:** este fluxo cobre apenas HTML/CSS → Figma.
 
 ---
 
@@ -20,7 +20,7 @@ Ativar SEMPRE que a tarefa envolver:
 - Criar uma nova tela (login, dashboard, landing page, modal, etc.)
 - Criar um componente visual para revisão/validação no Figma
 - O usuário pedir "criar no Figma", "inserir no Figma", "tela para o Figma"
-- O plano da task (orchestrator) listar escopo `frontend` com destino Figma
+- O plano ou issue listar escopo `frontend` com destino Figma
 
 ---
 

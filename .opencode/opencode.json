@@ -1,8 +1,21 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "default_agent": "planner",
   "permission": {
     "skill": {
       "*": "allow"
+    },
+    "bash": {
+      "gh issue *": "allow",
+      "git *": "allow",
+      "php *": "allow",
+      "composer *": "allow",
+      "npm *": "allow",
+      "npx *": "allow",
+      "node *": "allow",
+      "python3 *": "allow",
+      "vendor/bin/*": "allow",
+      "*": "ask"
     }
   },
   "mcp": {
@@ -20,5 +33,5 @@
       "url": "https://mcp.firecrawl.dev/${FIRECRAWL_API_KEY}/v2/mcp",
       "enabled": true
     }
-  },
+  }
 }

@@ -1,15 +1,16 @@
 ---
 name: issue-reader
-description: Reads and parses GitHub issues, extracting requirements, acceptance criteria, and metadata for the orchestrator.
+description: Reads and parses GitHub issues, extracting requirements, acceptance criteria, and metadata for the planner.
 ---
+
 ## Issue Reader Skill
 
-Parse GitHub issues into structured intake documents for the development workflow.
+Parse GitHub issues into structured summaries for the planning workflow.
 
 ### When to Use
-- At the start of any new issue/task from GitHub
-- When the orchestrator needs to understand a new demand
-- To create standardized intake documents
+- At the start of any new issue from GitHub
+- When the planner needs to normalize a new demand
+- To produce a concise issue summary before creating implementation issues
 
 ### Step 1: Fetch Issue
 Run the gh command directly:
@@ -27,7 +28,7 @@ Extract and categorize:
 - Priority indicators
 
 **Content:**
-- Problem statement / User story
+- Problem statement / user story
 - Acceptance criteria (look for checkboxes, numbered lists)
 - Technical requirements (if specified)
 - Design references / mockups (links)
@@ -39,7 +40,7 @@ Based on labels and content:
 - `bug` - Fix existing behavior
 - `refactor` - Code improvement without behavior change
 - `docs` - Documentation only
-- `test` - Test additions/improvements
+- `test` - Test additions or improvements
 - `chore` - Maintenance tasks
 
 ### Step 4: Determine Scope
@@ -49,49 +50,17 @@ Analyze if the issue requires:
 - **Full-stack**: Both frontend and backend changes
 - **Infrastructure**: DevOps, CI/CD, deployment
 
-### Step 5: Create Intake Document
-Save to `.opencode/work/tasks/issue-<num>-intake.md` (the orchestrator will later expand this into the full unified task file):
+### Step 5: Produce a Planning Summary
+Return a structured summary with:
+- Title and labels
+- Problem statement
+- Acceptance criteria
+- Technical requirements
+- Design references
+- Dependencies
+- Risks and open questions
 
-```markdown
-# Issue #<num> Intake
-
-## Metadata
-- **Title:** <title>
-- **Type:** <feature|bug|refactor|docs|test|chore>
-- **Scope:** <frontend|backend|full-stack|infrastructure>
-- **Priority:** <high|medium|low>
-- **Labels:** <label1>, <label2>
-
-## Problem Statement
-<extracted problem/user story>
-
-## Acceptance Criteria
-- [ ] <criterion 1>
-- [ ] <criterion 2>
-- [ ] <criterion 3>
-
-## Technical Requirements
-<any technical constraints mentioned>
-
-## Design References
-<links to mockups, designs, etc.>
-
-## Dependencies
-- Related to: #<related-issue>
-- Blocked by: #<blocking-issue>
-
-## Notes
-<any additional context or comments>
-
----
-*Parsed by issue-reader skill*
-*Ready for: @orchestrator — who will expand this into .opencode/work/tasks/issue-<num>.md*
-```
-
-### Step 6: Handoff
-- Pass the intake document path to the orchestrator
-- Include the classification for routing decisions
-- Flag any ambiguities that need user clarification
+Do not create local files.
 
 ### Parsing Rules
 - If acceptance criteria are missing, create them from the description
@@ -100,9 +69,9 @@ Save to `.opencode/work/tasks/issue-<num>-intake.md` (the orchestrator will late
 - Always preserve the original issue body verbatim in a collapsible section
 
 ### Output
-Return the path to the intake document and a brief summary:
+Return a concise summary like this:
 ```
 Parsed issue #<num>: "<title>"
 Type: <type> | Scope: <scope>
-Intake saved to: .opencode/work/tasks/issue-<num>-intake.md
+Ready for: @planner
 ```
