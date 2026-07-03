@@ -21,6 +21,7 @@ interface Investment {
   dt_investment: string | null;
   type: string;
   current_balance: number;
+  logo_url: string | null;
 }
 
 const props = defineProps<{
@@ -63,8 +64,16 @@ const goBack = () => {
       <div class="space-y-6">
         <div class="grid gap-6 md:grid-cols-2">
           <div>
-            <Label required>Nome</Label>
-            <Input v-model="form.name" type="text" placeholder="Ex.: PETR4, HGLG11" />
+            <Label required>Nome (Ticker)</Label>
+            <div class="flex items-center gap-3">
+              <img
+                v-if="investiment.logo_url"
+                :src="investiment.logo_url"
+                :alt="investiment.name"
+                class="h-8 w-8 rounded-full object-contain"
+              />
+              <Input v-model="form.name" type="text" placeholder="Ex.: PETR4, HGLG11" class="flex-1" />
+            </div>
             <InputError :message="form.errors.name" />
           </div>
 

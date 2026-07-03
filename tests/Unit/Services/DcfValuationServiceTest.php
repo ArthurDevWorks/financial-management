@@ -45,3 +45,23 @@ it('retorna campos nulos quando o preço atual da ação não é informado', fun
     expect($resultado['summary']['upside'])->toBeNull();
     expect($resultado['summary']['margin_of_safety'])->toBeNull();
 });
+
+it('não divide por zero quando o valor justo por ação zera', function () {
+    $service = new DcfValuationService();
+
+    $resultado = $service->calculate([
+        'current_fcf' => 0,
+        'payout' => 50,
+        'roe' => 20,
+        'discount_rate' => 10,
+        'terminal_growth_rate' => 3,
+        'projection_years' => 3,
+        'total_shares' => 10,
+        'current_price_per_share' => 12,
+        'growth_rates' => [0, 0, 0],
+    ]);
+
+    expect($resultado['summary']['fair_value_per_share'])->toBe(0.0);
+    expect($resultado['summary']['upside'])->toBe(-100.0);
+    expect($resultado['summary']['margin_of_safety'])->toBeNull();
+});

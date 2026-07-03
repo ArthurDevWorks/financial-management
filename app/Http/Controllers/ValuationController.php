@@ -5,26 +5,70 @@ namespace App\Http\Controllers;
 use App\Http\Requests\InvestimentValuationRequest;
 use App\Models\Investiment;
 use App\Models\InvestimentValuation;
+use App\Services\BrapiService;
 use App\Services\DcfValuationService;
 use Inertia\Inertia;
 
 class ValuationController extends Controller
 {
-    public function index()
+    public function index(BrapiService $brapi)
     {
+        $investiments = Investiment::query()
+            ->whereHas('valuations')
+            ->with(['valuations' => fn ($query) => $query->latest('calculated_at')])
+            ->orderBy('name')
+            ->paginate(15);
+
+        $symbols = $investiments->getCollection()
+            ->reject(fn (Investiment $i) => $i->type?->isFixedIncome())
+            ->pluck('name')
+            ->filter()
+            ->map(fn (string $name): string => strtoupper(trim($name)))
+            ->values()
+            ->all();
+
+        if (! empty($symbols)) {
+            $quotes = $brapi->fetchQuotes($symbols);
+            $now = now();
+
+            if ($quotes->isNotEmpty()) {
+                $investiments->getCollection()->each(function (Investiment $investiment) use ($quotes, $now): void {
+                    if ($investiment->type?->isFixedIncome()) {
+                        return;
+                    }
+
+                    $quote = $quotes->get(strtoupper(trim($investiment->name)));
+
+                    if ($quote === null) {
+                        return;
+                    }
+
+                    $investiment->current_balance = $quote['price'];
+                    $investiment->logo_url = $quote['logourl'];
+                    $investiment->last_price_fetched_at = $now;
+                    $investiment->save();
+                });
+            }
+        }
+
         return Inertia::render('valuations/Index', [
-            'valuations' => Investiment::query()
-                ->whereHas('valuations')
-                ->with(['valuations' => fn ($query) => $query->latest('calculated_at')])
-                ->orderBy('name')
-                ->paginate(15)
-                ->through(fn (Investiment $investiment): array => $this->investmentValuationsPayload($investiment)),
+            'valuations' => $investiments->through(fn (Investiment $investiment): array => $this->investmentValuationsPayload($investiment)),
         ]);
     }
 
-    public function show(InvestimentValuation $valuation)
+    public function show(InvestimentValuation $valuation, BrapiService $brapi)
     {
         $valuation->load(['investiment']);
+
+        if (! $valuation->investiment->type?->isFixedIncome()) {
+            $quotes = $brapi->fetchQuotes([$valuation->investiment->name]);
+            $quote = $quotes->get(strtoupper(trim($valuation->investiment->name)));
+
+            if ($quote) {
+                $valuation->investiment->current_balance = $quote['price'];
+                $valuation->investiment->logo_url = $quote['logourl'];
+            }
+        }
 
         return Inertia::render('valuations/Show', [
             'valuation' => [
@@ -32,6 +76,7 @@ class ValuationController extends Controller
                 'investiment' => [
                     'id' => $valuation->investiment->id,
                     'name' => $valuation->investiment->name,
+                    'logo_url' => $valuation->investiment->logo_url,
                 ],
                 'method' => $valuation->method,
                 'method_label' => $valuation->methodLabel(),
@@ -48,7 +93,7 @@ class ValuationController extends Controller
         return Inertia::render('valuations/Create', [
             'investiments' => Investiment::query()
                 ->orderBy('name')
-                ->get(['id', 'name']),
+                ->get(['id', 'name', 'logo_url']),
         ]);
     }
 
@@ -83,6 +128,7 @@ class ValuationController extends Controller
             'investiment' => [
                 'id' => $investiment->id,
                 'name' => $investiment->name,
+                'logo_url' => $investiment->logo_url,
             ],
             'dcf' => $dcfValuation ? $this->valuationSummaryPayload($dcfValuation) : null,
             'preco_teto' => $precoTetoValuation ? $this->valuationSummaryPayload($precoTetoValuation) : null,

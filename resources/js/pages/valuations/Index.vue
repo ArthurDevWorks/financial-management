@@ -35,6 +35,7 @@ interface ValuationSummary {
 interface Investment {
     id: number;
     name: string;
+    logo_url?: string | null;
 }
 
 interface Valuation {
@@ -113,7 +114,7 @@ const openValuation = (valuation: ValuationSummary | null) => {
                                 <TableHead
                                     class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                                 >
-                                    Margem DCF
+                                    Upside / Downside DCF
                                 </TableHead>
                                 <TableHead
                                     class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
@@ -129,7 +130,15 @@ const openValuation = (valuation: ValuationSummary | null) => {
                                 class="border-b border-border transition-colors hover:bg-surface/50"
                             >
                                 <TableCell class="font-medium text-foreground">
-                                    {{ valuation.investiment.name }}
+                                    <div class="flex items-center gap-2">
+                                        <img
+                                            v-if="valuation.investiment.logo_url"
+                                            :src="valuation.investiment.logo_url"
+                                            :alt="valuation.investiment.name"
+                                            class="h-6 w-6 rounded-full object-contain"
+                                        />
+                                        <span>{{ valuation.investiment.name }}</span>
+                                    </div>
                                 </TableCell>
                                 <TableCell class="text-right">
                                     <button
@@ -141,16 +150,14 @@ const openValuation = (valuation: ValuationSummary | null) => {
                                         <span
                                             class="block font-semibold"
                                             :class="
-                                                (valuation.dcf
-                                                    .margin_of_safety ?? 0) >= 0
+                                                (valuation.dcf.upside ?? 0) >= 0
                                                     ? 'text-revenue'
                                                     : 'text-destructive'
                                             "
                                         >
                                             {{
                                                 formatPercent(
-                                                    valuation.dcf
-                                                        .margin_of_safety,
+                                                    valuation.dcf.upside,
                                                 )
                                             }}
                                         </span>

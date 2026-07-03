@@ -13,6 +13,10 @@ class InvestimentValuationRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $growthRates = collect($this->input('growth_rates', []))
+            ->map(fn (mixed $value): string => $this->normalizeNumericInput($value))
+            ->all();
+
         $this->merge([
             'current_fcf' => $this->normalizeNumericInput($this->input('current_fcf')),
             'total_shares' => $this->normalizeNumericInput($this->input('total_shares')),
@@ -20,11 +24,9 @@ class InvestimentValuationRequest extends FormRequest
             'payout' => $this->normalizeNumericInput($this->input('payout')),
             'roe' => $this->normalizeNumericInput($this->input('roe')),
             'discount_rate' => $this->normalizeNumericInput($this->input('discount_rate')),
-            'terminal_growth_rate' => $this->normalizeNumericInput($this->input('terminal_growth_rate')),
+            'terminal_growth_rate' => $this->resolveTerminalGrowthRate($growthRates),
             'projection_years' => $this->normalizeIntegerInput($this->input('projection_years')),
-            'growth_rates' => collect($this->input('growth_rates', []))
-                ->map(fn (mixed $value): string => $this->normalizeNumericInput($value))
-                ->all(),
+            'growth_rates' => $growthRates,
         ]);
     }
 
@@ -93,5 +95,18 @@ class InvestimentValuationRequest extends FormRequest
         }
 
         return (string) (int) floor((float) $normalizedValue);
+    }
+
+    private function resolveTerminalGrowthRate(array $growthRates): string
+    {
+        $lastGrowthRate = collect($growthRates)
+            ->reverse()
+            ->first(static fn (string $value): bool => $value !== '');
+
+        if ($lastGrowthRate !== null) {
+            return $lastGrowthRate;
+        }
+
+        return $this->normalizeNumericInput($this->input('terminal_growth_rate'));
     }
 }

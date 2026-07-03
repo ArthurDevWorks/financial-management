@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PrecoTetoValuationRequest;
 use App\Models\Investiment;
 use App\Models\InvestimentValuation;
+use App\Services\BrapiService;
 use App\Services\PrecoTetoProjetivoValuationService;
 use Inertia\Inertia;
 
 class PrecoTetoController extends Controller
 {
-    public function index()
+    public function index(BrapiService $brapi)
     {
         $investimentId = request()->query('investiment_id');
         $valuationId = request()->query('valuation_id');
@@ -25,14 +26,38 @@ class PrecoTetoController extends Controller
 
         $investiment = $valuation?->investiment
             ?? ($investimentId
-                ? Investiment::find((int) $investimentId, ['id', 'name', 'value'])
+                ? Investiment::find((int) $investimentId, ['id', 'name', 'value', 'current_balance', 'logo_url', 'type'])
                 : null);
 
+        if ($investiment && ! $investiment->type?->isFixedIncome()) {
+            $quotes = $brapi->fetchQuotes([$investiment->name]);
+            $quote = $quotes->get(strtoupper($investiment->name));
+
+            if ($quote) {
+                $investiment->current_balance = $quote['price'];
+                $investiment->logo_url = $quote['logourl'];
+            }
+        }
+
+        $investiments = Investiment::query()
+            ->orderBy('name')
+            ->get(['id', 'name', 'value', 'current_balance', 'logo_url', 'type']);
+
         return Inertia::render('preco-teto/Index', [
-            'investiment' => $investiment,
-            'investiments' => Investiment::query()
-                ->orderBy('name')
-                ->get(['id', 'name', 'value']),
+            'investiment' => $investiment ? [
+                'id' => $investiment->id,
+                'name' => $investiment->name,
+                'value' => $investiment->value,
+                'current_balance' => $investiment->current_balance,
+                'logo_url' => $investiment->logo_url,
+            ] : null,
+            'investiments' => $investiments->map(fn (Investiment $i): array => [
+                'id' => $i->id,
+                'name' => $i->name,
+                'value' => $i->value,
+                'current_balance' => $i->current_balance,
+                'logo_url' => $i->logo_url,
+            ]),
             'valuation' => $valuation ? $this->valuationPayload($valuation) : null,
         ]);
     }

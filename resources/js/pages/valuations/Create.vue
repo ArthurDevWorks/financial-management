@@ -16,6 +16,7 @@ import {
 interface Investment {
     id: number;
     name: string;
+    logo_url?: string | null;
 }
 
 defineProps<{
@@ -125,6 +126,7 @@ const methods: {
                                 v-for="item in investiments"
                                 :key="item.id"
                                 :value="item.id"
+                                :data-logo="item.logo_url ?? ''"
                             >
                                 {{ item.name }}
                             </option>

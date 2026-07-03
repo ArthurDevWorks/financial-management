@@ -52,18 +52,26 @@ class DcfValuationService
         }
 
         $terminalCashFlow = $projectedFcf * (1 + $terminalGrowthRate);
-        $terminalValue = $terminalCashFlow / ($discountRate - $terminalGrowthRate);
+        $terminalSpread = $discountRate - $terminalGrowthRate;
+        $terminalValue = $terminalSpread > 0
+            ? $terminalCashFlow / $terminalSpread
+            : 0.0;
         $terminalPresentValue = $terminalValue / pow(1 + $discountRate, $projectionYears);
 
         $equityValue = $presentValueOfCashFlows + $terminalPresentValue;
-        $fairValuePerShare = $equityValue / $totalShares;
+        $fairValuePerShare = $totalShares > 0
+            ? $equityValue / $totalShares
+            : 0.0;
         $marketCap = $currentPricePerShare !== null ? $currentPricePerShare * $totalShares : null;
 
         $upside = null;
         $marginOfSafety = null;
 
-        if ($currentPricePerShare !== null) {
+        if ($currentPricePerShare !== null && $currentPricePerShare > 0) {
             $upside = (($fairValuePerShare / $currentPricePerShare) - 1) * 100;
+        }
+
+        if ($currentPricePerShare !== null && $fairValuePerShare > 0) {
             $marginOfSafety = (1 - ($currentPricePerShare / $fairValuePerShare)) * 100;
         }
 

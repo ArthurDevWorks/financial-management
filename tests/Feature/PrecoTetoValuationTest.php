@@ -67,7 +67,7 @@ it('atualiza uma simulação existente de preço teto projetivo', function () {
     $response->assertRedirect(route('valuations.show', $valuation));
 });
 
-it('lista um ativo com as margens dos dois métodos de valuation', function () {
+it('lista um ativo com upside no dcf e margem no preço teto', function () {
     $user = User::factory()->create();
     $investiment = Investiment::factory()->stock()->create(['name' => 'PSSA3']);
 
@@ -102,7 +102,7 @@ it('lista um ativo com as margens dos dois métodos de valuation', function () {
     $response->assertInertia(fn ($page) => $page
         ->component('valuations/Index')
         ->where('valuations.data.0.investiment.name', 'PSSA3')
-        ->where('valuations.data.0.dcf.margin_of_safety', 20)
+        ->where('valuations.data.0.dcf.upside', 25)
         ->where('valuations.data.0.preco_teto.margin_of_safety', -0.24)
     );
 });

@@ -1,7 +1,6 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AccountController;
+use App\Http\Controllers\QuoteController;
 
-Route::apiResource('accounts', AccountController::class);
+Route::get('quote', QuoteController::class);

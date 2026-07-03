@@ -22,6 +22,7 @@ interface Investment {
   name: string;
   type_label: string;
   current_balance: number;
+  logo_url: string | null;
 }
 
 const props = defineProps<{
@@ -108,7 +109,21 @@ const formatCurrency = (value: number | null | undefined) => {
             class="border-b border-border transition-colors hover:bg-surface/50"
           >
             <td class="px-4 py-4">
-              <p class="font-medium text-foreground">{{ investment.name }}</p>
+              <div class="flex items-center gap-3">
+                <img
+                  v-if="investment.logo_url"
+                  :src="investment.logo_url"
+                  :alt="investment.name"
+                  class="h-8 w-8 rounded-full object-contain"
+                />
+                <div
+                  v-else
+                  class="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground"
+                >
+                  {{ investment.name.charAt(0) }}
+                </div>
+                <p class="font-medium text-foreground">{{ investment.name }}</p>
+              </div>
             </td>
             <td class="px-4 py-4">
               {{ investment.type_label }}

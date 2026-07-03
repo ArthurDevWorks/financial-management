@@ -29,6 +29,8 @@ class Investiment extends Model
         'contracted_rate',
         'maturity_date',
         'liquidity',
+        'logo_url',
+        'last_price_fetched_at',
     ];
 
     protected $casts = [
@@ -42,6 +44,7 @@ class Investiment extends Model
         'indexer' => FixedIncomeIndexer::class,
         'contracted_rate' => 'decimal:4',
         'maturity_date' => 'date',
+        'last_price_fetched_at' => 'datetime',
     ];
 
     public function getTypeAttribute($value)

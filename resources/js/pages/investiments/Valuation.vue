@@ -17,11 +17,13 @@ interface Investment {
     name: string;
     value: number;
     average_price: number;
+    current_balance: number;
     profitability: number;
     dt_investment: string;
     type: string;
     type_label: string;
     portfolio_class: string;
+    logo_url: string | null;
 }
 
 interface ValuationProjection {
@@ -164,13 +166,13 @@ const projectionYearsCount = computed(() => {
 });
 
 const projectionYearIndexes = computed(() =>
-    Array.from({ length: projectionYearsCount.value + 1 }, (_, index) => index),
+    Array.from({ length: projectionYearsCount.value }, (_, index) => index),
 );
 
 const projectionCalendarYears = computed(() =>
     Array.from(
-        { length: projectionYearsCount.value + 1 },
-        (_, index) => currentCalendarYear + index,
+        { length: projectionYearsCount.value },
+        (_, index) => currentCalendarYear + 1 + index,
     ),
 );
 
@@ -201,6 +203,16 @@ watch(
         form.growth_rates = form.growth_rates.map(
             (growthRate) => growthRate || baseGrowthValue,
         );
+    },
+    { immediate: true },
+);
+
+watch(
+    () => [...form.growth_rates],
+    (growthRates) => {
+        form.terminal_growth_rate =
+            growthRates[projectionYearsCount.value - 1] ||
+            baseGrowthRate.value.toFixed(2);
     },
     { immediate: true },
 );
@@ -363,9 +375,15 @@ const submit = () => {
                                 >Ticker</label
                             >
                             <div
-                                class="rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
+                                class="flex items-center gap-3 rounded-lg border border-border bg-surface px-3 py-2 text-foreground"
                             >
-                                {{ investiment.name }}
+                                <img
+                                    v-if="investiment.logo_url"
+                                    :src="investiment.logo_url"
+                                    :alt="investiment.name"
+                                    class="h-6 w-6 rounded-full object-contain"
+                                />
+                                <span class="font-semibold">{{ investiment.name }}</span>
                             </div>
                         </div>
 
@@ -376,11 +394,17 @@ const submit = () => {
                                 class="mb-2 block text-sm font-medium text-muted-foreground"
                                 >Preço atual por ação</Label
                             >
-                            <CurrencyInput
-                                v-model="form.current_price_per_share"
-                                :error="form.errors.current_price_per_share"
-                                placeholder="0,00"
-                            />
+                            <div class="mb-1 flex items-baseline gap-2">
+                                <CurrencyInput
+                                    v-model="form.current_price_per_share"
+                                    :error="form.errors.current_price_per_share"
+                                    placeholder="0,00"
+                                />
+                                <span
+                                    v-if="investiment.current_balance"
+                                    class="text-xs text-muted-foreground"
+                                >(Cotação: {{ formatCurrency(Number(investiment.current_balance)) }})</span>
+                            </div>
                         </div>
 
                         <div
@@ -532,23 +556,23 @@ const submit = () => {
                             class="rounded-lg border border-border bg-surface p-3"
                         >
                             <Label
-                                required
                                 class="mb-2 block text-sm font-medium text-muted-foreground"
                                 >Crescimento na perpetuidade (%)</Label
                             >
                             <div
-                                class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2"
+                                class="rounded-lg border border-investment/40 bg-investment/10 px-3 py-2"
                             >
                                 <Input
                                     v-model="form.terminal_growth_rate"
                                     type="text"
                                     inputmode="decimal"
-                                    class="border-0 bg-transparent p-0 text-right font-medium text-foreground tabular-nums shadow-none focus-visible:ring-0"
+                                    readonly
+                                    class="border-0 bg-transparent p-0 text-right font-medium text-investment tabular-nums shadow-none focus-visible:ring-0"
                                 />
                             </div>
-                            <InputError
-                                :message="form.errors.terminal_growth_rate"
-                            />
+                            <p class="mt-2 text-xs text-muted-foreground">
+                                Segue a taxa do ultimo ano projetado da planilha.
+                            </p>
                         </div>
 
                         <div
@@ -641,19 +665,12 @@ const submit = () => {
                                     </td>
                                     <td class="px-4 py-4">
                                         <div
-                                            v-if="forecast.yearIndex === 0"
-                                            class="px-3 py-2 text-center text-muted-foreground"
-                                        >
-                                            —
-                                        </div>
-                                        <div
-                                            v-else
                                             class="rounded-lg border border-revenue/40 bg-revenue/15 px-3 py-2"
                                         >
                                             <Input
                                                 v-model="
                                                     form.growth_rates[
-                                                        forecast.yearIndex - 1
+                                                        forecast.yearIndex
                                                     ]
                                                 "
                                                 type="text"
@@ -736,17 +753,9 @@ const submit = () => {
                             <p
                                 class="text-xs tracking-wide text-muted-foreground uppercase"
                             >
-                                Margem de segurança
+                                Upside / Downside
                             </p>
                             <p class="mt-2 text-2xl font-bold text-primary">
-                                {{
-                                    formatPercent(
-                                        valuation.summary.margin_of_safety,
-                                    )
-                                }}
-                            </p>
-                            <p class="mt-2 text-sm text-muted-foreground">
-                                Upside/Downside:
                                 {{ formatPercent(valuation.summary.upside) }}
                             </p>
                         </div>

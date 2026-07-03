@@ -15,6 +15,10 @@ class InvestimentStoreRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $this->merge([
+            'name' => strtoupper(trim($this->input('name', ''))),
+        ]);
+
         $currentBalance = $this->normalizeDecimal($this->input('current_balance')) ?? '0';
 
         $this->merge([

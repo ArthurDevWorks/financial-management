@@ -8,8 +8,10 @@ use App\Http\Requests\InvestimentUpdateRequest;
 use App\Http\Requests\InvestimentValuationRequest;
 use App\Models\Investiment;
 use App\Models\InvestimentValuation;
+use App\Services\BrapiService;
 use App\Services\DcfValuationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 
 class InvestimentController extends Controller
@@ -17,14 +19,17 @@ class InvestimentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, BrapiService $brapi)
     {
+        $investiments = Investiment::query()
+            ->when($request->search, fn ($q, $search) => $q->where('name', 'like', "%{$search}%"))
+            ->orderBy('id', 'desc')
+            ->paginate(10);
+
+        $this->syncBrapiQuotes($investiments->getCollection(), $brapi);
+
         return Inertia::render('investiments/Index', [
-            'investiments' => Investiment::query()
-                ->when($request->search, fn ($q, $search) => $q->where('name', 'like', "%{$search}%"))
-                ->orderBy('id', 'desc')
-                ->paginate(10)
-                ->through(fn (Investiment $investiment): array => $this->investmentPayload($investiment)),
+            'investiments' => $investiments->through(fn (Investiment $investiment): array => $this->investmentPayload($investiment)),
         ]);
     }
 
@@ -39,9 +44,13 @@ class InvestimentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(InvestimentStoreRequest $request)
+    public function store(InvestimentStoreRequest $request, BrapiService $brapi)
     {
-        Investiment::create($request->validated());
+        $investiment = Investiment::create($request->validated());
+
+        if (! $investiment->type?->isFixedIncome()) {
+            $this->syncBrapiQuotes(collect([$investiment]), $brapi);
+        }
 
         return redirect()->route('investiments.index')
             ->with('success', 'Investimento cadastrado com sucesso');
@@ -50,8 +59,12 @@ class InvestimentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Investiment $investiment)
+    public function show(Investiment $investiment, BrapiService $brapi)
     {
+        if (! $investiment->type?->isFixedIncome()) {
+            $this->syncBrapiQuotes(collect([$investiment]), $brapi);
+        }
+
         $valuationId = request()->query('valuation_id');
 
         if ($valuationId) {
@@ -137,8 +150,12 @@ class InvestimentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Investiment $investiment)
+    public function edit(Investiment $investiment, BrapiService $brapi)
     {
+        if (! $investiment->type?->isFixedIncome()) {
+            $this->syncBrapiQuotes(collect([$investiment]), $brapi);
+        }
+
         return Inertia::render('investiments/Edit', [
             'investiment' => $this->investmentPayload($investiment),
             ...$this->formOptions(),
@@ -148,9 +165,13 @@ class InvestimentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(InvestimentUpdateRequest $request, Investiment $investiment)
+    public function update(InvestimentUpdateRequest $request, Investiment $investiment, BrapiService $brapi)
     {
         $investiment->update($request->validated());
+
+        if (! $investiment->type?->isFixedIncome()) {
+            $this->syncBrapiQuotes(collect([$investiment]), $brapi);
+        }
 
         return redirect()->route('investiments.index')
             ->with('success', 'Investimento atualizado com sucesso');
@@ -211,22 +232,66 @@ class InvestimentController extends Controller
             'contracted_rate' => $investiment->contracted_rate !== null ? (float) $investiment->contracted_rate : null,
             'maturity_date' => $investiment->maturity_date?->format('Y-m-d'),
             'liquidity' => $investiment->liquidity,
+            'logo_url' => $investiment->logo_url,
         ];
+    }
+
+    private function syncBrapiQuotes(Collection $investiments, BrapiService $brapi): void
+    {
+        $symbols = $investiments
+            ->reject(fn (Investiment $i) => $i->type?->isFixedIncome())
+            ->pluck('name')
+            ->filter()
+            ->map(fn (string $name): string => strtoupper(trim($name)))
+            ->values()
+            ->all();
+
+        if (empty($symbols)) {
+            return;
+        }
+
+        $quotes = $brapi->fetchQuotes($symbols);
+
+        if ($quotes->isEmpty()) {
+            return;
+        }
+
+        $now = now();
+
+        $investiments->each(function (Investiment $investiment) use ($quotes, $now): void {
+            $normalized = strtoupper(trim($investiment->name));
+            $quote = $quotes->get($normalized);
+
+            if ($quote === null) {
+                return;
+            }
+
+            $investiment->update([
+                'current_balance' => $quote['price'],
+                'logo_url' => $quote['logourl'],
+                'last_price_fetched_at' => $now,
+            ]);
+        });
     }
 
     private function buildDefaultAssumptions(
         Investiment $investiment,
         ?InvestimentValuation $lastValuation,
     ): array {
-        $currentPricePerShare = (string) ($investiment->average_price ?? $investiment->value ?? 0);
+        $currentPricePerShare = (string) ($investiment->current_balance ?? $investiment->average_price ?? $investiment->value ?? 0);
+        $defaultTerminalGrowthRate = '6';
 
         if ($lastValuation) {
             $assumptions = $lastValuation->assumptions;
+            $growthRates = $assumptions['growth_rates'] ?? [];
+            $terminalGrowthRate = ! empty($growthRates)
+                ? (string) $growthRates[array_key_last($growthRates)]
+                : (string) ($assumptions['terminal_growth_rate'] ?? $defaultTerminalGrowthRate);
 
             return [
                 'current_fcf' => (string) ($assumptions['current_fcf'] ?? ''),
                 'discount_rate' => (string) ($assumptions['discount_rate'] ?? '12'),
-                'terminal_growth_rate' => (string) ($assumptions['terminal_growth_rate'] ?? '3'),
+                'terminal_growth_rate' => $terminalGrowthRate,
                 'projection_years' => (string) ($assumptions['projection_years'] ?? '5'),
                 'total_shares' => (string) ($assumptions['total_shares'] ?? ''),
                 'payout' => (string) ($assumptions['payout'] ?? '75'),
@@ -239,7 +304,7 @@ class InvestimentController extends Controller
         return [
             'current_fcf' => '',
             'discount_rate' => '12',
-            'terminal_growth_rate' => '3',
+            'terminal_growth_rate' => $defaultTerminalGrowthRate,
             'projection_years' => '5',
             'total_shares' => '',
             'payout' => '75',

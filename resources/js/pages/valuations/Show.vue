@@ -17,6 +17,7 @@ import { ArrowLeft, Pencil } from 'lucide-vue-next';
 interface Investment {
     id: number;
     name: string;
+    logo_url?: string | null;
 }
 
 interface ValuationAssumptions {
@@ -221,11 +222,6 @@ const summaryItems = isPrecoTeto
               positive: (s.upside ?? 0) >= 0,
           },
           {
-              label: 'Margem de segurança',
-              value: formatPercent(s.margin_of_safety),
-              positive: (s.margin_of_safety ?? 0) >= 0,
-          },
-          {
               label: 'VP dos fluxos de caixa',
               value: formatCurrency(s.present_value_of_cash_flows),
           },
@@ -251,17 +247,30 @@ const summaryItems = isPrecoTeto
                 </button>
             </div>
 
-            <PageHeader
-                :title="valuation.investiment.name"
-                :description="`${valuation.method_label} calculado em ${formatDate(valuation.calculated_at)}`"
-            >
-                <template #actions>
+            <div class="mb-8 flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <img
+                        v-if="valuation.investiment.logo_url"
+                        :src="valuation.investiment.logo_url"
+                        :alt="valuation.investiment.name"
+                        class="h-8 w-8 rounded-full object-contain"
+                    />
+                    <div class="min-w-0">
+                        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+                            {{ valuation.investiment.name }}
+                        </h1>
+                        <p class="mt-1 text-[0.9375rem] text-muted-foreground">
+                            {{ valuation.method_label }} calculado em {{ formatDate(valuation.calculated_at) }}
+                        </p>
+                    </div>
+                </div>
+                <div class="flex shrink-0 items-center gap-3">
                     <Button @click="goToEdit">
                         <Pencil class="h-4 w-4" />
                         Editar Premissas
                     </Button>
-                </template>
-            </PageHeader>
+                </div>
+            </div>
 
             <div class="mt-6 grid gap-6 xl:grid-cols-2">
                 <SectionCard

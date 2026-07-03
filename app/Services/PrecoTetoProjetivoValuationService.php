@@ -9,17 +9,27 @@ class PrecoTetoProjetivoValuationService
         $desiredYieldRate = ((float) $data['desired_yield']) / 100;
         $projectedPayoutRate = ((float) $data['projected_payout']) / 100;
         $projectedNetIncome = (float) $data['projected_net_income'];
-        $totalShares = (int) $data['total_shares'];
+        $totalShares = (float) $data['total_shares'];
         $projectedGrowthRate = ((float) $data['projected_growth_rate']) / 100;
         $currentPricePerShare = (float) $data['current_price_per_share'];
 
         $projectedNetIncomeAfterGrowth = $projectedNetIncome * (1 + $projectedGrowthRate);
-        $projectedEps = $projectedNetIncomeAfterGrowth / $totalShares;
+        $projectedEps = $totalShares > 0
+            ? $projectedNetIncomeAfterGrowth / $totalShares
+            : 0.0;
         $projectedDps = $projectedEps * $projectedPayoutRate;
-        $priceCeiling = $projectedDps / $desiredYieldRate;
-        $projectedYield = ($projectedDps / $currentPricePerShare) * 100;
-        $marginOfSafety = (($priceCeiling - $currentPricePerShare) / $priceCeiling) * 100;
-        $upside = (($priceCeiling / $currentPricePerShare) - 1) * 100;
+        $priceCeiling = $desiredYieldRate > 0
+            ? $projectedDps / $desiredYieldRate
+            : 0.0;
+        $projectedYield = $currentPricePerShare > 0
+            ? ($projectedDps / $currentPricePerShare) * 100
+            : 0.0;
+        $marginOfSafety = $priceCeiling > 0
+            ? (($priceCeiling - $currentPricePerShare) / $priceCeiling) * 100
+            : 0.0;
+        $upside = $currentPricePerShare > 0
+            ? (($priceCeiling / $currentPricePerShare) - 1) * 100
+            : 0.0;
 
         return [
             'assumptions' => [
