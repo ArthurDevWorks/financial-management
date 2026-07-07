@@ -1,66 +1,84 @@
 <script setup lang="ts">
-import NavFooter from '@/components/NavFooter.vue';
-import NavMain from '@/components/NavMain.vue';
-import NavUser from '@/components/NavUser.vue';
+import AppLogo from '@/components/AppLogo.vue';
+import SidebarItem from '@/components/SidebarItem.vue';
+
 import {
-    Sidebar,
-    SidebarContent,
-    SidebarFooter,
-    SidebarHeader,
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { dashboard } from '@/routes';
-import { type NavItem } from '@/types';
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-vue-next';
-import AppLogo from './AppLogo.vue';
-
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Github Repo',
-        href: 'https://github.com/laravel/vue-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#vue',
-        icon: BookOpen,
-    },
-];
+    ArrowRightLeft,
+    ChartNoAxesCombined,
+    Landmark,
+    LayoutDashboard,
+    LogOut,
+    PiggyBank,
+    Settings,
+    Tags,
+    Wallet,
+} from 'lucide-vue-next';
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="inset">
-        <SidebarHeader>
-            <SidebarMenu>
-                <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
-                        <Link :href="dashboard()">
-                            <AppLogo />
-                        </Link>
-                    </SidebarMenuButton>
-                </SidebarMenuItem>
-            </SidebarMenu>
-        </SidebarHeader>
+    <aside
+        class="flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar"
+    >
+        <!-- LOGO -->
+        <div class="border-b border-sidebar-border px-5 py-5">
+            <AppLogo />
+        </div>
 
-        <SidebarContent>
-            <NavMain :items="mainNavItems" />
-        </SidebarContent>
+        <!-- MENU -->
+        <nav class="flex-1 overflow-y-auto px-3 py-5">
+            <p
+                class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+            >
+                Financeiro
+            </p>
 
-        <SidebarFooter>
-            <NavFooter :items="footerNavItems" />
-            <NavUser />
-        </SidebarFooter>
-    </Sidebar>
-    <slot />
+            <div class="space-y-0.5">
+                <SidebarItem
+                    label="Dashboard"
+                    :icon="LayoutDashboard"
+                    href="/dashboard"
+                />
+                <SidebarItem label="Bancos" :icon="Landmark" href="/banks" />
+                <SidebarItem label="Contas" :icon="Wallet" href="/accounts" />
+                <SidebarItem
+                    label="Lançamentos"
+                    :icon="ArrowRightLeft"
+                    href="/releases"
+                />
+                <SidebarItem
+                    label="Categorias"
+                    :icon="Tags"
+                    href="/categories"
+                />
+                <SidebarItem
+                    label="Investimentos"
+                    :icon="PiggyBank"
+                    href="/investiments"
+                />
+                <SidebarItem
+                    label="Valuations"
+                    :icon="ChartNoAxesCombined"
+                    href="/valuations"
+                />
+            </div>
+        </nav>
+
+        <!-- FOOTER -->
+        <div class="border-t border-sidebar-border px-3 py-3">
+            <div class="space-y-0.5">
+                <SidebarItem
+                    label="Configurações"
+                    :icon="Settings"
+                    href="/settings"
+                />
+                <SidebarItem
+                    label="Sair"
+                    :icon="LogOut"
+                    href="/logout"
+                    method="post"
+                    danger
+                />
+            </div>
+        </div>
+    </aside>
 </template>

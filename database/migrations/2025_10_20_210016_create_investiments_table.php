@@ -13,7 +13,13 @@ return new class extends Migration
     {
         Schema::create('investiments', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('type')->constrained('categories');
+            $table->string('name');
+            $table->dateTime('dt_investment');
+            $table->decimal('value', 15, 2);
+            $table->integer('profitability');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

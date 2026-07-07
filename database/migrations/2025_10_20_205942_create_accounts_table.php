@@ -13,9 +13,14 @@ return new class extends Migration
     {
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->foreignId('user_id')->constrained('users');
+            $table->foreignId('bank_id')->constrained('banks');
+            $table->integer('type');
+            $table->string('agency');
+            $table->string('account');
             $table->decimal('total', 15, 2);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

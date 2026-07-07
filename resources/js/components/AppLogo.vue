@@ -1,16 +1,40 @@
-<script setup lang="ts">
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
-</script>
+<script setup lang="ts"></script>
 
 <template>
-    <div
-        class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"
-    >
-        <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
-    </div>
-    <div class="ml-1 grid flex-1 text-left text-sm">
-        <span class="mb-0.5 truncate leading-tight font-semibold"
-            >Laravel Starter Kit</span
+    <div class="flex items-center gap-3">
+        <svg
+            viewBox="0 0 32 40"
+            fill="none"
+            class="h-9 w-7 shrink-0"
+            xmlns="http://www.w3.org/2000/svg"
         >
+            <rect
+                x="3"
+                y="3"
+                width="7"
+                height="34"
+                rx="3.5"
+                class="fill-primary"
+            />
+            <rect
+                x="3"
+                y="3"
+                width="24"
+                height="7"
+                rx="3.5"
+                class="fill-primary"
+            />
+            <rect
+                x="3"
+                y="18"
+                width="18"
+                height="7"
+                rx="3.5"
+                class="fill-primary"
+            />
+        </svg>
+        <div>
+            <h1 class="text-lg leading-none font-bold tracking-tight">Fidax</h1>
+        </div>
     </div>
 </template>

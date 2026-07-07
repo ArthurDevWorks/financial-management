@@ -13,8 +13,8 @@ import { LoaderCircle } from 'lucide-vue-next';
 
 <template>
     <AuthBase
-        title="Create an account"
-        description="Enter your details below to create your account"
+        title="Crie sua conta"
+        description="Comece a gerenciar suas finanças agora mesmo"
     >
         <Head title="Register" />
 
@@ -26,7 +26,7 @@ import { LoaderCircle } from 'lucide-vue-next';
         >
             <div class="grid gap-6">
                 <div class="grid gap-2">
-                    <Label for="name">Name</Label>
+                    <Label for="name" required>Nome Completo</Label>
                     <Input
                         id="name"
                         type="text"
@@ -35,13 +35,13 @@ import { LoaderCircle } from 'lucide-vue-next';
                         :tabindex="1"
                         autocomplete="name"
                         name="name"
-                        placeholder="Full name"
+                        placeholder="Seu nome"
                     />
                     <InputError :message="errors.name" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="email">Email address</Label>
+                    <Label for="email" required>Email</Label>
                     <Input
                         id="email"
                         type="email"
@@ -49,13 +49,13 @@ import { LoaderCircle } from 'lucide-vue-next';
                         :tabindex="2"
                         autocomplete="email"
                         name="email"
-                        placeholder="email@example.com"
+                        placeholder="seu@email.com"
                     />
                     <InputError :message="errors.email" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                    <Label for="password" required>Senha</Label>
                     <Input
                         id="password"
                         type="password"
@@ -63,13 +63,15 @@ import { LoaderCircle } from 'lucide-vue-next';
                         :tabindex="3"
                         autocomplete="new-password"
                         name="password"
-                        placeholder="Password"
+                        placeholder="Mínimo 8 caracteres"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">Confirm password</Label>
+                    <Label for="password_confirmation" required
+                        >Confirmar Senha</Label
+                    >
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -77,33 +79,32 @@ import { LoaderCircle } from 'lucide-vue-next';
                         :tabindex="4"
                         autocomplete="new-password"
                         name="password_confirmation"
-                        placeholder="Confirm password"
+                        placeholder="Repita a senha"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
 
                 <Button
                     type="submit"
-                    class="mt-2 w-full"
-                    tabindex="5"
+                    class="mt-4 h-11 w-full"
+                    :tabindex="5"
                     :disabled="processing"
-                    data-test="register-user-button"
                 >
                     <LoaderCircle
                         v-if="processing"
-                        class="h-4 w-4 animate-spin"
+                        class="mr-2 h-4 w-4 animate-spin"
                     />
-                    Create account
+                    {{ processing ? 'Criando conta...' : 'Criar Conta' }}
                 </Button>
             </div>
 
             <div class="text-center text-sm text-muted-foreground">
-                Already have an account?
+                Já tem uma conta?
                 <TextLink
                     :href="login()"
-                    class="underline underline-offset-4"
+                    class="font-semibold text-primary transition hover:text-primary/80"
                     :tabindex="6"
-                    >Log in</TextLink
+                    >Acessar</TextLink
                 >
             </div>
         </Form>
