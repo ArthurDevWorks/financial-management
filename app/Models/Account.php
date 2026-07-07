@@ -36,6 +36,16 @@ class Account extends Model
         return $this->belongsTo(Bank::class);
     }
 
+    public function getRevenueSumAttribute($value)
+    {
+        return number_format((float) ($value ?? 0), 2, '.', '');
+    }
+
+    public function getExpenseSumAttribute($value)
+    {
+        return number_format((float) ($value ?? 0), 2, '.', '');
+    }
+
     public function getCurrentBalanceAttribute()
     {
         $revenues = (float) ($this->revenue_sum ?? 0);
