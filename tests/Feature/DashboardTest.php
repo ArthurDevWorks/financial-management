@@ -88,3 +88,4 @@ it('aceita filtro customizado por intervalo de datas', function () {
         ->has('recentTransactions', 1)
     );
 });
+
