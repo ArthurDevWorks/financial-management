@@ -9,8 +9,8 @@ use App\Models\Account;
 use App\Models\Bank;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Response;
+use Inertia\Inertia;
 
 class AccountController extends Controller
 {
@@ -23,13 +23,13 @@ class AccountController extends Controller
             'accounts' => Account::query()
                 ->where('user_id', Auth::id())
                 ->with(['bank'])
-                ->withSum(['releases as revenue_sum' => fn($query) => $query->where('type', 'revenue')], 'amount')
-                ->withSum(['releases as expense_sum' => fn($query) => $query->where('type', 'expense')], 'amount')
-                ->when($request->search, fn($q, $search) => $q->where(function($q) use ($search) {
+                ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')], 'amount')
+                ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')], 'amount')
+                ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
                     $q->where('account', 'like', "%{$search}%")
-                      ->orWhereHas('bank', fn($q) => $q->where('name', 'like', "%{$search}%"));
+                        ->orWhereHas('bank', fn ($q) => $q->where('name', 'like', "%{$search}%"));
                 }))
-                ->paginate(10)
+                ->paginate(10),
         ]);
     }
 
@@ -86,14 +86,14 @@ class AccountController extends Controller
         $accounts = Account::query()
             ->where('user_id', Auth::id())
             ->with(['bank'])
-            ->withSum(['releases as revenue_sum' => fn($q) => $q->where('type', 'revenue')], 'amount')
-            ->withSum(['releases as expense_sum' => fn($q) => $q->where('type', 'expense')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($q) => $q->where('type', 'revenue')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($q) => $q->where('type', 'expense')], 'amount')
             ->orderBy('created_at', 'desc')
             ->get();
 
         $callback = function () use ($accounts) {
             $handle = fopen('php://output', 'w');
-            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fwrite($handle, chr(0xEF).chr(0xBB).chr(0xBF));
             fputcsv($handle, ['ID', 'Banco', 'Conta', 'Tipo', 'Saldo Inicial', 'Saldo Atual']);
 
             foreach ($accounts as $account) {

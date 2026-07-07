@@ -3,7 +3,7 @@
 use App\Services\DcfValuationService;
 
 it('calcula valuation e preenche taxas de crescimento em falta', function () {
-    $service = new DcfValuationService();
+    $service = new DcfValuationService;
 
     $resultado = $service->calculate([
         'current_fcf' => 100,
@@ -27,7 +27,7 @@ it('calcula valuation e preenche taxas de crescimento em falta', function () {
 });
 
 it('retorna campos nulos quando o preço atual da ação não é informado', function () {
-    $service = new DcfValuationService();
+    $service = new DcfValuationService;
 
     $resultado = $service->calculate([
         'current_fcf' => 100,
@@ -47,7 +47,7 @@ it('retorna campos nulos quando o preço atual da ação não é informado', fun
 });
 
 it('não divide por zero quando o valor justo por ação zera', function () {
-    $service = new DcfValuationService();
+    $service = new DcfValuationService;
 
     $resultado = $service->calculate([
         'current_fcf' => 0,

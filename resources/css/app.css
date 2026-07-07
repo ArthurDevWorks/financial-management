@@ -93,7 +93,9 @@
             'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
             'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
             'Noto Color Emoji';
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition:
+            background-color 0.3s ease,
+            color 0.3s ease;
     }
 }
 
@@ -235,8 +237,12 @@
 }
 
 @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes scale-in {
@@ -277,27 +283,67 @@
     animation: slide-in-right 0.3s ease-out both;
 }
 
-.animate-stagger-1 { animation-delay: 0.04s; }
-.animate-stagger-2 { animation-delay: 0.08s; }
-.animate-stagger-3 { animation-delay: 0.12s; }
-.animate-stagger-4 { animation-delay: 0.16s; }
-.animate-stagger-5 { animation-delay: 0.20s; }
-.animate-stagger-6 { animation-delay: 0.24s; }
-.animate-stagger-7 { animation-delay: 0.28s; }
-.animate-stagger-8 { animation-delay: 0.32s; }
-.animate-stagger-9 { animation-delay: 0.36s; }
-.animate-stagger-10 { animation-delay: 0.40s; }
+.animate-stagger-1 {
+    animation-delay: 0.04s;
+}
+.animate-stagger-2 {
+    animation-delay: 0.08s;
+}
+.animate-stagger-3 {
+    animation-delay: 0.12s;
+}
+.animate-stagger-4 {
+    animation-delay: 0.16s;
+}
+.animate-stagger-5 {
+    animation-delay: 0.2s;
+}
+.animate-stagger-6 {
+    animation-delay: 0.24s;
+}
+.animate-stagger-7 {
+    animation-delay: 0.28s;
+}
+.animate-stagger-8 {
+    animation-delay: 0.32s;
+}
+.animate-stagger-9 {
+    animation-delay: 0.36s;
+}
+.animate-stagger-10 {
+    animation-delay: 0.4s;
+}
 
 tr.animate-row {
     animation: fade-in-up 0.3s ease-out both;
 }
-tr.animate-row:nth-child(1) { animation-delay: 0.02s; }
-tr.animate-row:nth-child(2) { animation-delay: 0.04s; }
-tr.animate-row:nth-child(3) { animation-delay: 0.06s; }
-tr.animate-row:nth-child(4) { animation-delay: 0.08s; }
-tr.animate-row:nth-child(5) { animation-delay: 0.10s; }
-tr.animate-row:nth-child(6) { animation-delay: 0.12s; }
-tr.animate-row:nth-child(7) { animation-delay: 0.14s; }
-tr.animate-row:nth-child(8) { animation-delay: 0.16s; }
-tr.animate-row:nth-child(9) { animation-delay: 0.18s; }
-tr.animate-row:nth-child(10) { animation-delay: 0.20s; }
+tr.animate-row:nth-child(1) {
+    animation-delay: 0.02s;
+}
+tr.animate-row:nth-child(2) {
+    animation-delay: 0.04s;
+}
+tr.animate-row:nth-child(3) {
+    animation-delay: 0.06s;
+}
+tr.animate-row:nth-child(4) {
+    animation-delay: 0.08s;
+}
+tr.animate-row:nth-child(5) {
+    animation-delay: 0.1s;
+}
+tr.animate-row:nth-child(6) {
+    animation-delay: 0.12s;
+}
+tr.animate-row:nth-child(7) {
+    animation-delay: 0.14s;
+}
+tr.animate-row:nth-child(8) {
+    animation-delay: 0.16s;
+}
+tr.animate-row:nth-child(9) {
+    animation-delay: 0.18s;
+}
+tr.animate-row:nth-child(10) {
+    animation-delay: 0.2s;
+}

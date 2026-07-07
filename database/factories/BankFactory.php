@@ -16,7 +16,7 @@ class BankFactory extends Factory
     {
         return [
             'name' => fake()->company(),
-            'logo' => 'banks/' . fake()->unique()->slug() . '.png',
+            'logo' => 'banks/'.fake()->unique()->slug().'.png',
         ];
     }
 }

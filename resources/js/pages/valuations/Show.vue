@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -73,7 +72,7 @@ interface Valuation {
     calculated_at: string;
 }
 
-const props = defineProps<{
+defineProps<{
     valuation: Valuation;
 }>();
 
@@ -256,11 +255,14 @@ const summaryItems = isPrecoTeto
                         class="h-8 w-8 rounded-full object-contain"
                     />
                     <div class="min-w-0">
-                        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+                        <h1
+                            class="text-2xl font-bold tracking-tight text-foreground"
+                        >
                             {{ valuation.investiment.name }}
                         </h1>
                         <p class="mt-1 text-[0.9375rem] text-muted-foreground">
-                            {{ valuation.method_label }} calculado em {{ formatDate(valuation.calculated_at) }}
+                            {{ valuation.method_label }} calculado em
+                            {{ formatDate(valuation.calculated_at) }}
                         </p>
                     </div>
                 </div>

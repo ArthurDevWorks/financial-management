@@ -76,7 +76,9 @@ const form = useForm({
         toFormValue(assumptions.projected_growth_rate) || '0',
     current_price_per_share:
         toFormValue(assumptions.current_price_per_share) ||
-        toInputValue(props.investiment?.current_balance ?? props.investiment?.value),
+        toInputValue(
+            props.investiment?.current_balance ?? props.investiment?.value,
+        ),
 });
 
 watch(selectedId, (id) => {
@@ -91,12 +93,19 @@ watch(selectedId, (id) => {
 });
 
 watch(
-    () => [props.investiment?.id, props.investiment?.current_balance, props.investiment?.value] as const,
+    () =>
+        [
+            props.investiment?.id,
+            props.investiment?.current_balance,
+            props.investiment?.value,
+        ] as const,
     ([id, currentBalance, value]) => {
         form.investiment_id = id?.toString() ?? '';
 
         if (!props.valuation) {
-            form.current_price_per_share = toInputValue(currentBalance ?? value);
+            form.current_price_per_share = toInputValue(
+                currentBalance ?? value,
+            );
         }
     },
 );

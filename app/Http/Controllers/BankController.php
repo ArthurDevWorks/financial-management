@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\BankStoreRequest;
 use App\Http\Requests\BankUpdateRequest;
-use Illuminate\Support\Facades\Storage;
 use App\Models\Bank;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class BankController extends Controller
 {
@@ -19,13 +19,14 @@ class BankController extends Controller
     {
         $banks = Bank::query()
             ->withCount('accounts')
-            ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
+            ->when($request->search, fn ($q, $search) => $q->where('name', 'like', "%{$search}%"))
             ->paginate(10);
 
         $banks->getCollection()->transform(function ($bank) {
             $bank->logo_url = $bank->logo
-                ? asset('storage/' . $bank->logo)
+                ? asset('storage/'.$bank->logo)
                 : null;
+
             return $bank;
         });
 
@@ -60,7 +61,7 @@ class BankController extends Controller
             'logo' => $data['logo'],
         ]);
 
-        if (!$save) {
+        if (! $save) {
             return redirect()->route('banks.index')
                 ->with('sucess', 'Erro ao cadastrar banco');
         }
@@ -75,10 +76,10 @@ class BankController extends Controller
     public function edit(Bank $bank)
     {
         $bank->logo_url = $bank->logo
-            ? asset('storage/' . $bank->logo)
+            ? asset('storage/'.$bank->logo)
             : null;
 
-        return Inertia::render('banks/Edit',[
+        return Inertia::render('banks/Edit', [
             'bank' => $bank,
         ]);
     }
@@ -102,7 +103,7 @@ class BankController extends Controller
 
         $update = $bank->update($data);
 
-        if (!$update) {
+        if (! $update) {
             return redirect()->route('banks.index')
                 ->with('success', 'Erro ao atualizar banco');
         }
@@ -120,7 +121,7 @@ class BankController extends Controller
 
         $callback = function () use ($banks) {
             $handle = fopen('php://output', 'w');
-            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fwrite($handle, chr(0xEF).chr(0xBB).chr(0xBF));
             fputcsv($handle, ['ID', 'Nome', 'Contas Vinculadas']);
 
             foreach ($banks as $bank) {
@@ -148,7 +149,7 @@ class BankController extends Controller
         if ($bank->logo) {
             Storage::disk('public')->delete($bank->logo);
         }
-        
+
         $bank->delete();
 
         return redirect()->route('banks.index');

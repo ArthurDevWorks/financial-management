@@ -14,13 +14,13 @@ class ReleaseStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_id'  => 'required|exists:accounts,id',
+            'account_id' => 'required|exists:accounts,id',
             'category_id' => 'required|exists:categories,id',
-            'title'       => 'required|string|max:255',
+            'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'amount'      => 'required|numeric|min:0.01',
-            'type'        => 'required|in:revenue,expense',
-            'date'        => 'required|date',
+            'amount' => 'required|numeric|min:0.01',
+            'type' => 'required|in:revenue,expense',
+            'date' => 'required|date',
         ];
     }
 }

@@ -383,7 +383,9 @@ const submit = () => {
                                     :alt="investiment.name"
                                     class="h-6 w-6 rounded-full object-contain"
                                 />
-                                <span class="font-semibold">{{ investiment.name }}</span>
+                                <span class="font-semibold">{{
+                                    investiment.name
+                                }}</span>
                             </div>
                         </div>
 
@@ -403,7 +405,13 @@ const submit = () => {
                                 <span
                                     v-if="investiment.current_balance"
                                     class="text-xs text-muted-foreground"
-                                >(Cotação: {{ formatCurrency(Number(investiment.current_balance)) }})</span>
+                                    >(Cotação:
+                                    {{
+                                        formatCurrency(
+                                            Number(investiment.current_balance),
+                                        )
+                                    }})</span
+                                >
                             </div>
                         </div>
 
@@ -571,7 +579,8 @@ const submit = () => {
                                 />
                             </div>
                             <p class="mt-2 text-xs text-muted-foreground">
-                                Segue a taxa do ultimo ano projetado da planilha.
+                                Segue a taxa do ultimo ano projetado da
+                                planilha.
                             </p>
                         </div>
 

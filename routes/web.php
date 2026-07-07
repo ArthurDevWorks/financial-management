@@ -4,8 +4,8 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\InvestimentController;
-use App\Http\Controllers\ReleaseController;
 use App\Http\Controllers\PrecoTetoController;
+use App\Http\Controllers\ReleaseController;
 use App\Http\Controllers\ValuationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -21,7 +21,6 @@ use App\Http\Controllers\DashboardController;
 
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
-
 
 Route::middleware(['auth'])->group(function () {
     Route::get('banks/export', [BankController::class, 'export'])->name('banks.export');

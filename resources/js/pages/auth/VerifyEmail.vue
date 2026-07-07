@@ -21,9 +21,10 @@ defineProps<{
 
         <div
             v-if="status === 'verification-link-sent'"
-            class="mb-6 p-4 rounded-lg bg-primary/20 border border-primary/50 text-center text-sm font-medium text-primary"
+            class="mb-6 rounded-lg border border-primary/50 bg-primary/20 p-4 text-center text-sm font-medium text-primary"
         >
-            Um novo link de verificação foi enviado para o email fornecido durante o cadastro.
+            Um novo link de verificação foi enviado para o email fornecido
+            durante o cadastro.
         </div>
 
         <Form
@@ -31,19 +32,20 @@ defineProps<{
             class="space-y-6 text-center"
             v-slot="{ processing }"
         >
-            <Button 
-                variant="default"
-                class="w-full"
-                :disabled="processing"
-            >
-                <LoaderCircle v-if="processing" class="h-4 w-4 animate-spin mr-2" />
-                {{ processing ? 'Enviando...' : 'Reenviar Email de Verificação' }}
+            <Button variant="default" class="w-full" :disabled="processing">
+                <LoaderCircle
+                    v-if="processing"
+                    class="mr-2 h-4 w-4 animate-spin"
+                />
+                {{
+                    processing ? 'Enviando...' : 'Reenviar Email de Verificação'
+                }}
             </Button>
 
             <TextLink
                 :href="logout()"
                 as="button"
-                class="mx-auto block text-sm text-muted-foreground hover:text-primary font-medium"
+                class="mx-auto block text-sm font-medium text-muted-foreground hover:text-primary"
             >
                 Sair
             </TextLink>

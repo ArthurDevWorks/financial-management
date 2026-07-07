@@ -88,7 +88,9 @@ const currentPasswordInput = ref<HTMLInputElement | null>(null);
                                 autocomplete="new-password"
                                 placeholder="Confirme a nova senha"
                             />
-                            <InputError :message="errors.password_confirmation" />
+                            <InputError
+                                :message="errors.password_confirmation"
+                            />
                         </div>
 
                         <div class="flex items-center gap-4">

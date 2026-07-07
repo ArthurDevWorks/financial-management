@@ -132,12 +132,18 @@ const openValuation = (valuation: ValuationSummary | null) => {
                                 <TableCell class="font-medium text-foreground">
                                     <div class="flex items-center gap-2">
                                         <img
-                                            v-if="valuation.investiment.logo_url"
-                                            :src="valuation.investiment.logo_url"
+                                            v-if="
+                                                valuation.investiment.logo_url
+                                            "
+                                            :src="
+                                                valuation.investiment.logo_url
+                                            "
                                             :alt="valuation.investiment.name"
                                             class="h-6 w-6 rounded-full object-contain"
                                         />
-                                        <span>{{ valuation.investiment.name }}</span>
+                                        <span>{{
+                                            valuation.investiment.name
+                                        }}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell class="text-right">

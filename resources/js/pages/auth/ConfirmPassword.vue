@@ -47,7 +47,7 @@ import { LoaderCircle } from 'lucide-vue-next';
                     >
                         <LoaderCircle
                             v-if="processing"
-                            class="h-4 w-4 animate-spin mr-2"
+                            class="mr-2 h-4 w-4 animate-spin"
                         />
                         {{ processing ? 'Confirmando...' : 'Confirmar Senha' }}
                     </Button>

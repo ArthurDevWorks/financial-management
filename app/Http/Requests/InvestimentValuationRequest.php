@@ -43,7 +43,7 @@ class InvestimentValuationRequest extends FormRequest
             'discount_rate' => 'required|numeric|min:0.01|max:100',
             'terminal_growth_rate' => 'required|numeric|min:0|lt:discount_rate',
             'projection_years' => 'required|integer|min:3|max:15',
-            'growth_rates' => 'required|array|size:' . $projectionYears,
+            'growth_rates' => 'required|array|size:'.$projectionYears,
             'growth_rates.*' => 'required|numeric|min:0|max:100',
         ];
     }

@@ -32,7 +32,7 @@ class InvestimentUpdateRequest extends FormRequest
 
         if ($typeInput !== null) {
             $isValidEnum = collect(InvestmentAssetType::cases())
-                ->contains(fn($c) => $c->value === $typeInput);
+                ->contains(fn ($c) => $c->value === $typeInput);
 
             if ($isValidEnum) {
                 return;
@@ -53,7 +53,7 @@ class InvestimentUpdateRequest extends FormRequest
                             return true;
                         }
 
-                        $labels = array_map(fn($c) => $c->label(), InvestmentAssetType::cases());
+                        $labels = array_map(fn ($c) => $c->label(), InvestmentAssetType::cases());
                         if (in_array($typeInput, $labels, true)) {
                             return strcasecmp($cat->name, $typeInput) === 0;
                         }
@@ -64,7 +64,7 @@ class InvestimentUpdateRequest extends FormRequest
                 if ($category) {
                     $enum = InvestmentAssetType::fromLegacyCategoryName($category->name);
                 } else {
-                    $enum = collect(InvestmentAssetType::cases())->first(fn($c) => $c->value === $typeInput);
+                    $enum = collect(InvestmentAssetType::cases())->first(fn ($c) => $c->value === $typeInput);
                 }
             }
 
@@ -79,7 +79,7 @@ class InvestimentUpdateRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'type' => ['required', function ($attribute, $value, $fail) {
-                $valid = collect(InvestmentAssetType::cases())->contains(fn($c) => $c->value === $value);
+                $valid = collect(InvestmentAssetType::cases())->contains(fn ($c) => $c->value === $value);
 
                 if (! $valid) {
                     $fail('Tipo inválido.');

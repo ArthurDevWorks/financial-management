@@ -6,8 +6,8 @@ use App\Http\Requests\CategoryStoreRequest;
 use App\Http\Requests\CategoryUpdateRequest;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Response;
+use Inertia\Inertia;
 
 class CategoryController extends Controller
 {
@@ -15,10 +15,10 @@ class CategoryController extends Controller
     {
         return Inertia::render('categories/Index', [
             'categories' => Category::query()
-                ->when($request->search, fn($q, $search) => $q->where('name', 'like', "%{$search}%"))
+                ->when($request->search, fn ($q, $search) => $q->where('name', 'like', "%{$search}%"))
                 ->orderBy('type')
                 ->orderBy('name')
-                ->paginate(10)
+                ->paginate(10),
         ]);
     }
 
@@ -62,7 +62,7 @@ class CategoryController extends Controller
 
         $callback = function () use ($categories) {
             $handle = fopen('php://output', 'w');
-            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fwrite($handle, chr(0xEF).chr(0xBB).chr(0xBF));
             fputcsv($handle, ['ID', 'Nome', 'Tipo']);
 
             foreach ($categories as $category) {

@@ -16,7 +16,7 @@ class BrapiService
     {
         $this->http = Http::baseUrl(config('services.brapi.base_url', 'https://brapi.dev/api'))
             ->withHeaders([
-                'Authorization' => 'Bearer ' . config('services.brapi.key'),
+                'Authorization' => 'Bearer '.config('services.brapi.key'),
             ])
             ->acceptJson()
             ->timeout(10)
@@ -30,7 +30,7 @@ class BrapiService
         }
 
         $symbols = array_map(fn (string $s): string => strtoupper(trim($s)), $symbols);
-        $cacheKey = 'brapi_quotes_' . md5(implode(',', $symbols));
+        $cacheKey = 'brapi_quotes_'.md5(implode(',', $symbols));
 
         return Cache::remember($cacheKey, 60, function () use ($symbols) {
             try {
@@ -71,7 +71,7 @@ class BrapiService
                         ]];
                     });
             } catch (\Throwable $e) {
-                Log::error('brapi.dev connection error: ' . $e->getMessage());
+                Log::error('brapi.dev connection error: '.$e->getMessage());
 
                 return collect();
             }

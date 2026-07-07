@@ -5,10 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
@@ -16,12 +16,12 @@ class UserController extends Controller
     {
         return Inertia::render('users/Index', [
             'users' => User::query()
-                ->when($request->search, fn($q, $search) => $q->where(function($q) use ($search) {
+                ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%");
+                        ->orWhere('email', 'like', "%{$search}%");
                 }))
                 ->orderBy('name')
-                ->paginate(10)
+                ->paginate(10),
         ]);
     }
 
@@ -74,7 +74,7 @@ class UserController extends Controller
 
         $callback = function () use ($users) {
             $handle = fopen('php://output', 'w');
-            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fwrite($handle, chr(0xEF).chr(0xBB).chr(0xBF));
             fputcsv($handle, ['ID', 'Nome', 'Email', 'Verificado em']);
 
             foreach ($users as $user) {

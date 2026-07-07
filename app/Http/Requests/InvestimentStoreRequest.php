@@ -25,51 +25,51 @@ class InvestimentStoreRequest extends FormRequest
             'value' => $currentBalance,
             'dt_investment' => now()->toDateTimeString(),
         ]);
-        
-            $typeInput = $this->input('type');
 
-            if ($typeInput !== null) {
-                $isValidEnum = collect(InvestmentAssetType::cases())
-                    ->contains(fn($c) => $c->value === $typeInput);
+        $typeInput = $this->input('type');
 
-                if ($isValidEnum) {
-                    return;
+        if ($typeInput !== null) {
+            $isValidEnum = collect(InvestmentAssetType::cases())
+                ->contains(fn ($c) => $c->value === $typeInput);
+
+            if ($isValidEnum) {
+                return;
+            }
+
+            $enum = null;
+
+            if (is_numeric($typeInput)) {
+                $category = DB::table('categories')->find((int) $typeInput);
+                if ($category) {
+                    $enum = InvestmentAssetType::fromLegacyCategoryName($category->name);
                 }
+            } else {
+                $category = DB::table('categories')
+                    ->get()
+                    ->first(function (object $cat) use ($typeInput) {
+                        if (InvestmentAssetType::fromLegacyCategoryName($cat->name)->value === $typeInput) {
+                            return true;
+                        }
 
-                $enum = null;
-
-                if (is_numeric($typeInput)) {
-                    $category = DB::table('categories')->find((int) $typeInput);
-                    if ($category) {
-                        $enum = InvestmentAssetType::fromLegacyCategoryName($category->name);
-                    }
-                } else {
-                    $category = DB::table('categories')
-                        ->get()
-                        ->first(function (object $cat) use ($typeInput) {
-                            if (InvestmentAssetType::fromLegacyCategoryName($cat->name)->value === $typeInput) {
-                                return true;
-                            }
-
-                            $labels = array_map(fn($c) => $c->label(), InvestmentAssetType::cases());
-                            if (in_array($typeInput, $labels, true)) {
-                                return strcasecmp($cat->name, $typeInput) === 0;
-                            }
-
+                        $labels = array_map(fn ($c) => $c->label(), InvestmentAssetType::cases());
+                        if (in_array($typeInput, $labels, true)) {
                             return strcasecmp($cat->name, $typeInput) === 0;
-                        });
+                        }
 
-                    if ($category) {
-                        $enum = InvestmentAssetType::fromLegacyCategoryName($category->name);
-                    } else {
-                        $enum = collect(InvestmentAssetType::cases())->first(fn($c) => $c->value === $typeInput);
-                    }
-                }
+                        return strcasecmp($cat->name, $typeInput) === 0;
+                    });
 
-                if ($enum) {
-                    $this->merge(['type' => $enum->value]);
+                if ($category) {
+                    $enum = InvestmentAssetType::fromLegacyCategoryName($category->name);
+                } else {
+                    $enum = collect(InvestmentAssetType::cases())->first(fn ($c) => $c->value === $typeInput);
                 }
             }
+
+            if ($enum) {
+                $this->merge(['type' => $enum->value]);
+            }
+        }
     }
 
     public function rules(): array
@@ -77,7 +77,7 @@ class InvestimentStoreRequest extends FormRequest
         return [
             'name' => 'required|string|max:255',
             'type' => ['required', function ($attribute, $value, $fail) {
-                $valid = collect(InvestmentAssetType::cases())->contains(fn($c) => $c->value === $value);
+                $valid = collect(InvestmentAssetType::cases())->contains(fn ($c) => $c->value === $value);
 
                 if (! $valid) {
                     $fail('Tipo inválido.');

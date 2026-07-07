@@ -34,9 +34,7 @@ const passwordInput = ref<InstanceType<typeof Input> | null>(null);
         >
             <div class="relative space-y-0.5 text-destructive">
                 <p class="font-medium">Atenção</p>
-                <p class="text-sm">
-                    Tenha certeza, esta ação é irreversível.
-                </p>
+                <p class="text-sm">Tenha certeza, esta ação é irreversível.</p>
             </div>
             <Dialog>
                 <DialogTrigger as-child>

@@ -85,7 +85,8 @@ const user = page.props.auth.user;
                                     as="button"
                                     class="text-foreground underline decoration-border underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-border"
                                 >
-                                    Clique aqui para reenviar o e-mail de verificação.
+                                    Clique aqui para reenviar o e-mail de
+                                    verificação.
                                 </Link>
                             </p>
 
@@ -93,7 +94,8 @@ const user = page.props.auth.user;
                                 v-if="status === 'verification-link-sent'"
                                 class="mt-2 text-sm font-medium text-primary"
                             >
-                                Um novo link de verificação foi enviado para seu e-mail.
+                                Um novo link de verificação foi enviado para seu
+                                e-mail.
                             </div>
                         </div>
 
@@ -101,7 +103,8 @@ const user = page.props.auth.user;
                             <Button
                                 :disabled="processing"
                                 data-test="update-profile-button"
-                            >Salvar</Button>
+                                >Salvar</Button
+                            >
 
                             <Transition
                                 enter-active-class="transition ease-in-out"

@@ -56,8 +56,8 @@ onUnmounted(() => {
                         <p class="text-muted-foreground">
                             Ao ativar a autenticação de dois fatores, você será
                             solicitado a informar um PIN seguro durante o login.
-                            Este PIN pode ser obtido de um aplicativo
-                            compatível com TOTP no seu celular.
+                            Este PIN pode ser obtido de um aplicativo compatível
+                            com TOTP no seu celular.
                         </p>
 
                         <div>
@@ -88,15 +88,18 @@ onUnmounted(() => {
 
                         <p class="text-muted-foreground">
                             Com a autenticação de dois fatores ativada, você
-                            será solicitado a informar um PIN seguro e
-                            aleatório durante o login, que pode ser obtido
-                            do aplicativo compatível com TOTP no seu celular.
+                            será solicitado a informar um PIN seguro e aleatório
+                            durante o login, que pode ser obtido do aplicativo
+                            compatível com TOTP no seu celular.
                         </p>
 
                         <TwoFactorRecoveryCodes />
 
                         <div class="relative inline">
-                            <Form v-bind="disable.form()" #default="{ processing }">
+                            <Form
+                                v-bind="disable.form()"
+                                #default="{ processing }"
+                            >
                                 <Button
                                     variant="destructive"
                                     type="submit"

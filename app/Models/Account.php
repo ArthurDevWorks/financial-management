@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Account extends Model
 {
@@ -40,6 +40,7 @@ class Account extends Model
     {
         $revenues = (float) ($this->revenue_sum ?? 0);
         $expenses = (float) ($this->expense_sum ?? 0);
+
         return (float) $this->total + $revenues - $expenses;
     }
 }

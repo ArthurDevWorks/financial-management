@@ -59,9 +59,7 @@ const inputEmail = ref(props.email);
                 </div>
 
                 <div class="grid gap-2">
-                    <Label for="password_confirmation">
-                        Confirmar Senha
-                    </Label>
+                    <Label for="password_confirmation"> Confirmar Senha </Label>
                     <Input
                         id="password_confirmation"
                         type="password"
@@ -81,7 +79,7 @@ const inputEmail = ref(props.email);
                 >
                     <LoaderCircle
                         v-if="processing"
-                        class="h-4 w-4 animate-spin mr-2"
+                        class="mr-2 h-4 w-4 animate-spin"
                     />
                     {{ processing ? 'Alterando...' : 'Redefinir Senha' }}
                 </Button>

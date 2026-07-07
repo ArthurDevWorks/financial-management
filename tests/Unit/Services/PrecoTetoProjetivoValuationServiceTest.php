@@ -3,7 +3,7 @@
 use App\Services\PrecoTetoProjetivoValuationService;
 
 it('calcula preço teto projetivo com lucro, ações, payout e yield desejado', function () {
-    $service = new PrecoTetoProjetivoValuationService();
+    $service = new PrecoTetoProjetivoValuationService;
 
     $resultado = $service->calculate([
         'desired_yield' => 6,
@@ -23,7 +23,7 @@ it('calcula preço teto projetivo com lucro, ações, payout e yield desejado', 
 });
 
 it('não divide por zero quando recebe denominadores zerados', function () {
-    $service = new PrecoTetoProjetivoValuationService();
+    $service = new PrecoTetoProjetivoValuationService;
 
     $resultado = $service->calculate([
         'desired_yield' => 0,

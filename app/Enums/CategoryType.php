@@ -10,7 +10,7 @@ enum CategoryType: string
 
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::REVENUE => 'Receita',
             self::EXPENSE => 'Despesa',
             self::INVESTMENT => 'Investimento',
@@ -19,7 +19,7 @@ enum CategoryType: string
 
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::REVENUE => 'bg-green-500/20 text-green-400 border border-green-500/50',
             self::EXPENSE => 'bg-red-500/20 text-red-400 border border-red-500/50',
             self::INVESTMENT => 'bg-purple-500/20 text-purple-400 border border-purple-500/50',

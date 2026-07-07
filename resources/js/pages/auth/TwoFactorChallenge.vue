@@ -90,14 +90,18 @@ const codeValue = computed<string>(() => code.value.join(''));
                         </div>
                         <InputError :message="errors.code" />
                     </div>
-                    <Button type="submit" variant="default" class="w-full" :disabled="processing"
+                    <Button
+                        type="submit"
+                        variant="default"
+                        class="w-full"
+                        :disabled="processing"
                         >Continuar</Button
                     >
                     <div class="text-center text-sm text-muted-foreground">
                         <span>ou </span>
                         <button
                             type="button"
-                            class="text-primary hover:text-primary/80 font-semibold underline underline-offset-4"
+                            class="font-semibold text-primary underline underline-offset-4 hover:text-primary/80"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}
@@ -121,7 +125,11 @@ const codeValue = computed<string>(() => code.value.join(''));
                         required
                     />
                     <InputError :message="errors.recovery_code" />
-                    <Button type="submit" variant="default" class="w-full" :disabled="processing"
+                    <Button
+                        type="submit"
+                        variant="default"
+                        class="w-full"
+                        :disabled="processing"
                         >Continuar</Button
                     >
 
@@ -129,7 +137,7 @@ const codeValue = computed<string>(() => code.value.join(''));
                         <span>ou </span>
                         <button
                             type="button"
-                            class="text-primary hover:text-primary/80 font-semibold underline underline-offset-4"
+                            class="font-semibold text-primary underline underline-offset-4 hover:text-primary/80"
                             @click="() => toggleRecoveryMode(clearErrors)"
                         >
                             {{ authConfigContent.toggleText }}

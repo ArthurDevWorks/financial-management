@@ -8,9 +8,9 @@ use App\Models\Account;
 use App\Models\Category;
 use App\Models\Release;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
+use Inertia\Inertia;
 
 class ReleaseController extends Controller
 {
@@ -18,11 +18,11 @@ class ReleaseController extends Controller
     {
         $releases = Release::with(['account', 'category'])
             ->where('user_id', Auth::id())
-            ->when($request->search, fn($q, $search) => $q->where(function($q) use ($search) {
+            ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
-                  ->orWhereHas('category', fn($q) => $q->where('name', 'like', "%{$search}%"))
-                  ->orWhereHas('account', fn($q) => $q->where('account', 'like', "%{$search}%"));
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhereHas('category', fn ($q) => $q->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('account', fn ($q) => $q->where('account', 'like', "%{$search}%"));
             }))
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
@@ -30,7 +30,7 @@ class ReleaseController extends Controller
 
         return Inertia::render('releases/Index', [
             'releases' => $releases,
-            'filters' => $request->only(['search'])
+            'filters' => $request->only(['search']),
         ]);
     }
 
@@ -86,7 +86,7 @@ class ReleaseController extends Controller
 
         $callback = function () use ($releases) {
             $handle = fopen('php://output', 'w');
-            fputs($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fwrite($handle, chr(0xEF).chr(0xBB).chr(0xBF));
             fputcsv($handle, ['ID', 'Título', 'Descrição', 'Categoria', 'Conta', 'Data', 'Valor', 'Tipo']);
 
             foreach ($releases as $release) {

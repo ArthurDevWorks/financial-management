@@ -24,7 +24,7 @@ defineProps<{
 
         <div
             v-if="status"
-            class="mb-6 p-4 rounded-lg bg-primary/20 border border-primary/50 text-center text-sm font-medium text-primary"
+            class="mb-6 rounded-lg border border-primary/50 bg-primary/20 p-4 text-center text-sm font-medium text-primary"
         >
             {{ status }}
         </div>
@@ -53,16 +53,24 @@ defineProps<{
                     >
                         <LoaderCircle
                             v-if="processing"
-                            class="h-4 w-4 animate-spin mr-2"
+                            class="mr-2 h-4 w-4 animate-spin"
                         />
-                        {{ processing ? 'Enviando...' : 'Enviar Link de Redefinição' }}
+                        {{
+                            processing
+                                ? 'Enviando...'
+                                : 'Enviar Link de Redefinição'
+                        }}
                     </Button>
                 </div>
             </Form>
 
             <div class="text-center text-sm text-muted-foreground">
                 Lembrou a senha?
-                <TextLink :href="login()" class="text-primary hover:text-primary/80 font-semibold">Voltar para login</TextLink>
+                <TextLink
+                    :href="login()"
+                    class="font-semibold text-primary hover:text-primary/80"
+                    >Voltar para login</TextLink
+                >
             </div>
         </div>
     </AuthLayout>
