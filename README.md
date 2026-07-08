@@ -4,6 +4,16 @@ Fidax é uma plataforma financeira SaaS em evolução para controle pessoal, ges
 
 ## Status atual
 
+### Release 1 em produção
+
+A primeira release já foi colocada em produção com o núcleo operacional do produto:
+
+- gerenciamento financeiro pessoal;
+- dashboard financeiro autenticado;
+- cadastro de bancos, contas, categorias e lançamentos;
+- módulo inicial de investimentos;
+- cálculo de valuations e preço teto.
+
 Este repositório já contém uma base funcional com:
 - autenticação e perfil de usuário
 - dashboard autenticado
@@ -48,6 +58,8 @@ Este repositório já contém uma base funcional com:
 
 - [Handbook do projeto](docs/fidax-handbook.md)
 - [PRD do produto](docs/prd.md)
+- [Backlog e milestones](docs/backlog.md)
+- [Changelog](CHANGELOG.md)
 
 ## Estrutura geral
 
@@ -122,8 +134,10 @@ O projeto utiliza migrations para estruturar:
 
 ## Roadmap resumido
 
-- Consolidar o MVP financeiro
-- Evoluir relatórios e dashboards
-- Padronizar o módulo de investimentos
-- Introduzir APIs e integrações externas
-- Expandir para inteligência financeira assistida por IA
+- Release 1: gerenciamento financeiro e valuations em produção.
+- Release 1.1: operação pós-produção, domínio, SSL, e-mails e pt-BR.
+- Release 2: planejamento financeiro e lançamentos avançados.
+- Release 3: consolidador de carteira.
+- Release 4: screener e oportunidades.
+- Release 5: central de documentos e research.
+- Release 6: inteligência financeira assistida por IA.
