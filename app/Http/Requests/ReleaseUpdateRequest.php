@@ -21,6 +21,8 @@ class ReleaseUpdateRequest extends FormRequest
             'amount' => 'required|numeric|min:0.01',
             'type' => 'required|in:revenue,expense',
             'date' => 'required|date',
+            'payment_method' => 'nullable|in:cash,credit_card,debit_card,pix',
+            'status' => 'nullable|in:pending,paid,canceled',
         ];
     }
 }

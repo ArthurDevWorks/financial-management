@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RecurrenceFrequency;
 use App\Http\Requests\ReleaseStoreRequest;
 use App\Http\Requests\ReleaseUpdateRequest;
 use App\Models\Account;
 use App\Models\Category;
+use App\Models\RecurrencePlan;
 use App\Models\Release;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +18,7 @@ class ReleaseController extends Controller
 {
     public function index(Request $request)
     {
-        $releases = Release::with(['account', 'category'])
+        $releases = Release::with(['account.bank', 'category', 'parent'])
             ->where('user_id', Auth::id())
             ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
@@ -39,6 +41,9 @@ class ReleaseController extends Controller
         return Inertia::render('releases/Create', [
             'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
             'categories' => Category::where('type', 'receita')->orWhere('type', 'despesa')->get(),
+            'paymentMethods' => \App\Enums\PaymentMethod::options(),
+            'recurrenceFrequencies' => \App\Enums\RecurrenceFrequency::options(),
+            'releaseStatuses' => \App\Enums\ReleaseStatus::options(),
         ]);
     }
 
@@ -47,6 +52,76 @@ class ReleaseController extends Controller
         $validated = $request->validated();
         $validated['user_id'] = Auth::id();
 
+        $isInstallment = !empty($validated['is_installment']);
+        $isRecurring = !empty($validated['is_recurring']);
+
+        unset($validated['is_installment'], $validated['is_recurring']);
+        unset($validated['recurrence_frequency'], $validated['recurrence_end_date']);
+
+        if ($isInstallment && $validated['payment_method'] === 'credit_card') {
+            $totalInstallments = (int) ($request->input('total_installments', 1));
+            $installmentAmount = round($validated['amount'] / $totalInstallments, 2);
+            $remainder = round($validated['amount'] - ($installmentAmount * $totalInstallments), 2);
+
+            $parent = null;
+
+            for ($i = 1; $i <= $totalInstallments; $i++) {
+                $data = $validated;
+                $data['installment_number'] = $i;
+                $data['total_installments'] = $totalInstallments;
+                $data['status'] = $i === 1 ? 'paid' : 'pending';
+
+                $data['date'] = \Carbon\Carbon::parse($validated['date'])
+                    ->addMonths($i - 1)
+                    ->format('Y-m-d');
+
+                $amount = $installmentAmount;
+                if ($i === $totalInstallments) {
+                    $amount += $remainder;
+                }
+                $data['amount'] = $amount;
+
+                $release = Release::create($data);
+
+                if ($i === 1) {
+                    $parent = $release;
+                } else {
+                    $release->update(['parent_id' => $parent->id]);
+                }
+            }
+
+            return redirect()->route('releases.index')->with('success', 'Parcelamento criado com sucesso.');
+        }
+
+        if ($isRecurring) {
+            $frequency = RecurrenceFrequency::from($request->input('recurrence_frequency'));
+            $endDate = $request->input('recurrence_end_date');
+            $startDate = $validated['date'];
+
+            $recurrencePlan = RecurrencePlan::create([
+                'user_id' => Auth::id(),
+                'account_id' => $validated['account_id'],
+                'category_id' => $validated['category_id'],
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'amount' => $validated['amount'],
+                'type' => $validated['type'],
+                'payment_method' => $validated['payment_method'] ?? null,
+                'frequency' => $frequency->value,
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'next_generation' => $frequency->addToDate(\Carbon\Carbon::parse($startDate))->format('Y-m-d'),
+                'active' => true,
+            ]);
+
+            $validated['status'] ??= 'paid';
+            $validated['recurrence_id'] = $recurrencePlan->id;
+            Release::create($validated);
+
+            return redirect()->route('releases.index')->with('success', 'Lançamento recorrente criado com sucesso.');
+        }
+
+        $validated['status'] ??= 'paid';
         Release::create($validated);
 
         return redirect()->route('releases.index')->with('success', 'Lançamento criado com sucesso.');
@@ -59,9 +134,12 @@ class ReleaseController extends Controller
         }
 
         return Inertia::render('releases/Edit', [
-            'release' => $release,
+            'release' => $release->load('parent', 'recurrencePlan'),
             'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
             'categories' => Category::all(),
+            'paymentMethods' => \App\Enums\PaymentMethod::options(),
+            'recurrenceFrequencies' => \App\Enums\RecurrenceFrequency::options(),
+            'releaseStatuses' => \App\Enums\ReleaseStatus::options(),
         ]);
     }
 
@@ -78,7 +156,7 @@ class ReleaseController extends Controller
 
     public function export()
     {
-        $releases = Release::with(['account', 'category'])
+        $releases = Release::with(['account.bank', 'category', 'parent'])
             ->where('user_id', Auth::id())
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
@@ -87,7 +165,7 @@ class ReleaseController extends Controller
         $callback = function () use ($releases) {
             $handle = fopen('php://output', 'w');
             fwrite($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($handle, ['ID', 'Título', 'Descrição', 'Categoria', 'Conta', 'Data', 'Valor', 'Tipo']);
+            fputcsv($handle, ['ID', 'Título', 'Descrição', 'Categoria', 'Conta', 'Data', 'Valor', 'Tipo', 'Forma de Pagamento', 'Status', 'Parcela']);
 
             foreach ($releases as $release) {
                 fputcsv($handle, [
@@ -99,6 +177,9 @@ class ReleaseController extends Controller
                     $release->date?->format('d/m/Y'),
                     number_format($release->amount, 2, ',', '.'),
                     $release->type === 'revenue' ? 'Receita' : 'Despesa',
+                    $release->payment_method?->label() ?? '-',
+                    $release->status?->label() ?? 'Pago',
+                    $release->installment_number ? "{$release->installment_number}/{$release->total_installments}" : '-',
                 ]);
             }
 
