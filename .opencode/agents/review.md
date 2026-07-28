@@ -1,7 +1,6 @@
 ---
 description: Runs QA for implementation work by reviewing the diff, running tests, and validating security and Laravel conventions.
 mode: primary
-model: opencode/deepseek-v4-flash-free
 tools:
   task: true
   read: true

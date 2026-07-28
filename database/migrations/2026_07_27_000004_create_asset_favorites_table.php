@@ -1,0 +1,27 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('asset_favorites', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('ticker', 20)->index();
+            $table->string('asset_type', 20)->default('stock'); // stock, fii, bdr, etf
+            $table->text('notes')->nullable();
+            $table->timestamps();
+
+            $table->unique(['user_id', 'ticker']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('asset_favorites');
+    }
+};

@@ -24,8 +24,10 @@ class PrecoTetoProjetivoValuationService
         $projectedYield = $currentPricePerShare > 0
             ? ($projectedDps / $currentPricePerShare) * 100
             : 0.0;
-        $marginOfSafety = $priceCeiling > 0
-            ? (($priceCeiling - $currentPricePerShare) / $priceCeiling) * 100
+        // Margem de segurança = diferença entre preço teto e cotação atual,
+        // expressa como percentual da cotação (quanto o ativo está "barato" hoje)
+        $marginOfSafety = $currentPricePerShare > 0
+            ? (($priceCeiling - $currentPricePerShare) / $currentPricePerShare) * 100
             : 0.0;
         $upside = $currentPricePerShare > 0
             ? (($priceCeiling / $currentPricePerShare) - 1) * 100

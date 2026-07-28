@@ -13,7 +13,9 @@ O projeto começa como um gerenciador financeiro pessoal e evolui para uma plata
 - Kinvo
 - Trademap
 
-O foco atual do produto está na Release 1: gestão financeira pessoal com cadastro de ações, integração de cotação via API e uso desses dados nos cálculos de valuation e preço teto.
+O foco atual do produto está na Release 2 (Módulo Screening) e Release 3 (Valuation Avançado): construir um buscador inteligente de ativos com filtros fundamentalistas, cache de indicadores, comparação de ativos, favoritos, e expandir os modelos de valuation com o modelo de Gordon para FIIs.
+
+A Release 1 (Gestão Financeira) está concluída e lançada como v1.0.0.
 
 ---
 
@@ -83,74 +85,82 @@ A plataforma deve permitir:
 
 # ROADMAP DE RELEASES
 
-## Release 1 - Base Financeira + Ações com Cotação
+## Release 1 — Gestão Financeira ✅ (v1.0.0)
 
 ### Objetivo
-Entregar o núcleo próximo da conclusão: gestão financeira pessoal com cadastro de ações e atualização automática da cotação para suportar valuation.
+Núcleo de gestão financeira pessoal com cadastro de ativos e cotação automática.
 
-### Entregas
-- Gestão financeira pessoal.
-- Cadastro e edição de ativos.
-- Cadastro de ações com ticker.
-- Consulta automática de cotação via API.
-- Uso da cotação atual em valuation e preço teto.
-- Listagem de investimentos com logo e valor mais recente.
+### Entregues
+- Dashboard financeiro com gráficos e indicadores
+- CRUD de bancos, contas, categorias, lançamentos
+- CRUD de investimentos com cotação via brapi.dev
+- Valuation DCF (Fluxo de Caixa Descontado)
+- Valuation Preço Teto Projetivo
+- Autenticação completa (Fortify, 2FA, email verification)
+- Design system Banco Premium
 
-### Resultado esperado
-- Redução de entrada manual.
-- Primeira experiência de dado de mercado dentro do Fidax.
-- Base consistente para análise inicial de investimentos.
+---
 
-## Release 2 - Consolidador de Carteira
+## Release 2 — Módulo Screening 🚧
 
 ### Objetivo
-Transformar o Fidax em um consolidador de posições e rentabilidade.
+Permitir busca e descoberta de ativos com filtros fundamentalistas, cache de indicadores no banco local, comparação de ativos e favoritos.
 
 ### Entregas
-- Visão consolidada da carteira.
-- Distribuição por classe de ativo.
-- Rentabilidade acumulada e por período.
-- Evolução de patrimônio.
-- Dividendos e proventos.
+- Cache de indicadores fundamentalistas (asset_indicators)
+- Cache de indicadores de FIIs (fii_indicators)
+- Templates de filtros salvos (screening_filters)
+- Favoritar ativos (asset_favorites)
+- Estender BrapiService (statistics, financial-data, profile, dividends)
+- AssetIndicatorService (sincronização de indicadores)
+- ScreeningService (lógica de filtros)
+- ScrapingService (dados complementares)
+- Página principal de screening (filtros + resultados)
+- Página detalhada do ativo (indicadores, gráficos, dividendos)
+- Comparação side-by-side de ativos
+- Jobs de sincronização (SyncAssetIndicatorsJob)
+- Artisan command screening:sync
 
-## Release 3 - Screener e Oportunidades
+---
+
+## Release 3 — Valuation Avançado 🚧
 
 ### Objetivo
-Permitir triagem de ativos com base em filtros fundamentalistas e dados retornados pela API.
+Expandir os modelos de valuation com Gordon para FIIs e automatizar carregamento de premissas.
 
 ### Entregas
-- Filtros por P/VP, DY, P/L, margem, liquidez, setor e preço.
-- Combinação de múltiplos critérios.
-- Shortlist de ativos.
-- Comparação entre candidatos.
-- Salvamento de filtros favoritos.
+- GordonValuationService (modelo de Gordon com perpetuidade fixa em 3%)
+- Auto-preenchimento de premissas com dados do cache
+- Página unificada (indicadores do ativo + valuation na mesma tela)
+- Atualização automática de cotação, ROE, número de papéis
+- Melhorias no frontend de DCF e Preço Teto
 
-### Exemplo de uso
-- Encontrar ações com `P/VP < x`.
-- Encontrar ações com `DY > 7%`.
-- Combinar filtros para reduzir o universo e achar ativos aderentes à tese.
+---
 
-## Release 4 - Central de Documentos e Research
+## Release 4 — Automação e Infraestrutura
 
 ### Objetivo
-Centralizar relatórios, fatos relevantes, PDFs e documentos de ativos e FIIs.
+Automatizar sincronização de dados e expandir fontes com scraping.
 
 ### Entregas
-- Upload e organização de documentos.
-- Associação a ativos e FIIs.
-- Busca por ativo, tipo e período.
-- Histórico documental para apoiar análise.
+- SyncAssetIndicatorsJob agendado
+- Schedule diário de atualização
+- Scraping estruturado de fontes complementares
+- Sistema de e-mails (notificações, recovery)
 
-## Release 5 - Inteligência e Apoio à Decisão
+---
+
+## Release 5 — Financeiro Avançado
 
 ### Objetivo
-Adicionar camadas inteligentes sobre os dados já consolidados.
+Expandir controle financeiro com cartões, faturas, planejamento e metas.
 
 ### Entregas
-- Insights sobre comportamento financeiro.
-- Alertas automáticos.
-- Recomendações de acompanhamento.
-- Padrões de carteira e comportamento.
+- Cartões de crédito e faturas
+- Lançamentos recorrentes e parcelados
+- Planejamento financeiro mensal e anual
+- Metas e objetivos financeiros
+- Orçamento por categoria
 
 # STACK TECNOLÓGICA
 
@@ -274,14 +284,39 @@ All CRUD create/edit pages follow this structure:
 
 # 8. Project-Specific Rules
 
-## Design System Tokens
+## Design System — Fidax (Jul/2026)
+
+> ⚠️ **Fase de Exploração:** Os protótipos em `prototypes/` são explorações de design. As melhorias visuais (spacing, micro-interações, glassmorphism, gráficos) ainda **não** foram aplicadas ao código Vue/Tailwind do projeto. Quando forem convertidas, devem ser aplicadas globalmente, não isoladamente.
+
+### Identidade Visual
+
+O Fidax usa uma identidade dark premium com teal como cor primária e gold como acento. A paleta é consistente entre light/dark modes.
+
+**Paleta (dark mode):**
+- **Primária:** Teal `hsl(168,75%,42%)` — cor principal, usada em botões, links, ativos
+- **Destaque (accent):** Gold/amber `hsl(42,80%,52%)` — usado com moderação para favoritos e badges
+- **Revenue:** Verde `hsl(142,70%,50%)` — valores positivos
+- **Destructive:** Vermelho `hsl(0,75%,55%)` — valores negativos
+- **Investment:** Azul `hsl(220,80%,55%)` — badges de FIIs/informação
+- **Background:** `hsl(228,28%,5%)` — quase preto azulado
+- **Card:** `hsl(228,22%,9%)` — superfície de cartões
+- **Surface:** `hsl(228,20%,12%)` — inputs, selects
+- **Sidebar:** `hsl(228,25%,6%)` — navy escuro
+
+**Tipografia:**
+- **UI/Corpo:** `Instrument Sans` (pesos 400, 500, 600, 700) — via fonts.bunny.net
+- **Dados financeiros:** `Instrument Sans` (weight 600) — sem fonte monoespaçada dedicada
+
+**Logo:** Marca composta por 3 retângulos geométricos arredondados em teal + wordmark "Fidax" em bold. Sem serifa, sem ouro.
+
+### Design System Tokens (vigentes — legado Banco Premium)
 - **Background:** `bg-background` (screen bg)
 - **Card:** `bg-card` (--card: hsl(228 22% 9%))
 - **Surface:** `bg-surface` (--surface: hsl(228 20% 12%))
 - **Secondary:** `bg-secondary` (--secondary: hsl(228 18% 14%))
 - **Text:** `text-foreground` (white), `text-muted-foreground` (muted)
 - **Border:** `border-border` (--border: hsl(228 15% 14%))
-- **Primary:** `text-primary` / `bg-primary` (teal hsl(168 75% 42%))
+- **Primary:** `text-primary` / `bg-primary` (teal hsl(168 75% 42%)) ⚠️ migrar para gold
 - **Destructive:** `text-destructive` / `bg-destructive/10`
 - **Revenue:** `text-revenue` / `bg-revenue/10`
 - **Investment:** `text-investment` / `bg-investment/10`

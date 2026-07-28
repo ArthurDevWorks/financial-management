@@ -26,7 +26,7 @@ class PrecoTetoValuationRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'investiment_id' => 'required|exists:investiments,id',
+            'asset_id' => 'required|integer|exists:assets,id',
             'desired_yield' => 'required|numeric|min:0.01|max:100',
             'projected_payout' => 'required|numeric|min:0.01|max:100',
             'projected_net_income' => 'required|numeric|gt:0',

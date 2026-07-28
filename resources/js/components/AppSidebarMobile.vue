@@ -3,39 +3,9 @@ import AppLogo from '@/components/AppLogo.vue';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { router } from '@inertiajs/vue3';
-import type { LucideProps } from 'lucide-vue-next';
-import {
-    ArrowRightLeft,
-    ChartNoAxesCombined,
-    Landmark,
-    LayoutDashboard,
-    LogOut,
-    PiggyBank,
-    Settings,
-    Tags,
-    Wallet,
-} from 'lucide-vue-next';
-import type { FunctionalComponent } from 'vue';
+import { navSections, footerNavItems } from '@/lib/navigation';
 
 const open = defineModel<boolean>('open', { required: true });
-
-interface NavItem {
-    label: string;
-    icon: FunctionalComponent<LucideProps>;
-    href: string;
-    method?: 'get' | 'post';
-    danger?: boolean;
-}
-
-const navItems: NavItem[] = [
-    { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-    { label: 'Bancos', icon: Landmark, href: '/banks' },
-    { label: 'Contas', icon: Wallet, href: '/accounts' },
-    { label: 'Lançamentos', icon: ArrowRightLeft, href: '/releases' },
-    { label: 'Categorias', icon: Tags, href: '/categories' },
-    { label: 'Investimentos', icon: PiggyBank, href: '/investiments' },
-    { label: 'Valuations', icon: ChartNoAxesCombined, href: '/valuations' },
-];
 
 function navigate(href: string, method: 'get' | 'post' = 'get') {
     open.value = false;
@@ -57,50 +27,50 @@ function navigate(href: string, method: 'get' | 'post' = 'get') {
                 <AppLogo />
             </div>
 
+            <!-- MENU POR MÓDULOS -->
             <nav class="flex-1 overflow-y-auto px-3 py-5">
-                <p
-                    class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
-                >
-                    Financeiro
-                </p>
-                <div class="space-y-0.5">
-                    <Button
-                        v-for="item in navItems"
-                        :key="item.href"
-                        variant="ghost"
-                        class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium"
-                        @click="navigate(item.href)"
+                <div v-for="section in navSections" :key="section.title" class="mb-6 last:mb-0">
+                    <p
+                        class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
                     >
-                        <component
-                            :is="item.icon"
-                            class="h-[18px] w-[18px] shrink-0 text-muted-foreground"
-                        />
-                        {{ item.label }}
-                    </Button>
+                        {{ section.title }}
+                    </p>
+
+                    <div class="space-y-0.5">
+                        <Button
+                            v-for="item in section.items"
+                            :key="item.href"
+                            variant="ghost"
+                            class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium"
+                            @click="navigate(item.href)"
+                        >
+                            <component
+                                :is="item.icon"
+                                class="h-[18px] w-[18px] shrink-0 text-muted-foreground"
+                            />
+                            {{ item.label }}
+                        </Button>
+                    </div>
                 </div>
             </nav>
 
+            <!-- FOOTER -->
             <div class="border-t border-sidebar-border px-3 py-3">
                 <div class="space-y-0.5">
                     <Button
+                        v-for="item in footerNavItems"
+                        :key="item.href"
                         variant="ghost"
                         class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium"
-                        @click="navigate('/settings')"
+                        :class="item.danger ? 'text-destructive hover:bg-destructive/10' : ''"
+                        @click="navigate(item.href, item.method)"
                     >
-                        <Settings
-                            class="h-[18px] w-[18px] shrink-0 text-muted-foreground"
+                        <component
+                            :is="item.icon"
+                            class="h-[18px] w-[18px] shrink-0"
+                            :class="item.danger ? 'text-destructive' : 'text-muted-foreground'"
                         />
-                        Configurações
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive/10"
-                        @click="navigate('/logout', 'post')"
-                    >
-                        <LogOut
-                            class="h-[18px] w-[18px] shrink-0 text-destructive"
-                        />
-                        Sair
+                        {{ item.label }}
                     </Button>
                 </div>
             </div>

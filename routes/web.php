@@ -3,7 +3,8 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\InvestimentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\GordonController;
 use App\Http\Controllers\PrecoTetoController;
 use App\Http\Controllers\ReleaseController;
 use App\Http\Controllers\ValuationController;
@@ -16,8 +17,6 @@ Route::get('/', function () {
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
-
-use App\Http\Controllers\DashboardController;
 
 Route::get('dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])->name('dashboard');
@@ -43,19 +42,30 @@ Route::middleware(['auth'])->group(function () {
 })->middleware(['auth', 'verified']);
 
 Route::middleware(['auth'])->group(function () {
-    Route::post('investiments/{investiment}/valuation', [InvestimentController::class, 'valuation'])
-        ->name('investiments.valuation');
-    Route::resource('investiments', InvestimentController::class);
-})->middleware(['auth', 'verified']);
-
-Route::middleware(['auth'])->group(function () {
     Route::get('valuations', [ValuationController::class, 'index'])->name('valuations.index');
     Route::get('valuations/create', [ValuationController::class, 'create'])->name('valuations.create');
-    Route::put('valuations/{valuation}', [ValuationController::class, 'update'])->name('valuations.update');
+    Route::post('valuations', [ValuationController::class, 'store'])->name('valuations.store');
     Route::get('valuations/{valuation}', [ValuationController::class, 'show'])->name('valuations.show');
+    Route::put('valuations/{valuation}', [ValuationController::class, 'update'])->name('valuations.update');
+
+    Route::get('preco-teto', [PrecoTetoController::class, 'index'])->name('preco-teto.index');
     Route::post('preco-teto', [PrecoTetoController::class, 'store'])->name('preco-teto.store');
     Route::put('preco-teto/{valuation}', [PrecoTetoController::class, 'update'])->name('preco-teto.update');
-    Route::get('preco-teto', [PrecoTetoController::class, 'index'])->name('preco-teto.index');
+
+    Route::get('gordon', [GordonController::class, 'index'])->name('gordon.index');
+    Route::post('gordon', [GordonController::class, 'store'])->name('gordon.store');
+    Route::put('gordon/{valuation}', [GordonController::class, 'update'])->name('gordon.update');
 })->middleware(['auth', 'verified']);
+
+Route::prefix('screening')->name('screening.')->middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', [\App\Http\Controllers\ScreeningController::class, 'index'])->name('index');
+    Route::get('/json', [\App\Http\Controllers\ScreeningController::class, 'json'])->name('json');
+    Route::get('/compare', [\App\Http\Controllers\ScreeningController::class, 'compare'])->name('compare');
+    Route::get('/{ticker}', [\App\Http\Controllers\ScreeningController::class, 'show'])->name('show');
+    Route::get('/{ticker}/valuation', [\App\Http\Controllers\ScreeningController::class, 'valuation'])->name('valuation');
+    Route::post('/favorite', [\App\Http\Controllers\ScreeningController::class, 'toggleFavorite'])->name('favorite');
+    Route::post('/filters', [\App\Http\Controllers\ScreeningController::class, 'saveFilter'])->name('filters.save');
+    Route::delete('/filters/{filter}', [\App\Http\Controllers\ScreeningController::class, 'deleteFilter'])->name('filters.delete');
+});
 
 require __DIR__.'/settings.php';

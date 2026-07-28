@@ -1,84 +1,39 @@
 <script setup lang="ts">
 import SectionCard from '@/components/SectionCard.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { ArrowLeft, Pencil } from 'lucide-vue-next';
+import { computed } from 'vue';
 
-interface Investment {
+interface ValuationAsset {
     id: number;
+    ticker: string;
     name: string;
     logo_url?: string | null;
-}
-
-interface ValuationAssumptions {
-    desired_yield?: number;
-    projected_payout?: number;
-    projected_net_income?: number;
-    projected_growth_rate?: number;
-    current_fcf?: number;
-    payout?: number;
-    roe?: number;
-    base_growth_rate?: number;
-    discount_rate?: number;
-    terminal_growth_rate?: number;
-    projection_years?: number;
-    total_shares?: number;
-    current_price_per_share?: number | null;
-    growth_rates?: number[];
-}
-
-interface ProjectedCashFlow {
-    year: number;
-    growth_rate: number;
-    projected_fcf: number;
-    discount_factor: number;
-    present_value: number;
-}
-
-interface ValuationSummary {
-    projected_net_income_after_growth?: number;
-    projected_eps?: number;
-    projected_dps?: number;
-    price_ceiling?: number;
-    current_price_per_share?: number;
-    projected_yield?: number;
-    present_value_of_cash_flows?: number;
-    terminal_value?: number;
-    terminal_present_value?: number;
-    equity_value?: number;
-    fair_value_per_share?: number;
-    market_cap?: number | null;
-    upside?: number | null;
-    margin_of_safety?: number | null;
+    current_price?: number | null;
+    dividends_per_share?: number | null;
+    net_income?: number | null;
+    total_shares?: number | null;
+    free_cash_flow?: number | null;
+    asset_type: string;
 }
 
 interface Valuation {
     id: number;
-    method: 'dcf' | 'preco_teto';
+    asset: ValuationAsset;
+    method: 'dcf' | 'preco_teto' | 'gordon';
     method_label: string;
-    investiment: Investment;
-    assumptions: ValuationAssumptions;
-    projected_cash_flows: ProjectedCashFlow[];
-    summary: ValuationSummary;
+    assumptions: Record<string, any>;
     calculated_at: string;
 }
 
-defineProps<{
+const props = defineProps<{
     valuation: Valuation;
 }>();
 
 const formatCurrency = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value))
-        return 'N/A';
+    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
     return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
@@ -86,15 +41,8 @@ const formatCurrency = (value: number | null | undefined) => {
 };
 
 const formatPercent = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value))
-        return 'N/A';
+    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-};
-
-const formatRate = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value))
-        return 'N/A';
-    return `${value.toFixed(2)}%`;
 };
 
 const formatDate = (date: string) => {
@@ -102,22 +50,9 @@ const formatDate = (date: string) => {
 };
 
 const formatNumber = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value))
-        return 'N/A';
+    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
     return new Intl.NumberFormat('pt-BR').format(value);
 };
-
-const baseCalendarYear = new Date(props.valuation.calculated_at).getFullYear();
-
-const cashFlowsWithCalendarYear = props.valuation.projected_cash_flows.map(
-    (cf) => ({
-        ...cf,
-        calendarYear:
-            cf.year === 0
-                ? `${baseCalendarYear}`
-                : `${baseCalendarYear + cf.year}`,
-    }),
-);
 
 const goBack = () => {
     router.visit('/valuations');
@@ -128,108 +63,49 @@ const goToEdit = () => {
         router.visit(`/preco-teto?valuation_id=${props.valuation.id}`);
         return;
     }
-
-    router.visit(
-        `/investiments/${props.valuation.investiment.id}?valuation_id=${props.valuation.id}`,
-    );
+    if (props.valuation.method === 'gordon') {
+        router.visit(`/gordon?valuation_id=${props.valuation.id}`);
+        return;
+    }
+    router.visit(`/valuations?valuation_id=${props.valuation.id}`);
 };
 
-const a = props.valuation.assumptions;
-const s = props.valuation.summary;
-const isPrecoTeto = props.valuation.method === 'preco_teto';
+const a = computed(() => props.valuation.assumptions ?? {});
 
-const assumptionItems = isPrecoTeto
-    ? [
-          {
-              label: 'Dividend yield desejado',
-              value: formatRate(a.desired_yield),
-          },
-          { label: 'Payout projetado', value: formatRate(a.projected_payout) },
-          {
-              label: 'Lucro líquido projetado',
-              value: formatCurrency(a.projected_net_income),
-          },
-          { label: 'Quantidade de ações', value: formatNumber(a.total_shares) },
-          {
-              label: 'Crescimento projetado',
-              value: formatRate(a.projected_growth_rate),
-          },
-          {
-              label: 'Preço atual por ação',
-              value: formatCurrency(a.current_price_per_share),
-          },
-      ]
-    : [
-          { label: 'FCF atual', value: formatCurrency(a.current_fcf) },
-          { label: 'Taxa de desconto', value: `${a.discount_rate ?? 'N/A'}%` },
-          { label: 'Payout', value: `${a.payout ?? 'N/A'}%` },
-          { label: 'ROE', value: `${a.roe ?? 'N/A'}%` },
-          {
-              label: 'Crescimento base',
-              value: `${a.base_growth_rate ?? 'N/A'}%`,
-          },
-          {
-              label: 'Crescimento na perpetuidade',
-              value: `${a.terminal_growth_rate ?? 'N/A'}%`,
-          },
-          {
-              label: 'Anos de projeção',
-              value: `${a.projection_years ?? 'N/A'}`,
-          },
-          { label: 'Total de ações', value: formatNumber(a.total_shares) },
-          {
-              label: 'Preço atual por ação',
-              value: formatCurrency(a.current_price_per_share),
-          },
-      ];
+const assumptionItems = computed(() => {
+    const isGordon = props.valuation.method === 'gordon';
+    const isPrecoTeto = props.valuation.method === 'preco_teto';
 
-const summaryItems = isPrecoTeto
-    ? [
-          {
-              label: 'Preço teto',
-              value: formatCurrency(s.price_ceiling ?? s.fair_value_per_share),
-              highlight: true,
-          },
-          { label: 'LPA projetado', value: formatCurrency(s.projected_eps) },
-          { label: 'DPA projetado', value: formatCurrency(s.projected_dps) },
-          { label: 'Yield projetado', value: formatRate(s.projected_yield) },
-          {
-              label: 'Margem de segurança',
-              value: formatPercent(s.margin_of_safety),
-              positive: (s.margin_of_safety ?? 0) >= 0,
-          },
-          {
-              label: 'Upside / Downside',
-              value: formatPercent(s.upside),
-              positive: (s.upside ?? 0) >= 0,
-          },
-          {
-              label: 'Lucro ajustado pela projeção',
-              value: formatCurrency(s.projected_net_income_after_growth),
-          },
-      ]
-    : [
-          {
-              label: 'Valor justo por ação',
-              value: formatCurrency(s.fair_value_per_share),
-              highlight: true,
-          },
-          { label: 'Market cap', value: formatCurrency(s.market_cap) },
-          {
-              label: 'Upside / Downside',
-              value: formatPercent(s.upside),
-              positive: (s.upside ?? 0) >= 0,
-          },
-          {
-              label: 'VP dos fluxos de caixa',
-              value: formatCurrency(s.present_value_of_cash_flows),
-          },
-          {
-              label: 'Valor terminal (VP)',
-              value: formatCurrency(s.terminal_present_value),
-          },
-          { label: 'Valor do equity', value: formatCurrency(s.equity_value) },
-      ];
+    if (isGordon) {
+        return [
+            { label: 'DPS atual', value: formatCurrency(a.value.dps) },
+            { label: 'Taxa de desconto (Ke)', value: `${a.value.discount_rate ?? 'N/A'}%` },
+            { label: 'Cresc. perpetuidade (g)', value: `${a.value.growth_perpetuity ?? 'N/A'}%` },
+            { label: 'Preço atual', value: formatCurrency(a.value.current_price) },
+            { label: 'Anos de projeção', value: `${a.value.projection_years ?? 'N/A'}` },
+        ];
+    }
+    if (isPrecoTeto) {
+        return [
+            { label: 'Dividend yield desejado', value: `${a.value.desired_yield ?? 'N/A'}%` },
+            { label: 'Payout projetado', value: `${a.value.projected_payout ?? 'N/A'}%` },
+            { label: 'Lucro líquido projetado', value: formatCurrency(a.value.projected_net_income) },
+            { label: 'Quantidade de ações', value: formatNumber(a.value.total_shares) },
+            { label: 'Crescimento projetado', value: `${a.value.projected_growth_rate ?? 'N/A'}%` },
+            { label: 'Preço atual por ação', value: formatCurrency(a.value.current_price_per_share) },
+        ];
+    }
+    return [
+        { label: 'FCF atual', value: formatCurrency(a.value.current_fcf) },
+        { label: 'Taxa de desconto', value: `${a.value.discount_rate ?? 'N/A'}%` },
+        { label: 'Payout', value: `${a.value.payout ?? 'N/A'}%` },
+        { label: 'ROE', value: `${a.value.roe ?? 'N/A'}%` },
+        { label: 'Crescimento na perpetuidade', value: `${a.value.terminal_growth_rate ?? 'N/A'}%` },
+        { label: 'Anos de projeção', value: `${a.value.projection_years ?? 'N/A'}` },
+        { label: 'Total de ações', value: formatNumber(a.value.total_shares) },
+        { label: 'Preço atual por ação', value: formatCurrency(a.value.current_price_per_share) },
+    ];
+});
 </script>
 
 <template>
@@ -249,20 +125,17 @@ const summaryItems = isPrecoTeto
             <div class="mb-8 flex items-start justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <img
-                        v-if="valuation.investiment.logo_url"
-                        :src="valuation.investiment.logo_url"
-                        :alt="valuation.investiment.name"
-                        class="h-8 w-8 rounded-full object-contain"
+                        :src="valuation.asset.logo_url || '/images/default-logo.svg'"
+                        :alt="valuation.asset.ticker"
+                        class="h-10 w-10 rounded-full object-contain"
+                        @error="($event.target as HTMLImageElement).src = '/images/default-logo.svg'"
                     />
                     <div class="min-w-0">
-                        <h1
-                            class="text-2xl font-bold tracking-tight text-foreground"
-                        >
-                            {{ valuation.investiment.name }}
+                        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+                            {{ valuation.asset.name }}
                         </h1>
-                        <p class="mt-1 text-[0.9375rem] text-muted-foreground">
-                            {{ valuation.method_label }} calculado em
-                            {{ formatDate(valuation.calculated_at) }}
+                        <p class="mt-1 text-sm text-muted-foreground">
+                            {{ valuation.asset.ticker }} · {{ valuation.method_label }} · {{ formatDate(valuation.calculated_at) }}
                         </p>
                     </div>
                 </div>
@@ -276,6 +149,30 @@ const summaryItems = isPrecoTeto
 
             <div class="mt-6 grid gap-6 xl:grid-cols-2">
                 <SectionCard
+                    title="Dados do Ativo"
+                    description="Informações atuais do ativo na tabela Assets"
+                >
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div class="rounded-lg border border-border bg-surface px-4 py-3">
+                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Cotação Atual</p>
+                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatCurrency(valuation.asset.current_price) }}</p>
+                        </div>
+                        <div v-if="valuation.asset.dividends_per_share !== null" class="rounded-lg border border-border bg-surface px-4 py-3">
+                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Dividendos por Ação</p>
+                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatCurrency(valuation.asset.dividends_per_share) }}</p>
+                        </div>
+                        <div v-if="valuation.asset.net_income !== null" class="rounded-lg border border-border bg-surface px-4 py-3">
+                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Lucro Líquido</p>
+                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatCurrency(valuation.asset.net_income) }}</p>
+                        </div>
+                        <div v-if="valuation.asset.total_shares !== null" class="rounded-lg border border-border bg-surface px-4 py-3">
+                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Total de Ações</p>
+                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatNumber(valuation.asset.total_shares) }}</p>
+                        </div>
+                    </div>
+                </SectionCard>
+
+                <SectionCard
                     title="Premissas da Análise"
                     description="Parâmetros utilizados no cálculo"
                 >
@@ -285,139 +182,16 @@ const summaryItems = isPrecoTeto
                             :key="item.label"
                             class="rounded-lg border border-border bg-surface px-4 py-3"
                         >
-                            <p
-                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
-                            >
+                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                 {{ item.label }}
                             </p>
-                            <p
-                                class="mt-1 text-lg font-semibold text-foreground"
-                            >
-                                {{ item.value }}
-                            </p>
-                        </div>
-                    </div>
-                </SectionCard>
-
-                <SectionCard
-                    title="Resumo do Valuation"
-                    description="Resultados do cálculo"
-                >
-                    <div class="grid gap-3">
-                        <div
-                            v-for="item in summaryItems"
-                            :key="item.label"
-                            class="rounded-lg border border-border px-4 py-3"
-                            :class="
-                                item.highlight
-                                    ? 'border-primary/40 bg-primary/10'
-                                    : 'bg-surface'
-                            "
-                        >
-                            <p
-                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
-                            >
-                                {{ item.label }}
-                            </p>
-                            <p
-                                class="mt-1 text-lg font-semibold"
-                                :class="
-                                    item.highlight
-                                        ? 'text-primary'
-                                        : item.positive !== undefined
-                                          ? item.positive
-                                              ? 'text-revenue'
-                                              : 'text-destructive'
-                                          : 'text-foreground'
-                                "
-                            >
+                            <p class="mt-1 text-lg font-semibold text-foreground">
                                 {{ item.value }}
                             </p>
                         </div>
                     </div>
                 </SectionCard>
             </div>
-
-            <SectionCard
-                v-if="valuation.projected_cash_flows.length"
-                class="mt-6"
-                title="Fluxos de Caixa Projetados"
-                :description="`${valuation.projected_cash_flows.length} ano(s) projetado(s)`"
-            >
-                <div class="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow
-                                class="border-b border-border hover:bg-transparent"
-                            >
-                                <TableHead
-                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Ano
-                                </TableHead>
-                                <TableHead
-                                    class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Taxa de Crescimento
-                                </TableHead>
-                                <TableHead
-                                    class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    FCF Projetado
-                                </TableHead>
-                                <TableHead
-                                    class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Fator de Desconto
-                                </TableHead>
-                                <TableHead
-                                    class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Valor Presente
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="cf in cashFlowsWithCalendarYear"
-                                :key="cf.year"
-                                class="border-b border-border transition-colors hover:bg-surface/50"
-                            >
-                                <TableCell class="font-medium text-foreground">
-                                    {{ cf.calendarYear }}
-                                </TableCell>
-                                <TableCell
-                                    class="text-right text-muted-foreground"
-                                >
-                                    <template v-if="cf.year === 0">—</template>
-                                    <template v-else
-                                        >{{ cf.growth_rate }}%</template
-                                    >
-                                </TableCell>
-                                <TableCell
-                                    class="text-right text-muted-foreground"
-                                >
-                                    {{ formatCurrency(cf.projected_fcf) }}
-                                </TableCell>
-                                <TableCell
-                                    class="text-right text-muted-foreground"
-                                >
-                                    {{
-                                        cf.year === 0
-                                            ? '1,0000'
-                                            : cf.discount_factor.toFixed(4)
-                                    }}
-                                </TableCell>
-                                <TableCell
-                                    class="text-right font-semibold text-foreground"
-                                >
-                                    {{ formatCurrency(cf.present_value) }}
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </div>
-            </SectionCard>
         </div>
     </AppLayout>
 </template>
