@@ -19,17 +19,36 @@ class AccountController extends Controller
      */
     public function index(Request $request)
     {
+        $query = Account::query()
+            ->where('user_id', Auth::id())
+            ->with(['bank'])
+            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')], 'amount')
+            ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
+                $q->where('account', 'like', "%{$search}%")
+                    ->orWhereHas('bank', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+            }));
+
+        // Aggregate stats sobre o mesmo dataset filtrado
+        $allAccounts = (clone $query)->get();
+
+        $accounts = $query->paginate(10);
+
+        $totalBalance = $allAccounts->sum(fn ($a) => $a->current_balance);
+        $totalRevenues = $allAccounts->sum('revenue_sum');
+        $totalExpenses = $allAccounts->sum('expense_sum');
+        $countByType = $allAccounts->groupBy('type')->map->count();
+
         return Inertia::render('accounts/Index', [
-            'accounts' => Account::query()
-                ->where('user_id', Auth::id())
-                ->with(['bank'])
-                ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')], 'amount')
-                ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')], 'amount')
-                ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
-                    $q->where('account', 'like', "%{$search}%")
-                        ->orWhereHas('bank', fn ($q) => $q->where('name', 'like', "%{$search}%"));
-                }))
-                ->paginate(10),
+            'accounts' => $accounts,
+            'stats' => [
+                'total_balance' => $totalBalance,
+                'avg_balance' => $allAccounts->count() > 0 ? $totalBalance / $allAccounts->count() : 0,
+                'total_count' => $allAccounts->count(),
+                'total_revenues' => $totalRevenues,
+                'total_expenses' => $totalExpenses,
+                'count_by_type' => $countByType,
+            ],
         ]);
     }
 

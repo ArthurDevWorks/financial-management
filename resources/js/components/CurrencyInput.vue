@@ -29,7 +29,6 @@ const currencyOptions = {
 
 const { inputRef, formattedValue, numberValue, setValue } = useCurrencyInput(
     currencyOptions,
-    false,
 );
 
 watch(
@@ -60,6 +59,8 @@ watch(numberValue, (valorAtual) => {
         emit('update:modelValue', '');
         return;
     }
+
+    if (props.modelValue !== '' && Number(props.modelValue) === valorAtual) return;
 
     emit('update:modelValue', valorAtual.toFixed(2));
 });

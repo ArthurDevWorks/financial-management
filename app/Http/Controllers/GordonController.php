@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\PrecoTetoValuationRequest;
+use App\Http\Requests\GordonValuationRequest;
 use App\Models\Asset;
 use App\Models\InvestimentValuation;
 use Inertia\Inertia;
 
-class PrecoTetoController extends Controller
+class GordonController extends Controller
 {
     public function index()
     {
@@ -17,7 +17,7 @@ class PrecoTetoController extends Controller
         $valuation = $valuationId
             ? InvestimentValuation::query()
                 ->with('asset')
-                ->where('method', InvestimentValuation::METHOD_PRECO_TETO)
+                ->where('method', InvestimentValuation::METHOD_GORDON)
                 ->findOrFail((int) $valuationId)
             : null;
 
@@ -26,16 +26,15 @@ class PrecoTetoController extends Controller
 
         $assets = Asset::query()
             ->orderBy('ticker')
-            ->get(['id', 'ticker', 'name', 'asset_type', 'current_price', 'logo_url', 'net_income', 'total_shares']);
+            ->get(['id', 'ticker', 'name', 'asset_type', 'current_price', 'logo_url', 'dividends_per_share']);
 
-        return Inertia::render('preco-teto/Index', [
+        return Inertia::render('gordon/Index', [
             'asset' => $asset ? [
                 'id' => $asset->id,
                 'ticker' => $asset->ticker,
                 'name' => $asset->name,
                 'current_price' => $asset->current_price,
-                'net_income' => $asset->net_income,
-                'total_shares' => $asset->total_shares,
+                'dividends_per_share' => $asset->dividends_per_share,
                 'logo_url' => $asset->logo_url,
                 'asset_type' => $asset->asset_type,
             ] : null,
@@ -51,28 +50,28 @@ class PrecoTetoController extends Controller
                 'assumptions' => $valuation->assumptions,
                 'calculated_at' => $valuation->calculated_at,
             ] : null,
-            'defaultAssumptions' => $asset ? $this->buildPrecoTetoDefaults($asset, $valuation) : null,
+            'defaultAssumptions' => $asset ? $this->buildGordonDefaults($asset, $valuation) : null,
         ]);
     }
 
-    public function store(PrecoTetoValuationRequest $request)
+    public function store(GordonValuationRequest $request)
     {
         $validated = $request->validated();
 
         InvestimentValuation::create([
             'asset_id' => (int) $validated['asset_id'],
-            'method' => InvestimentValuation::METHOD_PRECO_TETO,
+            'method' => InvestimentValuation::METHOD_GORDON,
             'assumptions' => $validated,
             'calculated_at' => now(),
         ]);
 
         return redirect()->route('valuations.index')
-            ->with('success', 'Valuation de Preço Teto salva com sucesso');
+            ->with('success', 'Valuation de Gordon salva com sucesso');
     }
 
-    public function update(PrecoTetoValuationRequest $request, InvestimentValuation $valuation)
+    public function update(GordonValuationRequest $request, InvestimentValuation $valuation)
     {
-        abort_unless($valuation->method === InvestimentValuation::METHOD_PRECO_TETO, 404);
+        abort_unless($valuation->method === InvestimentValuation::METHOD_GORDON, 404);
 
         $validated = $request->validated();
 
@@ -82,30 +81,30 @@ class PrecoTetoController extends Controller
         ]);
 
         return redirect()->route('valuations.show', $valuation)
-            ->with('success', 'Valuation de Preço Teto atualizada com sucesso');
+            ->with('success', 'Valuation de Gordon atualizada com sucesso');
     }
 
-    private function buildPrecoTetoDefaults(Asset $asset, ?InvestimentValuation $valuation): array
+    private function buildGordonDefaults(Asset $asset, ?InvestimentValuation $valuation): array
     {
         if ($valuation) {
             $a = $valuation->assumptions;
             return [
-                'desired_yield' => (string) ($a['desired_yield'] ?? '8'),
-                'projected_payout' => (string) ($a['projected_payout'] ?? '50'),
-                'projected_net_income' => (string) ($a['projected_net_income'] ?? $asset->net_income ?? ''),
-                'total_shares' => (string) ($a['total_shares'] ?? $asset->total_shares ?? ''),
-                'projected_growth_rate' => (string) ($a['projected_growth_rate'] ?? '5'),
-                'current_price_per_share' => (string) ($a['current_price_per_share'] ?? $asset->current_price ?? ''),
+                'dps' => (string) ($a['dps'] ?? $asset->dividends_per_share ?? ''),
+                'discount_rate' => (string) ($a['discount_rate'] ?? '12.5'),
+                'growth_perpetuity' => (string) ($a['growth_perpetuity'] ?? '3'),
+                'current_price' => (string) ($a['current_price'] ?? $asset->current_price ?? ''),
+                'projection_years' => (string) ($a['projection_years'] ?? '5'),
+                'growth_rates' => $a['growth_rates'] ?? [8.0, 7.0, 6.0, 5.0, 4.0],
             ];
         }
 
         return [
-            'desired_yield' => '8',
-            'projected_payout' => '50',
-            'projected_net_income' => (string) ($asset->net_income ?? ''),
-            'total_shares' => (string) ($asset->total_shares ?? ''),
-            'projected_growth_rate' => '5',
-            'current_price_per_share' => (string) ($asset->current_price ?? ''),
+            'dps' => (string) ($asset->dividends_per_share ?? ''),
+            'discount_rate' => '12.5',
+            'growth_perpetuity' => '3',
+            'current_price' => (string) ($asset->current_price ?? ''),
+            'projection_years' => '5',
+            'growth_rates' => [8.0, 7.0, 6.0, 5.0, 4.0],
         ];
     }
 }

@@ -19,12 +19,15 @@ import {
 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
-interface Investment {
+interface Asset {
     id: number;
+    ticker: string;
     name: string;
-    value: number | string | null;
-    current_balance?: number | string | null;
+    current_price?: number | string | null;
+    net_income?: number | string | null;
+    total_shares?: number | string | null;
     logo_url?: string | null;
+    asset_type?: string;
 }
 
 interface PrecoTetoAssumptions {
@@ -45,14 +48,15 @@ interface PrecoTetoValuation {
 }
 
 const props = defineProps<{
-    investiment: Investment | null;
-    investiments: Investment[];
+    asset: Asset | null;
+    assets: Asset[];
     valuation: PrecoTetoValuation | null;
+    defaultAssumptions?: PrecoTetoAssumptions | null;
 }>();
 
-const selectedId = ref(props.investiment?.id?.toString() ?? '');
+const selectedId = ref(props.asset?.id?.toString() ?? '');
 
-const toInputValue = (value: Investment['value'] | undefined) => {
+const toInputValue = (value: Asset['current_price'] | undefined) => {
     return value === null || value === undefined ? '' : value.toString();
 };
 
@@ -64,10 +68,10 @@ const toFormValue = (value: string | number | null | undefined) => {
     return value === null || value === undefined ? '' : value.toString();
 };
 
-const assumptions = props.valuation?.assumptions ?? {};
+const assumptions = props.valuation?.assumptions ?? props.defaultAssumptions ?? {};
 
 const form = useForm({
-    investiment_id: props.investiment?.id?.toString() ?? '',
+    asset_id: props.asset?.id?.toString() ?? '',
     desired_yield: toFormValue(assumptions.desired_yield),
     projected_payout: toFormValue(assumptions.projected_payout),
     projected_net_income: toFormValue(assumptions.projected_net_income),
@@ -76,14 +80,12 @@ const form = useForm({
         toFormValue(assumptions.projected_growth_rate) || '0',
     current_price_per_share:
         toFormValue(assumptions.current_price_per_share) ||
-        toInputValue(
-            props.investiment?.current_balance ?? props.investiment?.value,
-        ),
+        toInputValue(props.asset?.current_price),
 });
 
 watch(selectedId, (id) => {
     if (id) {
-        router.visit(`/preco-teto?investiment_id=${id}`, {
+        router.visit(`/preco-teto?asset_id=${id}`, {
             preserveState: true,
             replace: true,
         });
@@ -95,17 +97,14 @@ watch(selectedId, (id) => {
 watch(
     () =>
         [
-            props.investiment?.id,
-            props.investiment?.current_balance,
-            props.investiment?.value,
+            props.asset?.id,
+            props.asset?.current_price,
         ] as const,
-    ([id, currentBalance, value]) => {
-        form.investiment_id = id?.toString() ?? '';
+    ([id, currentPrice]) => {
+        form.asset_id = id?.toString() ?? '';
 
         if (!props.valuation) {
-            form.current_price_per_share = toInputValue(
-                currentBalance ?? value,
-            );
+            form.current_price_per_share = toInputValue(currentPrice);
         }
     },
 );
@@ -235,14 +234,17 @@ const margemStatus = computed(() => {
     };
 });
 
-const temInputs = computed(
+const podeCalcularPrecoTeto = computed(
     () =>
         percentToDecimal(form.desired_yield) > 0 &&
         percentToDecimal(form.projected_payout) > 0 &&
         parseNumber(form.projected_net_income) > 0 &&
         lucroProjetado.value > 0 &&
-        parseShareQuantity(form.total_shares) > 0 &&
-        parseNumber(form.current_price_per_share) > 0,
+        parseShareQuantity(form.total_shares) > 0,
+);
+
+const temPrecoAtual = computed(
+    () => parseNumber(form.current_price_per_share) > 0,
 );
 
 const formatCurrency = (value: number) => {
@@ -303,7 +305,7 @@ const submit = () => {
                         >
                             <option value="">Selecione um ativo...</option>
                             <option
-                                v-for="item in investiments"
+                                v-for="item in assets"
                                 :key="item.id"
                                 :value="item.id"
                             >
@@ -472,7 +474,7 @@ const submit = () => {
 
                     <!-- Gauge -->
                     <div
-                        v-if="temInputs"
+                        v-if="podeCalcularPrecoTeto && temPrecoAtual"
                         class="mt-6 rounded-xl border border-border bg-card p-6"
                     >
                         <div class="mb-2 flex items-center justify-between">
@@ -525,7 +527,7 @@ const submit = () => {
                 <div class="space-y-4">
                     <SummaryCard
                         label="Preço Teto"
-                        :value="temInputs ? formatCurrency(precoTeto) : '—'"
+                        :value="podeCalcularPrecoTeto ? formatCurrency(precoTeto) : '—'"
                         variant="investment"
                         :icon="Calculator"
                     />
@@ -533,12 +535,12 @@ const submit = () => {
                     <SummaryCard
                         label="Margem de Segurança"
                         :value="
-                            temInputs ? formatPercent(margemSeguranca) : '—'
+                            podeCalcularPrecoTeto && temPrecoAtual ? formatPercent(margemSeguranca) : '—'
                         "
                         :variant="margemSeguranca >= 0 ? 'revenue' : 'expense'"
                         :icon="ShieldCheck"
                         :trend="
-                            temInputs
+                            podeCalcularPrecoTeto && temPrecoAtual
                                 ? parseFloat(margemSeguranca.toFixed(2))
                                 : undefined
                         "
@@ -546,25 +548,25 @@ const submit = () => {
 
                     <SummaryCard
                         label="LPA Projetado"
-                        :value="temInputs ? formatCurrency(lpaProjetado) : '—'"
+                        :value="podeCalcularPrecoTeto ? formatCurrency(lpaProjetado) : '—'"
                         variant="default"
                         :icon="Banknote"
                     />
 
                     <SummaryCard
                         label="DPA Projetado"
-                        :value="temInputs ? formatCurrency(dpaProjetado) : '—'"
+                        :value="podeCalcularPrecoTeto ? formatCurrency(dpaProjetado) : '—'"
                         variant="default"
                         :icon="PiggyBank"
                     />
 
                     <SummaryCard
                         label="Yield Projetado"
-                        :value="temInputs ? formatPercent(yieldProjetado) : '—'"
+                        :value="podeCalcularPrecoTeto && temPrecoAtual ? formatPercent(yieldProjetado) : '—'"
                         variant="profit"
                         :icon="TrendingUp"
                         :trend="
-                            temInputs
+                            podeCalcularPrecoTeto && temPrecoAtual
                                 ? parseFloat(yieldProjetado.toFixed(2))
                                 : undefined
                         "
@@ -575,8 +577,8 @@ const submit = () => {
                         class="w-full"
                         :disabled="
                             form.processing ||
-                            !temInputs ||
-                            !form.investiment_id
+                            !podeCalcularPrecoTeto ||
+                            !form.asset_id
                         "
                     >
                         {{
@@ -591,11 +593,11 @@ const submit = () => {
             </form>
 
             <div
-                v-if="!investiments.length"
+                v-if="!assets.length"
                 class="mt-6 rounded-xl border border-border bg-card p-6 text-center"
             >
                 <p class="text-sm text-muted-foreground">
-                    Nenhum ativo cadastrado. Crie um investimento primeiro para
+                    Nenhum ativo cadastrado. Adicione um ativo primeiro para
                     usar esta ferramenta.
                 </p>
             </div>

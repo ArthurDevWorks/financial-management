@@ -3,17 +3,10 @@ import PageHeader from '@/components/PageHeader.vue';
 import PaginationLinks from '@/components/PaginationLinks.vue';
 import SectionCard from '@/components/SectionCard.vue';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
-import { ChartNoAxesCombined, Plus } from 'lucide-vue-next';
+import { ChartNoAxesCombined, Plus, TrendingUp, TrendingDown, Calculator } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface PaginationMeta {
     current_page: number;
@@ -24,27 +17,22 @@ interface PaginationMeta {
     links: { url: string | null; label: string; active: boolean }[];
 }
 
-interface ValuationSummary {
-    id: number;
-    calculated_at: string;
-    fair_value_per_share?: number | null;
-    upside?: number | null;
-    margin_of_safety?: number | null;
-}
-
-interface Investment {
-    id: number;
-    name: string;
-    logo_url?: string | null;
-}
-
 interface Valuation {
-    investiment: Investment;
-    dcf: ValuationSummary | null;
-    preco_teto: ValuationSummary | null;
+    id: number;
+    asset: {
+        id: number;
+        ticker: string;
+        name: string;
+        logo_url?: string | null;
+        current_price?: number | null;
+        asset_type: string;
+    };
+    method: string;
+    method_label: string;
+    calculated_at: string;
 }
 
-defineProps<{
+const props = defineProps<{
     valuations: {
         data: Valuation[];
         meta: PaginationMeta;
@@ -52,21 +40,20 @@ defineProps<{
 }>();
 
 const formatCurrency = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value))
-        return '0,00';
+    if (value === null || value === undefined || Number.isNaN(value)) return '---';
     return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
     }).format(value);
 };
 
-const formatDate = (date: string) => {
+const formatDate = (date: string | null | undefined) => {
+    if (!date) return '---';
     return new Date(date).toLocaleDateString('pt-BR');
 };
 
 const formatPercent = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value))
-        return '---';
+    if (value === null || value === undefined || Number.isNaN(value)) return '---';
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 };
 
@@ -74,10 +61,14 @@ const createValuation = () => {
     router.visit('/valuations/create');
 };
 
-const openValuation = (valuation: ValuationSummary | null) => {
-    if (valuation) {
-        router.visit(`/valuations/${valuation.id}`);
-    }
+const openValuation = (valuation: Valuation) => {
+    router.visit(`/valuations/${valuation.id}`);
+};
+
+const methodIcon = (method: string) => {
+    if (method === 'dcf') return Calculator;
+    if (method === 'preco_teto') return ChartNoAxesCombined;
+    return TrendingUp;
 };
 </script>
 
@@ -97,152 +88,48 @@ const openValuation = (valuation: ValuationSummary | null) => {
             </PageHeader>
 
             <SectionCard
-                title="Cálculos por Ativo"
-                :description="`${valuations.meta?.total || valuations.data.length} ativo(s) com valuation`"
+                class="mt-6"
+                title="Valuations Salvas"
+                :description="`${valuations.meta?.total || valuations.data.length} registro(s)`"
             >
-                <div v-if="valuations.data.length" class="overflow-x-auto">
-                    <Table>
-                        <TableHeader>
-                            <TableRow
-                                class="border-b border-border hover:bg-transparent"
-                            >
-                                <TableHead
-                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Ativo
-                                </TableHead>
-                                <TableHead
-                                    class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Upside / Downside DCF
-                                </TableHead>
-                                <TableHead
-                                    class="text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                                >
-                                    Margem Preço Teto
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            <TableRow
-                                v-for="valuation in valuations.data"
-                                :key="valuation.investiment.id"
-                                class="border-b border-border transition-colors hover:bg-surface/50"
-                            >
-                                <TableCell class="font-medium text-foreground">
-                                    <div class="flex items-center gap-2">
-                                        <img
-                                            v-if="
-                                                valuation.investiment.logo_url
-                                            "
-                                            :src="
-                                                valuation.investiment.logo_url
-                                            "
-                                            :alt="valuation.investiment.name"
-                                            class="h-6 w-6 rounded-full object-contain"
-                                        />
-                                        <span>{{
-                                            valuation.investiment.name
-                                        }}</span>
-                                    </div>
-                                </TableCell>
-                                <TableCell class="text-right">
-                                    <button
-                                        v-if="valuation.dcf"
-                                        type="button"
-                                        class="text-right"
-                                        @click="openValuation(valuation.dcf)"
-                                    >
-                                        <span
-                                            class="block font-semibold"
-                                            :class="
-                                                (valuation.dcf.upside ?? 0) >= 0
-                                                    ? 'text-revenue'
-                                                    : 'text-destructive'
-                                            "
-                                        >
-                                            {{
-                                                formatPercent(
-                                                    valuation.dcf.upside,
-                                                )
-                                            }}
-                                        </span>
-                                        <span
-                                            class="block text-xs text-muted-foreground"
-                                        >
-                                            {{
-                                                formatCurrency(
-                                                    valuation.dcf
-                                                        .fair_value_per_share,
-                                                )
-                                            }}
-                                            ·
-                                            {{
-                                                formatDate(
-                                                    valuation.dcf.calculated_at,
-                                                )
-                                            }}
-                                        </span>
-                                    </button>
-                                    <span v-else class="text-muted-foreground"
-                                        >---</span
-                                    >
-                                </TableCell>
-                                <TableCell class="text-right">
-                                    <button
-                                        v-if="valuation.preco_teto"
-                                        type="button"
-                                        class="text-right"
-                                        @click="
-                                            openValuation(valuation.preco_teto)
-                                        "
-                                    >
-                                        <span
-                                            class="block font-semibold"
-                                            :class="
-                                                (valuation.preco_teto
-                                                    .margin_of_safety ?? 0) >= 0
-                                                    ? 'text-revenue'
-                                                    : 'text-destructive'
-                                            "
-                                        >
-                                            {{
-                                                formatPercent(
-                                                    valuation.preco_teto
-                                                        .margin_of_safety,
-                                                )
-                                            }}
-                                        </span>
-                                        <span
-                                            class="block text-xs text-muted-foreground"
-                                        >
-                                            {{
-                                                formatCurrency(
-                                                    valuation.preco_teto
-                                                        .fair_value_per_share,
-                                                )
-                                            }}
-                                            ·
-                                            {{
-                                                formatDate(
-                                                    valuation.preco_teto
-                                                        .calculated_at,
-                                                )
-                                            }}
-                                        </span>
-                                    </button>
-                                    <span v-else class="text-muted-foreground"
-                                        >---</span
-                                    >
-                                </TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
+                <div v-if="valuations.data.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div
+                        v-for="valuation in valuations.data"
+                        :key="valuation.id"
+                        class="group cursor-pointer rounded-xl border border-border bg-card transition-all hover:border-primary/30 hover:shadow-sm"
+                        @click="openValuation(valuation)"
+                        role="button"
+                        tabindex="0"
+                        @keydown.enter="openValuation(valuation)"
+                    >
+                        <div class="flex items-center gap-3 border-b border-border px-5 py-4">
+                            <img
+                                :src="valuation.asset.logo_url || '/images/default-logo.svg'"
+                                :alt="valuation.asset.ticker"
+                                class="h-9 w-9 rounded-full object-contain"
+                                @error="($event.target as HTMLImageElement).src = '/images/default-logo.svg'"
+                            />
+                            <div class="min-w-0 flex-1">
+                                <p class="truncate text-sm font-semibold text-foreground">
+                                    {{ valuation.asset.name }}
+                                </p>
+                                <p class="text-xs text-muted-foreground">{{ valuation.asset.ticker }}</p>
+                            </div>
+                        </div>
 
-                    <PaginationLinks
-                        v-if="valuations.meta"
-                        :meta="valuations.meta"
-                    />
+                        <div class="px-5 py-3.5">
+                            <div class="flex items-center justify-between">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                    <component :is="methodIcon(valuation.method)" class="h-3.5 w-3.5" />
+                                    {{ valuation.method_label }}
+                                </span>
+                                <span class="text-xs text-muted-foreground">{{ formatDate(valuation.calculated_at) }}</span>
+                            </div>
+                            <div class="mt-2 text-sm text-muted-foreground">
+                                Cotação: <strong class="text-foreground">{{ formatCurrency(valuation.asset.current_price) }}</strong>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div
@@ -253,7 +140,7 @@ const openValuation = (valuation: ValuationSummary | null) => {
                         class="mb-4 h-16 w-16 text-muted-foreground opacity-15"
                     />
                     <p class="font-medium text-muted-foreground">
-                        Nenhum ativo com valuation encontrado
+                        Nenhuma valuation salva
                     </p>
                     <p class="mt-1 text-sm text-muted-foreground">
                         Realize um cálculo de valuation para começar
@@ -263,6 +150,13 @@ const openValuation = (valuation: ValuationSummary | null) => {
                         Nova Valuation
                     </Button>
                 </div>
+
+                <template v-if="valuations.data.length && valuations.meta">
+                    <PaginationLinks
+                        class="mt-6"
+                        :meta="valuations.meta"
+                    />
+                </template>
             </SectionCard>
         </div>
     </AppLayout>

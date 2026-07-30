@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Investiment;
+use App\Models\Asset;
 use App\Models\InvestimentValuation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -16,9 +16,10 @@ class InvestimentValuationFactory extends Factory
     public function definition(): array
     {
         return [
-            'investiment_id' => Investiment::factory(),
+            'asset_id' => Asset::factory(),
             'method' => InvestimentValuation::METHOD_DCF,
             'assumptions' => [
+                'asset_id' => 1,
                 'current_fcf' => 100,
                 'discount_rate' => 12,
                 'terminal_growth_rate' => 3,
@@ -29,8 +30,6 @@ class InvestimentValuationFactory extends Factory
                 'current_price_per_share' => 100,
                 'growth_rates' => [6, 6, 6, 6, 6],
             ],
-            'projected_cash_flows' => [],
-            'summary' => [],
             'calculated_at' => now(),
         ];
     }

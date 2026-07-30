@@ -13,31 +13,36 @@ import {
     TrendingUp,
 } from 'lucide-vue-next';
 
-interface Investment {
+interface AssetItem {
     id: number;
+    ticker: string;
     name: string;
     logo_url?: string | null;
+    asset_type: string;
+    current_price?: number | null;
 }
 
 defineProps<{
-    investiments: Investment[];
+    assets: AssetItem[];
 }>();
 
-type ValuationMethod = 'dcf' | 'preco-teto';
+type ValuationMethod = 'dcf' | 'preco_teto' | 'gordon';
 
 const form = useForm<{
-    investiment_id: string;
+    asset_id: string;
     method: ValuationMethod | '';
 }>({
-    investiment_id: '',
+    asset_id: '',
     method: '',
 });
 
 const submit = () => {
     if (form.method === 'dcf') {
-        router.visit(`/investiments/${form.investiment_id}`);
-    } else if (form.method === 'preco-teto') {
-        router.visit(`/preco-teto?investiment_id=${form.investiment_id}`);
+        router.visit(`/valuations?asset_id=${form.asset_id}`);
+    } else if (form.method === 'preco_teto') {
+        router.visit(`/preco-teto?asset_id=${form.asset_id}`);
+    } else if (form.method === 'gordon') {
+        router.visit(`/gordon?asset_id=${form.asset_id}`);
     }
 };
 
@@ -59,10 +64,17 @@ const methods: {
         icon: Calculator,
     },
     {
-        value: 'preco-teto',
+        value: 'preco_teto',
         label: 'Preço Teto Projetivo',
         description:
             'Determina o preço máximo de compra com base em lucro, payout e dividend yield projetados.',
+        icon: TrendingUp,
+    },
+    {
+        value: 'gordon',
+        label: 'Gordon Growth Model',
+        description:
+            'Valuation de FIIs pelo modelo de desconto de dividendos com crescimento perpétuo.',
         icon: TrendingUp,
     },
 ];
@@ -89,25 +101,18 @@ const methods: {
             </div>
 
             <div
-                v-if="!investiments.length"
+                v-if="!assets.length"
                 class="rounded-xl border border-border bg-card p-8 text-center"
             >
                 <ChartNoAxesCombined
                     class="mx-auto mb-4 h-16 w-16 text-muted-foreground opacity-15"
                 />
                 <p class="font-medium text-foreground">
-                    Nenhum investimento cadastrado
+                    Nenhum ativo disponível
                 </p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    Cadastre um investimento primeiro para poder realizar
-                    valuations.
+                    Aguarde a sincronização de ativos para começar.
                 </p>
-                <Button
-                    class="mt-6"
-                    @click="router.visit('/investiments/create')"
-                >
-                    Novo Investimento
-                </Button>
             </div>
 
             <form v-else @submit.prevent="submit" class="space-y-6">
@@ -115,7 +120,7 @@ const methods: {
                     <div>
                         <Label required>Ativo</Label>
                         <select
-                            v-model="form.investiment_id"
+                            v-model="form.asset_id"
                             required
                             class="mt-1.5 h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
                         >
@@ -123,15 +128,14 @@ const methods: {
                                 Selecione um ativo
                             </option>
                             <option
-                                v-for="item in investiments"
+                                v-for="item in assets"
                                 :key="item.id"
                                 :value="item.id"
-                                :data-logo="item.logo_url ?? ''"
                             >
-                                {{ item.name }}
+                                {{ item.ticker }} - {{ item.name }}
                             </option>
                         </select>
-                        <InputError :message="form.errors.investiment_id" />
+                        <InputError :message="form.errors.asset_id" />
                     </div>
                 </SectionCard>
 
@@ -185,7 +189,7 @@ const methods: {
                     <Button
                         type="submit"
                         variant="default"
-                        :disabled="!form.investiment_id || !form.method"
+                        :disabled="!form.asset_id || !form.method"
                     >
                         Iniciar Cálculo
                     </Button>
