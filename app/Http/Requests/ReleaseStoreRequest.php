@@ -22,6 +22,7 @@ class ReleaseStoreRequest extends FormRequest
             'type' => 'required|in:revenue,expense',
             'date' => 'required|date',
             'payment_method' => 'nullable|in:cash,credit_card,debit_card,pix',
+            'credit_card_id' => 'nullable|exists:credit_cards,id',
             'is_installment' => 'nullable|boolean',
             'total_installments' => 'nullable|integer|min:2|max:360',
             'is_recurring' => 'nullable|boolean',
@@ -36,9 +37,15 @@ class ReleaseStoreRequest extends FormRequest
         $validator->after(function ($validator) {
             $data = $this->all();
 
-            if (($data['payment_method'] ?? null) === 'credit_card' && !empty($data['is_installment'])) {
-                if (empty($data['total_installments']) || (int) $data['total_installments'] < 2) {
-                    $validator->errors()->add('total_installments', 'Informe o número de parcelas (mínimo 2).');
+            if (($data['payment_method'] ?? null) === 'credit_card') {
+                if (empty($data['credit_card_id'])) {
+                    $validator->errors()->add('credit_card_id', 'Selecione o cartão de crédito utilizado.');
+                }
+
+                if (!empty($data['is_installment'])) {
+                    if (empty($data['total_installments']) || (int) $data['total_installments'] < 2) {
+                        $validator->errors()->add('total_installments', 'Informe o número de parcelas (mínimo 2).');
+                    }
                 }
             }
 

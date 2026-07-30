@@ -15,6 +15,7 @@ class RecurrencePlan extends Model
     protected $fillable = [
         'user_id',
         'account_id',
+        'credit_card_id',
         'category_id',
         'title',
         'description',
@@ -48,6 +49,11 @@ class RecurrencePlan extends Model
         return $this->belongsTo(Account::class);
     }
 
+    public function creditCard()
+    {
+        return $this->belongsTo(CreditCard::class);
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);
@@ -76,6 +82,7 @@ class RecurrencePlan extends Model
         $release = Release::create([
             'user_id' => $this->user_id,
             'account_id' => $this->account_id,
+            'credit_card_id' => $this->credit_card_id,
             'category_id' => $this->category_id,
             'title' => $this->title,
             'description' => $this->description,
