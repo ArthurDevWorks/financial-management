@@ -48,7 +48,6 @@ interface Asset {
     book_value_per_share: number | null;
     total_shares: number | null;
     asset_type: string;
-    logo_url: string | null;
     long_business_summary: string | null;
     website: string | null;
     full_time_employees: number | null;
@@ -61,10 +60,20 @@ interface DividendRecord {
     type: string;
 }
 
+interface HistoricalPrice {
+    date: number | null;
+    close: number;
+    open?: number;
+    high?: number;
+    low?: number;
+    volume?: number;
+}
+
 const props = defineProps<{
     asset: Asset;
     isFavorite: boolean;
     dividends?: DividendRecord[];
+    historicalPrices?: HistoricalPrice[];
 }>();
 
 function toNumber(value: unknown): number | null {
@@ -103,8 +112,13 @@ function formatMarketCap(value: unknown): string {
     return formatCurrency(num);
 }
 
-const hasPriceData = computed(() => props.asset.current_price !== null);
+const hasPriceData = computed(() => props.historicalPrices && props.historicalPrices.length > 0);
 const hasDividends = computed(() => props.dividends && props.dividends.length > 0);
+
+function formatTimestamp(ts: number | null): string {
+    if (!ts) return '';
+    return new Date(ts * 1000).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+}
 
 const dividendLabels = computed(() => {
     if (!hasDividends.value) return [];
@@ -119,17 +133,31 @@ const dividendValues = computed(() => {
     return props.dividends!.map((d) => d.value);
 });
 
+const priceChartLabels = computed(() => {
+    if (hasPriceData.value) {
+        return props.historicalPrices!.map((p) => formatTimestamp(p.date));
+    }
+    return ['Preço atual'];
+});
+
+const priceChartValues = computed(() => {
+    if (hasPriceData.value) {
+        return props.historicalPrices!.map((p) => p.close);
+    }
+    return props.asset.current_price !== null ? [props.asset.current_price] : [0];
+});
+
 const priceChartData = computed(() => ({
-    labels: hasDividends.value ? dividendLabels.value : ['Preço atual'],
+    labels: priceChartLabels.value,
     datasets: [
         {
             label: props.asset.ticker,
-            data: hasPriceData.value ? [props.asset.current_price] : [0],
+            data: priceChartValues.value,
             borderColor: 'hsl(168, 75%, 42%)',
             backgroundColor: 'hsla(168, 75%, 42%, 0.08)',
             fill: true,
             tension: 0.35,
-            pointRadius: 4,
+            pointRadius: hasPriceData.value ? 2 : 4,
             pointHitRadius: 8,
             borderWidth: 2.5,
         },

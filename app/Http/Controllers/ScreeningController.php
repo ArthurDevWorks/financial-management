@@ -156,11 +156,13 @@ class ScreeningController extends Controller
             ->exists();
 
         $dividends = $brapi->fetchHistoricalDividends($ticker);
+        $historicalPrices = $brapi->fetchHistoricalPrices($ticker);
 
         return Inertia::render('screening/AssetDetail', [
             'asset' => $asset,
             'isFavorite' => $isFavorite,
             'dividends' => $dividends->values(),
+            'historicalPrices' => $historicalPrices->values(),
         ]);
     }
 

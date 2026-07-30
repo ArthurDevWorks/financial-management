@@ -295,31 +295,113 @@ class BrapiService
         }
     }
 
-    private function fetchFiiIndicators(string $symbol): ?array
+    public function fetchFiiIndicators(string $symbol): ?array
     {
-        try {
-            $response = $this->http->get('/v2/fii/indicators', ['symbols' => $symbol]);
-            if ($response->failed()) return null;
-            $fiis = $response->json('fiis');
-            return $fiis[0] ?? null;
-        } catch (\Throwable $e) {
-            Log::warning("brapi fii indicators error {$symbol}: {$e->getMessage()}");
-            return null;
-        }
+        $symbol = strtoupper(trim($symbol));
+        $cacheKey = 'brapi_fii_indicators_'.$symbol;
+
+        return Cache::remember($cacheKey, 360, function () use ($symbol) {
+            try {
+                $response = $this->http->get('/v2/fii/indicators', ['symbols' => $symbol]);
+                if ($response->failed()) return null;
+                $fiis = $response->json('fiis');
+                return $fiis[0] ?? null;
+            } catch (\Throwable $e) {
+                Log::warning("brapi fii indicators error {$symbol}: {$e->getMessage()}");
+                return null;
+            }
+        });
     }
 
     private function detectAssetType(string $symbol): string
     {
-        if (preg_match('/11$/', $symbol)) {
+        $suffix = (string) preg_replace('/^[A-Z0-9]{4}/', '', strtoupper($symbol));
+
+        if ($suffix === '11') {
             return 'fii';
         }
-        if (preg_match('/3[45]$/', $symbol)) {
+        if (preg_match('/^3[1-9]$/', $suffix)) {
             return 'bdr';
         }
-        if (preg_match('/[0-9]$/', $symbol)) {
+        if (preg_match('/^[0-9]B$/i', $suffix)) {
+            return 'invalid';
+        }
+        if (preg_match('/^[3-8]$/', $suffix)) {
             return 'stock';
         }
-        return 'stock';
+        return 'invalid';
+    }
+
+    public function fetchAvailableTickers(int $cacheMinutes = 1440): array
+    {
+        $cacheKey = 'brapi_available';
+
+        return Cache::remember($cacheKey, $cacheMinutes, function () {
+            try {
+                $response = $this->http->get('/available');
+
+                if ($response->failed()) {
+                    Log::warning('brapi.dev available API error', [
+                        'status' => $response->status(),
+                    ]);
+                    return [];
+                }
+
+                return $response->json('stocks') ?? [];
+            } catch (\Throwable $e) {
+                Log::error('brapi.dev available error: '.$e->getMessage());
+                return [];
+            }
+        });
+    }
+
+    public function fetchHistoricalPrices(string $symbol, string $range = '1y', string $interval = '1mo'): Collection
+    {
+        $symbol = strtoupper(trim($symbol));
+        $cacheKey = 'brapi_historical_prices_'.$symbol.'_'.$range.'_'.$interval;
+
+        return Cache::remember($cacheKey, 360, function () use ($symbol, $range, $interval) {
+            try {
+                $response = $this->http->get('/v2/stocks/quote', [
+                    'symbols' => $symbol,
+                    'range' => $range,
+                    'interval' => $interval,
+                    'historicalPrice' => 'true',
+                ]);
+
+                if ($response->failed()) {
+                    Log::warning('brapi.dev historical prices API error', [
+                        'symbol' => $symbol,
+                        'status' => $response->status(),
+                    ]);
+                    return collect();
+                }
+
+                $results = $response->json('results');
+                if (empty($results) || ! isset($results[0]['data'])) {
+                    return collect();
+                }
+
+                $data = $results[0]['data'];
+                $historicalData = $data['historicalDataPrice'] ?? [];
+
+                return collect($historicalData)
+                    ->filter(fn (array $item): bool => isset($item['close']) && $item['close'] !== null)
+                    ->map(fn (array $item): array => [
+                        'date' => $item['date'] ?? null,
+                        'close' => (float) $item['close'],
+                        'open' => (float) ($item['open'] ?? 0),
+                        'high' => (float) ($item['high'] ?? 0),
+                        'low' => (float) ($item['low'] ?? 0),
+                        'volume' => (int) ($item['volume'] ?? 0),
+                    ])
+                    ->sortBy('date')
+                    ->values();
+            } catch (\Throwable $e) {
+                Log::error('brapi.dev historical prices error: '.$e->getMessage());
+                return collect();
+            }
+        });
     }
 
     public function fetchHistoricalDividends(string $symbol): Collection

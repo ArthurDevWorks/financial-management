@@ -48,6 +48,13 @@ class AssetSyncService
             $errors += $result['errors'];
         }
 
+        if ($type === 'all') {
+            $result = $this->syncMissingFromBrapi($onProgress);
+            $processed += $result['processed'];
+            $updated += $result['updated'];
+            $errors += $result['errors'];
+        }
+
         $this->enrichLogos([]);
 
         return [
@@ -101,6 +108,10 @@ class AssetSyncService
 
                 foreach ($stockIndicators as $key) {
                     $data[$key] ??= $quote[$key];
+                }
+
+                if (empty($data['total_shares']) && !empty($data['market_cap']) && !empty($data['current_price'])) {
+                    $data['total_shares'] = (int) round($data['market_cap'] / $data['current_price']);
                 }
             }
 
@@ -347,13 +358,16 @@ class AssetSyncService
             'profit_margin' => $this->toPercent($get('margemliquida')),
             'ebitda_margin' => $this->toPercent($get('margemebit')),
             'gross_margin' => $this->toPercent($get('margembruta')),
-            'debt_to_ebitda' => $this->toFloat($get('dividaliquidaebit')),
+            'net_debt_to_ebitda' => $this->toFloat($get('dividaliquidaebit')),
             'current_liquidity' => $this->toFloat($get('liquidezcorrente')),
             'payout' => $this->toPercent($get('payout')),
             'market_cap' => $this->toFloat($get('valormercado')),
             'volume_avg_30d' => $this->toFloat($get('liquidezmediadiaria')),
             'dividends_per_share' => $this->toFloat($get('div_Yield')),
-            'total_shares' => $this->toInt($get('nro_Acoes')),
+            'total_shares' => $this->computeTotalSharesFromMarketCap(
+                $this->toFloat($get('valormercado')),
+                $this->toFloat($get('price')),
+            ),
             'free_cash_flow' => $this->toFloat($get('fcf_Liq')),
             'sector' => $get('sectorname') ?? $get('sector'),
             'subsector' => $get('subsectorname') ?? $get('subsector'),
@@ -367,9 +381,141 @@ class AssetSyncService
             $data['number_of_properties'] = $this->toInt($get('numberproperties'));
             $data['net_worth'] = $this->toFloat($get('networth'));
             $data['ffo_yield'] = $this->toPercent($get('ffoyield'));
+            $data['total_shares'] = $this->toInt($get('numerocotas'));
         }
 
         return $data;
+    }
+
+    public function syncMissingFromBrapi(?callable $onProgress = null): array
+    {
+        $available = $this->brapi->fetchAvailableTickers();
+
+        if (empty($available)) {
+            return ['processed' => 0, 'updated' => 0, 'errors' => 0, 'missing' => 0];
+        }
+
+        $existingTickers = Asset::pluck('ticker')->map(fn ($t) => strtoupper(trim($t)))->flip();
+
+        $missing = collect($available)
+            ->map(fn ($t) => strtoupper(trim($t)))
+            ->unique()
+            ->reject(fn ($t) => (bool) preg_match('/F$/', $t))
+            ->filter(fn ($t) => ! $existingTickers->has($t))
+            ->filter(fn ($t) => $this->detectAssetType($t) === 'stock' || $this->detectAssetType($t) === 'fii')
+            ->values()
+            ->all();
+
+        if (empty($missing)) {
+            return ['processed' => 0, 'updated' => 0, 'errors' => 0, 'missing' => 0];
+        }
+
+        $processed = 0;
+        $updated = 0;
+        $errors = 0;
+        $total = count($missing);
+
+        foreach ($missing as $i => $ticker) {
+            $processed++;
+
+            if ($onProgress) {
+                $onProgress($ticker, $i + 1, $total);
+            }
+
+            try {
+                if ($this->syncSingleFromBrapi($ticker)) {
+                    $updated++;
+                }
+            } catch (\Throwable $e) {
+                $errors++;
+                Log::warning("Error syncing missing asset {$ticker}: {$e->getMessage()}");
+            }
+
+            usleep(200_000);
+        }
+
+        return compact('processed', 'updated', 'errors', 'missing');
+    }
+
+    public function syncSingleFromBrapi(string $ticker): bool
+    {
+        $ticker = strtoupper(trim($ticker));
+        $assetType = $this->detectAssetType($ticker);
+
+        if ($assetType === 'invalid') {
+            return false;
+        }
+
+        if ($assetType === 'fii') {
+            $fiiData = $this->brapi->fetchFiiIndicators($ticker);
+            if ($fiiData === null) {
+                return false;
+            }
+        }
+
+        try {
+            $quote = $this->brapi->fetchCompleteQuote($ticker);
+            if ($quote === null) {
+                return false;
+            }
+
+            $data = [
+                'ticker' => $ticker,
+                'asset_type' => $assetType,
+                'name' => $quote['name'] ?? $ticker,
+                'current_price' => $quote['current_price'] ?? null,
+                'logo_url' => $quote['logourl'] ?? null,
+                'sector' => $quote['sector'] ?? null,
+                'subsector' => $quote['industry'] ?? null,
+                'market_cap' => $quote['market_cap'] ?? null,
+                'enterprise_value' => $quote['enterprise_value'] ?? null,
+                'volume_avg_30d' => $quote['volume_avg_30d'] ?? null,
+                'dividend_yield' => $quote['dividend_yield'] ?? null,
+                'price_to_earnings' => $quote['price_to_earnings'] ?? null,
+                'price_to_book' => $quote['price_to_book'] ?? null,
+                'ev_to_ebitda' => $quote['ev_to_ebitda'] ?? null,
+                'price_to_sales' => $quote['price_to_sales'] ?? null,
+                'price_to_assets' => $quote['price_to_assets'] ?? null,
+                'price_to_cash_flow' => $quote['price_to_cash_flow'] ?? null,
+                'roe' => $quote['roe'] ?? null,
+                'roa' => $quote['roa'] ?? null,
+                'profit_margin' => $quote['profit_margin'] ?? null,
+                'ebitda_margin' => $quote['ebitda_margin'] ?? null,
+                'gross_margin' => $quote['gross_margin'] ?? null,
+                'debt_to_ebitda' => $quote['debt_to_ebitda'] ?? null,
+                'net_debt_to_ebitda' => $quote['net_debt_to_ebitda'] ?? null,
+                'current_liquidity' => $quote['current_liquidity'] ?? null,
+                'payout' => $quote['payout'] ?? null,
+                'net_income' => $quote['net_income'] ?? null,
+                'revenue' => $quote['revenue'] ?? null,
+                'free_cash_flow' => $quote['free_cash_flow'] ?? null,
+                'dividends_per_share' => $quote['dividends_per_share'] ?? null,
+                'earnings_per_share' => $quote['earnings_per_share'] ?? null,
+                'book_value_per_share' => $quote['book_value_per_share'] ?? null,
+                'total_shares' => $quote['total_shares'] ?? null,
+                'long_business_summary' => $quote['long_business_summary'] ?? null,
+                'website' => $quote['website'] ?? null,
+                'full_time_employees' => $quote['full_time_employees'] ?? null,
+                'fetched_at' => now(),
+            ];
+
+            if (empty($data['total_shares']) && ! empty($data['market_cap']) && ! empty($data['current_price'])) {
+                $data['total_shares'] = (int) round($data['market_cap'] / $data['current_price']);
+            }
+
+            $clean = array_filter($data, fn ($v) => $v !== null);
+
+            if (empty($clean)) {
+                return false;
+            }
+
+            Asset::updateOrCreate(['ticker' => $ticker], $clean);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::warning("Error syncing asset from Brapi {$ticker}: {$e->getMessage()}");
+            return false;
+        }
     }
 
     private function isStockOrFii(string $ticker, string $expectedType): bool
@@ -385,16 +531,21 @@ class AssetSyncService
 
     private function detectAssetType(string $ticker): string
     {
-        if (preg_match('/11$/', $ticker)) {
+        $suffix = (string) preg_replace('/^[A-Z0-9]{4}/', '', strtoupper($ticker));
+
+        if ($suffix === '11') {
             return 'fii';
         }
-        if (preg_match('/3[45]$/', $ticker)) {
+        if (preg_match('/^3[1-9]$/', $suffix)) {
             return 'bdr';
         }
-        if (preg_match('/[0-9]$/', $ticker)) {
+        if (preg_match('/^[0-9]B$/i', $suffix)) {
+            return 'invalid';
+        }
+        if (preg_match('/^[3-8]$/', $suffix)) {
             return 'stock';
         }
-        return 'stock';
+        return 'invalid';
     }
 
     private function toFloat(mixed $value): ?float
@@ -419,6 +570,14 @@ class AssetSyncService
             return null;
         }
         return round($float, 4);
+    }
+
+    private function computeTotalSharesFromMarketCap(?float $marketCap, ?float $price): ?int
+    {
+        if ($marketCap !== null && $price !== null && $price > 0) {
+            return (int) round($marketCap / $price);
+        }
+        return null;
     }
 
     private function toInt(mixed $value): ?int

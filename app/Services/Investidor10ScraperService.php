@@ -157,7 +157,7 @@ class Investidor10ScraperService
             'p_cap_giro' => 'price_to_cash_flow',
             'ev_ebit' => 'ev_to_ebitda',
             'p_sr' => 'price_to_sales',
-            'divida_liquida_ebitda' => 'debt_to_ebitda',
+            'divida_liquida_ebitda' => 'net_debt_to_ebitda',
             'liquidez_corrente' => 'current_liquidity',
             'dy' => 'dividend_yield',
         ];

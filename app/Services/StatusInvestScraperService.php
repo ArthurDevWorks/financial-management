@@ -147,7 +147,7 @@ class StatusInvestScraperService
             'profit_margin' => $this->toPercent($get('marg_Liq')),
             'ebitda_margin' => $this->toPercent($get('marg_EBIT')),
             'gross_margin' => $this->toPercent($get('marg_Bruta')),
-            'debt_to_ebitda' => $this->toFloat($get('dividaLiquidaEbit')),
+            'net_debt_to_ebitda' => $this->toFloat($get('dividaLiquidaEbit')),
             'current_liquidity' => $this->toFloat($get('liquidez_Corr')),
             'payout' => $this->toPercent($get('payout')),
             'market_cap' => $this->toFloat($get('valor_Mercado')),
