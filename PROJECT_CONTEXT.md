@@ -13,7 +13,7 @@ O projeto começa como um gerenciador financeiro pessoal e evolui para uma plata
 - Kinvo
 - Trademap
 
-O foco atual do produto está na Release 1: gestão financeira pessoal com cadastro de ações, integração de cotação via API e uso desses dados nos cálculos de valuation e preço teto.
+O produto já teve a Release 1 colocada em produção com gerenciamento financeiro e cálculo de valuations. O foco atual é documentar a entrega, estabilizar operação pós-produção e preparar a Release 2 de planejamento financeiro e lançamentos avançados.
 
 ---
 
@@ -85,6 +85,9 @@ A plataforma deve permitir:
 
 ## Release 1 - Base Financeira + Ações com Cotação
 
+### Status
+Entregue em produção.
+
 ### Objetivo
 Entregar o núcleo próximo da conclusão: gestão financeira pessoal com cadastro de ações e atualização automática da cotação para suportar valuation.
 
@@ -101,7 +104,34 @@ Entregar o núcleo próximo da conclusão: gestão financeira pessoal com cadast
 - Primeira experiência de dado de mercado dentro do Fidax.
 - Base consistente para análise inicial de investimentos.
 
-## Release 2 - Consolidador de Carteira
+## Release 1.1 - Pós-produção, Operação e Localização
+
+### Objetivo
+Estabilizar o produto em produção e fechar pendências operacionais essenciais.
+
+### Entregas
+- Envio real de e-mail de redefinição de senha.
+- Mensagens de validação e requests em pt-BR.
+- Domínio de produção.
+- Certificado SSL e HTTPS obrigatório.
+- Checklist de deploy e operação.
+- Hardening da Release 1 em produção.
+
+## Release 2 - Planejamento Financeiro e Lançamentos Avançados
+
+### Objetivo
+Evoluir o gerenciamento financeiro para planejamento, previsibilidade e automação.
+
+### Entregas
+- Status de lançamentos: previsto, pago e cancelado.
+- Forma de pagamento nos lançamentos.
+- Parcelamento com geração automática das parcelas futuras.
+- Recorrência com frequência configurável.
+- Despesas fixas mensais ou recorrentes.
+- Planejamento financeiro mensal e anual.
+- Comparativo de planejado versus realizado no dashboard.
+
+## Release 3 - Consolidador de Carteira
 
 ### Objetivo
 Transformar o Fidax em um consolidador de posições e rentabilidade.
@@ -113,7 +143,7 @@ Transformar o Fidax em um consolidador de posições e rentabilidade.
 - Evolução de patrimônio.
 - Dividendos e proventos.
 
-## Release 3 - Screener e Oportunidades
+## Release 4 - Screener e Oportunidades
 
 ### Objetivo
 Permitir triagem de ativos com base em filtros fundamentalistas e dados retornados pela API.
@@ -130,7 +160,7 @@ Permitir triagem de ativos com base em filtros fundamentalistas e dados retornad
 - Encontrar ações com `DY > 7%`.
 - Combinar filtros para reduzir o universo e achar ativos aderentes à tese.
 
-## Release 4 - Central de Documentos e Research
+## Release 5 - Central de Documentos e Research
 
 ### Objetivo
 Centralizar relatórios, fatos relevantes, PDFs e documentos de ativos e FIIs.
@@ -141,7 +171,7 @@ Centralizar relatórios, fatos relevantes, PDFs e documentos de ativos e FIIs.
 - Busca por ativo, tipo e período.
 - Histórico documental para apoiar análise.
 
-## Release 5 - Inteligência e Apoio à Decisão
+## Release 6 - Inteligência e Apoio à Decisão
 
 ### Objetivo
 Adicionar camadas inteligentes sobre os dados já consolidados.
@@ -363,3 +393,10 @@ All CRUD create/edit pages follow this structure:
 **Discovery:** All 3 requested files (ForgotPassword.vue, Profile.vue, Welcome.vue) had their hardcoded colors correctly replaced with design tokens. Welcome.vue still has 2 decorative feature grid cards (Categorias with `orange-500`, Análises with `indigo-500`) using hardcoded colors — but these were NOT in the original review scope and no semantic tokens exist for general decorative marketing accents.
 **Solution:** The 2 remaining hardcoded color instances in Welcome.vue are decorative marketing features on the landing page, not application UI elements. The design system does not define tokens for these. If desired, consider adding general-purpose accent tokens (e.g., `--accent-warm`, `--accent-cool`) or converting to chart-based tokens for full token purity. Not blocking.
 **Source:** Reviewer agent (code review final approval)
+
+### 2026-07-07 - Release 1 em Produção e Backlog Pós-Produção
+
+**Contexto:** O usuário confirmou que a Release 1 já foi colocada em produção com gerenciamento financeiro e cálculo de valuations.
+**Discovery:** As próximas prioridades não são finalizar a Release 1, mas documentar a entrega, estabilizar operação real e abrir milestones/issues para evolução do produto.
+**Solution:** O roadmap passa a tratar Release 1 como entregue, adiciona Release 1.1 para operação/localização/infraestrutura e define Release 2 como planejamento financeiro e lançamentos avançados.
+**Source:** User clarification (backlog and milestones request)

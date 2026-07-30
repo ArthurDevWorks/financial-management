@@ -72,7 +72,7 @@ interface Valuation {
     calculated_at: string;
 }
 
-defineProps<{
+const props = defineProps<{
     valuation: Valuation;
 }>();
 
