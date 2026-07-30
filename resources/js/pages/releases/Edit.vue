@@ -20,6 +20,13 @@ interface Category {
     type: string;
 }
 
+interface RecurrencePlan {
+    id: number;
+    frequency: string;
+    end_date: string;
+    active: boolean;
+}
+
 interface Release {
     id: number;
     type: 'revenue' | 'expense';
@@ -29,15 +36,29 @@ interface Release {
     amount: number;
     date: string;
     description: string | null;
+    payment_method: string | null;
+    status: string;
+    installment_number: number | null;
+    total_installments: number | null;
+    parent_id: number | null;
+    recurrence_id: number | null;
+    parent: Release | null;
+    recurrencePlan: RecurrencePlan | null;
 }
 
 const props = defineProps<{
     release: Release;
     accounts: Account[];
     categories: Category[];
+    paymentMethods: Record<string, string>;
+    recurrenceFrequencies: Record<string, string>;
+    releaseStatuses: Record<string, string>;
 }>();
 
 const showUnsavedDialog = ref(false);
+
+const isInstallment = computed(() => !!props.release.installment_number);
+const isRecurring = computed(() => !!props.release.recurrence_id);
 
 const form = useForm({
     type: props.release.type,
@@ -47,6 +68,8 @@ const form = useForm({
     amount: props.release.amount?.toString() ?? '',
     date: props.release.date,
     description: props.release.description || '',
+    payment_method: props.release.payment_method ?? '',
+    status: props.release.status ?? 'paid',
 });
 
 const submit = () => {
@@ -86,6 +109,25 @@ watch(
             @cancel="goBack"
         >
             <div class="space-y-6">
+                <div v-if="isInstallment" class="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                    <p class="text-sm font-medium text-primary">
+                        Parcela {{ props.release.installment_number }} de {{ props.release.total_installments }}
+                    </p>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                        As demais parcelas não são afetadas por esta edição.
+                    </p>
+                </div>
+
+                <div v-if="isRecurring && props.release.recurrencePlan" class="rounded-lg border border-purple-500/30 bg-purple-500/5 p-4">
+                    <p class="text-sm font-medium text-purple-400">
+                        Lançamento Recorrente • {{ props.release.recurrencePlan.active ? 'Ativo' : 'Inativo' }}
+                    </p>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                        Frequência: {{ props.recurrenceFrequencies[props.release.recurrencePlan.frequency] ?? props.release.recurrencePlan.frequency }}
+                        • Término: {{ props.release.recurrencePlan.end_date }}
+                    </p>
+                </div>
+
                 <div>
                     <Label required>Tipo de Lançamento</Label>
                     <div class="mt-3 flex gap-4">
@@ -200,6 +242,49 @@ watch(
                             placeholder="Observação"
                         />
                         <InputError :message="form.errors.description" />
+                    </div>
+                </div>
+
+                <div class="border-t border-border pt-6">
+                    <h3 class="mb-4 text-sm font-semibold text-foreground">
+                        Forma de Pagamento e Status
+                    </h3>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <Label>Forma de Pagamento</Label>
+                            <select
+                                v-model="form.payment_method"
+                                class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            >
+                                <option value="">Selecione</option>
+                                <option
+                                    v-for="(label, value) in props.paymentMethods"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.payment_method" />
+                        </div>
+
+                        <div>
+                            <Label>Status</Label>
+                            <select
+                                v-model="form.status"
+                                class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            >
+                                <option
+                                    v-for="(label, value) in props.releaseStatuses"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.status" />
+                        </div>
                     </div>
                 </div>
             </div>

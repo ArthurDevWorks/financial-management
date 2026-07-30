@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { ArrowRightLeft, Download, Plus } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface PaginationMeta {
     current_page: number;
@@ -27,6 +28,12 @@ interface Release {
     type: 'revenue' | 'expense';
     account: { id: number; account: string; bank?: { name: string } } | null;
     category: { id: number; name: string } | null;
+    payment_method: string | null;
+    status: string;
+    installment_number: number | null;
+    total_installments: number | null;
+    recurrence_id: number | null;
+    parent: { id: number } | null;
 }
 
 defineProps<{
@@ -38,6 +45,25 @@ defineProps<{
         search?: string;
     };
 }>();
+
+const paymentMethodLabels: Record<string, string> = {
+    cash: 'Dinheiro',
+    credit_card: 'Cartão de Crédito',
+    debit_card: 'Cartão de Débito',
+    pix: 'Pix',
+};
+
+const statusLabels: Record<string, string> = {
+    paid: 'Pago',
+    pending: 'Previsto',
+    canceled: 'Cancelado',
+};
+
+const statusColors: Record<string, string> = {
+    paid: 'bg-green-500/20 text-green-400 border border-green-500/50',
+    pending: 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50',
+    canceled: 'bg-red-500/20 text-red-400 border border-red-500/50',
+};
 
 const editRelease = (release: Release) => {
     router.visit(`/releases/${release.id}/edit`);
@@ -96,7 +122,7 @@ const formatDate = (date: string) => {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                title="Exportar XLSX"
+                                title="Exportar CSV"
                             >
                                 <Download class="h-4 w-4" />
                             </Button>
@@ -133,6 +159,16 @@ const formatDate = (date: string) => {
                             Conta
                         </th>
                         <th
+                            class="px-4 py-3 text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                        >
+                            Forma de Pagamento
+                        </th>
+                        <th
+                            class="px-4 py-3 text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                        >
+                            Status
+                        </th>
+                        <th
                             class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                         >
                             Data
@@ -156,8 +192,24 @@ const formatDate = (date: string) => {
                         :key="release.id"
                         class="border-b border-border transition-colors hover:bg-surface/50"
                     >
-                        <td class="px-4 py-4 font-medium text-foreground">
-                            {{ release.title }}
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-2">
+                                <span class="font-medium text-foreground">
+                                    {{ release.title }}
+                                </span>
+                                <span
+                                    v-if="release.installment_number"
+                                    class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
+                                >
+                                    {{ release.installment_number }}/{{ release.total_installments }}
+                                </span>
+                                <span
+                                    v-if="release.recurrence_id"
+                                    class="inline-flex items-center rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-medium text-purple-400"
+                                >
+                                    Recorrente
+                                </span>
+                            </div>
                         </td>
                         <td class="px-4 py-4">
                             <StatBadge
@@ -176,6 +228,23 @@ const formatDate = (date: string) => {
                                     ? `${release.account.bank.name} - ${release.account.account}`
                                     : (release.account?.account ?? 'Sem Conta')
                             }}
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <span
+                                v-if="release.payment_method"
+                                class="text-xs text-muted-foreground"
+                            >
+                                {{ paymentMethodLabels[release.payment_method] ?? release.payment_method }}
+                            </span>
+                            <span v-else class="text-xs text-muted-foreground/50">—</span>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <span
+                                class="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium"
+                                :class="statusColors[release.status] || 'bg-surface text-muted-foreground border border-border'"
+                            >
+                                {{ statusLabels[release.status] ?? release.status }}
+                            </span>
                         </td>
                         <td class="px-4 py-4 text-muted-foreground">
                             {{ formatDate(release.date) }}
