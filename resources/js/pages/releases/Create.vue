@@ -20,12 +20,20 @@ interface Category {
     type: string;
 }
 
+interface CreditCardOption {
+    id: number;
+    name: string;
+    color: string;
+    limit: number;
+}
+
 const props = defineProps<{
     accounts: Account[];
     categories: Category[];
     paymentMethods: Record<string, string>;
     recurrenceFrequencies: Record<string, string>;
     releaseStatuses: Record<string, string>;
+    creditCards: CreditCardOption[];
 }>();
 
 const showUnsavedDialog = ref(false);
@@ -39,6 +47,7 @@ const form = useForm({
     date: '',
     description: '',
     payment_method: '',
+    credit_card_id: '' as string | number,
     is_installment: false,
     total_installments: 2,
     is_recurring: false,
@@ -79,6 +88,7 @@ watch(
         if (method !== 'credit_card') {
             form.is_installment = false;
             form.total_installments = 2;
+            form.credit_card_id = '';
         }
     },
 );
@@ -246,6 +256,24 @@ watch(
                                 <option value="canceled">Cancelado</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div v-if="isCreditCard" class="mt-4">
+                        <Label required>Cartão de Crédito</Label>
+                        <select
+                            v-model="form.credit_card_id"
+                            class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        >
+                            <option value="" disabled>Selecione o cartão</option>
+                            <option
+                                v-for="card in props.creditCards"
+                                :key="card.id"
+                                :value="card.id"
+                            >
+                                {{ card.name }}
+                            </option>
+                        </select>
+                        <InputError :message="form.errors.credit_card_id" />
                     </div>
 
                     <div v-if="isCreditCard" class="mt-4">

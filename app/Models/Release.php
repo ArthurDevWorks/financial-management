@@ -15,6 +15,7 @@ class Release extends Model
     protected $fillable = [
         'user_id',
         'account_id',
+        'credit_card_id',
         'category_id',
         'title',
         'description',
@@ -38,6 +39,11 @@ class Release extends Model
     public function account()
     {
         return $this->belongsTo(Account::class);
+    }
+
+    public function creditCard()
+    {
+        return $this->belongsTo(CreditCard::class);
     }
 
     public function category()

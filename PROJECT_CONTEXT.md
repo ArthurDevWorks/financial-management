@@ -13,9 +13,7 @@ O projeto começa como um gerenciador financeiro pessoal e evolui para uma plata
 - Kinvo
 - Trademap
 
-O foco atual do produto está na Release 2 (Módulo Screening) e Release 3 (Valuation Avançado): construir um buscador inteligente de ativos com filtros fundamentalistas, cache de indicadores, comparação de ativos, favoritos, e expandir os modelos de valuation com o modelo de Gordon para FIIs.
-
-A Release 1 (Gestão Financeira) está concluída e lançada como v1.0.0.
+O produto já teve a Release 1 colocada em produção com gerenciamento financeiro e cálculo de valuations. O foco atual é documentar a entrega, estabilizar operação pós-produção e preparar a Release 2 de planejamento financeiro e lançamentos avançados.
 
 ---
 
@@ -86,6 +84,9 @@ A plataforma deve permitir:
 # ROADMAP DE RELEASES
 
 ## Release 1 — Gestão Financeira ✅ (v1.0.0)
+
+### Status
+Entregue em produção.
 
 ### Objetivo
 Núcleo de gestão financeira pessoal com cadastro de ativos e cotação automática.
@@ -398,3 +399,10 @@ O Fidax usa uma identidade dark premium com teal como cor primária e gold como 
 **Discovery:** All 3 requested files (ForgotPassword.vue, Profile.vue, Welcome.vue) had their hardcoded colors correctly replaced with design tokens. Welcome.vue still has 2 decorative feature grid cards (Categorias with `orange-500`, Análises with `indigo-500`) using hardcoded colors — but these were NOT in the original review scope and no semantic tokens exist for general decorative marketing accents.
 **Solution:** The 2 remaining hardcoded color instances in Welcome.vue are decorative marketing features on the landing page, not application UI elements. The design system does not define tokens for these. If desired, consider adding general-purpose accent tokens (e.g., `--accent-warm`, `--accent-cool`) or converting to chart-based tokens for full token purity. Not blocking.
 **Source:** Reviewer agent (code review final approval)
+
+### 2026-07-07 - Release 1 em Produção e Backlog Pós-Produção
+
+**Contexto:** O usuário confirmou que a Release 1 já foi colocada em produção com gerenciamento financeiro e cálculo de valuations.
+**Discovery:** As próximas prioridades não são finalizar a Release 1, mas documentar a entrega, estabilizar operação real e abrir milestones/issues para evolução do produto.
+**Solution:** O roadmap passa a tratar Release 1 como entregue, adiciona Release 1.1 para operação/localização/infraestrutura e define Release 2 como planejamento financeiro e lançamentos avançados.
+**Source:** User clarification (backlog and milestones request)

@@ -2,6 +2,7 @@ import type { LucideProps } from 'lucide-vue-next';
 import {
     ArrowRightLeft,
     ChartNoAxesCombined,
+    CreditCard,
     Landmark,
     LayoutDashboard,
     LogOut,
@@ -34,6 +35,12 @@ export const navSections: NavSection[] = [
             { label: 'Contas', icon: Wallet, href: '/accounts' },
             { label: 'Lançamentos', icon: ArrowRightLeft, href: '/releases' },
             { label: 'Categorias', icon: Tags, href: '/categories' },
+            { label: 'Bancos', icon: Landmark, href: '/banks' },
+            { label: 'Cartões', icon: CreditCard, href: '/credit-cards' },
+            { label: 'Categorias', icon: Tags, href: '/categories' },
+            { label: 'Contas', icon: Wallet, href: '/accounts' },
+            { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
+            { label: 'Lançamentos', icon: ArrowRightLeft, href: '/releases' },
         ],
     },
     {

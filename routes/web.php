@@ -3,8 +3,11 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GordonController;
+use App\Http\Controllers\InvestimentController;
+use App\Http\Controllers\CreditCardController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\PrecoTetoController;
 use App\Http\Controllers\ReleaseController;
 use App\Http\Controllers\ValuationController;
@@ -35,6 +38,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('releases/export', [ReleaseController::class, 'export'])->name('releases.export');
     Route::resource('releases', ReleaseController::class);
 })->middleware(['auth', 'verified']);
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::resource('credit-cards', CreditCardController::class);
+    Route::get('credit-cards/{creditCard}/invoices/{year}/{month}', [InvoiceController::class, 'show'])
+        ->name('credit-cards.invoices.show');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('categories/export', [CategoryController::class, 'export'])->name('categories.export');

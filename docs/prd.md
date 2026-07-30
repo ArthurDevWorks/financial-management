@@ -104,6 +104,9 @@ O Fidax centraliza esse fluxo em um único ambiente para reduzir retrabalho, aum
 
 ### Release 1 - Gestão Financeira + Cadastro de Ações com Cotação
 
+**Status**
+Entregue em produção. A release colocou no ar o núcleo de gerenciamento financeiro, módulo inicial de investimentos e cálculo de valuations/preço teto.
+
 **Objetivo**  
 Entregar o núcleo próximo da conclusão: gestão financeira pessoal com cadastro de ações e atualização automática da cotação para suportar valuation.
 
@@ -130,7 +133,49 @@ Entregar o núcleo próximo da conclusão: gestão financeira pessoal com cadast
 - O valuation usa o preço mais atual disponível.
 - A integração com a API externa não quebra a navegação quando falha.
 
-### Release 2 - Consolidador de Carteira
+### Release 1.1 - Pós-produção, Operação e Localização
+
+**Objetivo**
+Estabilizar a operação em produção e fechar pendências técnicas essenciais para uso real do produto.
+
+**Inclui**
+
+- Envio real de e-mail de redefinição de senha.
+- Mensagens de validação e requests em pt-BR.
+- Configuração de domínio de produção.
+- Certificado SSL e redirecionamento HTTPS.
+- Checklist de deploy, variáveis de ambiente, backup e operação.
+- Hardening de segurança da release já publicada.
+
+**Valor entregue**
+
+- Produto mais confiável para usuários reais.
+- Melhor experiência em português.
+- Base operacional mais segura para evoluir as próximas releases.
+
+### Release 2 - Planejamento Financeiro e Lançamentos Avançados
+
+**Objetivo**
+Evoluir o gerenciamento financeiro para planejamento, previsibilidade e automação de lançamentos.
+
+**Inclui**
+
+- Status de lançamentos: previsto, pago e cancelado.
+- Forma de pagamento nos lançamentos.
+- Parcelamento com criação automática das próximas parcelas.
+- Recorrência com frequência configurável.
+- Despesas fixas mensais ou recorrentes.
+- Planejamento financeiro mensal e anual por categoria.
+- Comparativo de planejado versus realizado no dashboard.
+- Atualização de filtros, listagem e exportação de lançamentos.
+
+**Valor entregue**
+
+- Menos trabalho manual no cadastro financeiro.
+- Visão antecipada de compromissos futuros.
+- Capacidade de comparar orçamento planejado com execução real.
+
+### Release 3 - Consolidador de Carteira
 
 **Objetivo**  
 Transformar o Fidax em um consolidador de posições e rentabilidade.
@@ -150,7 +195,7 @@ Transformar o Fidax em um consolidador de posições e rentabilidade.
 - Acompanhamento de performance.
 - Melhor leitura de risco e concentração.
 
-### Release 3 - Screener e Descoberta de Oportunidades
+### Release 4 - Screener e Descoberta de Oportunidades
 
 **Objetivo**  
 Permitir que o usuário encontre ativos que fazem sentido para sua tese de investimento usando filtros com dados retornados pela API.
@@ -175,7 +220,7 @@ Permitir que o usuário encontre ativos que fazem sentido para sua tese de inves
 - Melhor triagem quantitativa.
 - Apoio à decisão antes do valuation.
 
-### Release 4 - Central de Documentos e Research
+### Release 5 - Central de Documentos e Research
 
 **Objetivo**  
 Centralizar relatórios, documentos e materiais relevantes de ativos e FIIs.
@@ -194,7 +239,7 @@ Centralizar relatórios, documentos e materiais relevantes de ativos e FIIs.
 - Contexto histórico mais fácil de revisar.
 - Base documental para suportar tese e valuation.
 
-### Release 5 - Inteligência e Apoio à Decisão
+### Release 6 - Inteligência e Apoio à Decisão
 
 **Objetivo**  
 Adicionar camadas inteligentes sobre os dados já consolidados.
@@ -248,8 +293,10 @@ Adicionar camadas inteligentes sobre os dados já consolidados.
 
 ## 15. Próximos Passos
 
-1. Finalizar a Release 1.
-2. Consolidar a visão de carteira.
-3. Definir o modelo de filtros do screener.
-4. Estruturar a central de documentos.
-5. Planejar camadas de inteligência e alertas.
+1. Documentar e acompanhar a operação da Release 1 em produção.
+2. Executar a Release 1.1 de pós-produção, localização e infraestrutura.
+3. Implementar planejamento financeiro e lançamentos avançados.
+4. Consolidar a visão de carteira.
+5. Definir o modelo de filtros do screener.
+6. Estruturar a central de documentos.
+7. Planejar camadas de inteligência e alertas.
