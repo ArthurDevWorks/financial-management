@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use App\Enums\RecurrenceFrequency;
 use App\Http\Requests\ReleaseStoreRequest;
 use App\Http\Requests\ReleaseUpdateRequest;
 use App\Models\Account;
 use App\Models\Category;
+use App\Models\CreditCard;
 use App\Models\RecurrencePlan;
 use App\Models\Release;
 use Illuminate\Http\Request;
@@ -39,11 +41,12 @@ class ReleaseController extends Controller
     public function create()
     {
         return Inertia::render('releases/Create', [
-            'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
-            'categories' => Category::where('type', 'receita')->orWhere('type', 'despesa')->get(),
-            'paymentMethods' => \App\Enums\PaymentMethod::options(),
+            'accounts'              => Account::with('bank')->where('user_id', Auth::id())->get(),
+            'categories'            => Category::where('type', 'receita')->orWhere('type', 'despesa')->get(),
+            'paymentMethods'        => \App\Enums\PaymentMethod::options(),
             'recurrenceFrequencies' => \App\Enums\RecurrenceFrequency::options(),
-            'releaseStatuses' => \App\Enums\ReleaseStatus::options(),
+            'releaseStatuses'       => \App\Enums\ReleaseStatus::options(),
+            'creditCards'           => CreditCard::where('user_id', Auth::id())->orderBy('name')->get(['id', 'name', 'color', 'limit']),
         ]);
     }
 
@@ -101,6 +104,7 @@ class ReleaseController extends Controller
             $recurrencePlan = RecurrencePlan::create([
                 'user_id' => Auth::id(),
                 'account_id' => $validated['account_id'],
+                'credit_card_id' => $validated['credit_card_id'] ?? null,
                 'category_id' => $validated['category_id'],
                 'title' => $validated['title'],
                 'description' => $validated['description'] ?? null,
@@ -134,12 +138,13 @@ class ReleaseController extends Controller
         }
 
         return Inertia::render('releases/Edit', [
-            'release' => $release->load('parent', 'recurrencePlan'),
-            'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
-            'categories' => Category::all(),
-            'paymentMethods' => \App\Enums\PaymentMethod::options(),
+            'release'               => $release->load('parent', 'recurrencePlan', 'creditCard'),
+            'accounts'              => Account::with('bank')->where('user_id', Auth::id())->get(),
+            'categories'            => Category::all(),
+            'paymentMethods'        => \App\Enums\PaymentMethod::options(),
             'recurrenceFrequencies' => \App\Enums\RecurrenceFrequency::options(),
-            'releaseStatuses' => \App\Enums\ReleaseStatus::options(),
+            'releaseStatuses'       => \App\Enums\ReleaseStatus::options(),
+            'creditCards'           => CreditCard::where('user_id', Auth::id())->orderBy('name')->get(['id', 'name', 'color', 'limit']),
         ]);
     }
 

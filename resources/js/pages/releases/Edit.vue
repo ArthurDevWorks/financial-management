@@ -37,6 +37,7 @@ interface Release {
     date: string;
     description: string | null;
     payment_method: string | null;
+    credit_card_id: number | null;
     status: string;
     installment_number: number | null;
     total_installments: number | null;
@@ -46,6 +47,13 @@ interface Release {
     recurrencePlan: RecurrencePlan | null;
 }
 
+interface CreditCardOption {
+    id: number;
+    name: string;
+    color: string;
+    limit: number;
+}
+
 const props = defineProps<{
     release: Release;
     accounts: Account[];
@@ -53,6 +61,7 @@ const props = defineProps<{
     paymentMethods: Record<string, string>;
     recurrenceFrequencies: Record<string, string>;
     releaseStatuses: Record<string, string>;
+    creditCards: CreditCardOption[];
 }>();
 
 const showUnsavedDialog = ref(false);
@@ -69,8 +78,11 @@ const form = useForm({
     date: props.release.date,
     description: props.release.description || '',
     payment_method: props.release.payment_method ?? '',
+    credit_card_id: props.release.credit_card_id ?? ('' as string | number),
     status: props.release.status ?? 'paid',
 });
+
+const isCreditCard = computed(() => form.payment_method === 'credit_card');
 
 const submit = () => {
     form.put(`/releases/${props.release.id}`);
@@ -285,6 +297,25 @@ watch(
                             </select>
                             <InputError :message="form.errors.status" />
                         </div>
+                    </div>
+
+                    <!-- Cartão de crédito -->
+                    <div v-if="isCreditCard" class="mt-4">
+                        <Label required>Cartão de Crédito</Label>
+                        <select
+                            v-model="form.credit_card_id"
+                            class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        >
+                            <option value="" disabled>Selecione o cartão</option>
+                            <option
+                                v-for="card in props.creditCards"
+                                :key="card.id"
+                                :value="card.id"
+                            >
+                                {{ card.name }}
+                            </option>
+                        </select>
+                        <InputError :message="form.errors.credit_card_id" />
                     </div>
                 </div>
             </div>

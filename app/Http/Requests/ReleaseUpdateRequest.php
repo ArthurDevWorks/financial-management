@@ -22,6 +22,7 @@ class ReleaseUpdateRequest extends FormRequest
             'type' => 'required|in:revenue,expense',
             'date' => 'required|date',
             'payment_method' => 'nullable|in:cash,credit_card,debit_card,pix',
+            'credit_card_id' => 'nullable|exists:credit_cards,id',
             'status' => 'nullable|in:pending,paid,canceled',
         ];
     }
