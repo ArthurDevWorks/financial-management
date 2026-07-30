@@ -23,6 +23,9 @@ interface Category {
 const props = defineProps<{
     accounts: Account[];
     categories: Category[];
+    paymentMethods: Record<string, string>;
+    recurrenceFrequencies: Record<string, string>;
+    releaseStatuses: Record<string, string>;
 }>();
 
 const showUnsavedDialog = ref(false);
@@ -35,7 +38,20 @@ const form = useForm({
     amount: '',
     date: '',
     description: '',
+    payment_method: '',
+    is_installment: false,
+    total_installments: 2,
+    is_recurring: false,
+    recurrence_frequency: '',
+    recurrence_end_date: '',
+    status: 'paid',
 });
+
+const isCreditCard = computed(() => form.payment_method === 'credit_card');
+
+const isRecurringEnabled = computed(() => form.is_recurring);
+
+const showInstallmentOptions = computed(() => isCreditCard.value && form.is_installment);
 
 const submit = () => {
     form.post('/releases');
@@ -54,6 +70,16 @@ watch(
     () => form.type,
     () => {
         form.category_id = '';
+    },
+);
+
+watch(
+    () => form.payment_method,
+    (method) => {
+        if (method !== 'credit_card') {
+            form.is_installment = false;
+            form.total_installments = 2;
+        }
     },
 );
 </script>
@@ -186,6 +212,127 @@ watch(
                             placeholder="Observação"
                         />
                         <InputError :message="form.errors.description" />
+                    </div>
+                </div>
+
+                <div class="border-t border-border pt-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <Label>Forma de Pagamento</Label>
+                            <select
+                                v-model="form.payment_method"
+                                class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            >
+                                <option value="">Selecione</option>
+                                <option
+                                    v-for="(label, value) in props.paymentMethods"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.payment_method" />
+                        </div>
+
+                        <div>
+                            <Label>Status</Label>
+                            <select
+                                v-model="form.status"
+                                class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            >
+                                <option value="paid">Pago</option>
+                                <option value="pending">Previsto</option>
+                                <option value="canceled">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div v-if="isCreditCard" class="mt-4">
+                        <Label>Tipo de Pagamento</Label>
+                        <div class="mt-2 flex gap-4">
+                            <label class="flex-1 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    v-model="form.is_installment"
+                                    :value="false"
+                                    class="peer sr-only"
+                                />
+                                <div
+                                    class="rounded-lg border border-border bg-surface p-3 text-center text-sm transition peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary hover:bg-secondary"
+                                >
+                                    <span class="block font-medium">À Vista</span>
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    v-model="form.is_installment"
+                                    :value="true"
+                                    class="peer sr-only"
+                                />
+                                <div
+                                    class="rounded-lg border border-border bg-surface p-3 text-center text-sm transition peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary hover:bg-secondary"
+                                >
+                                    <span class="block font-medium">Parcelado</span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div v-if="showInstallmentOptions" class="mt-4">
+                        <Label required>Número de Parcelas</Label>
+                        <Input
+                            v-model="form.total_installments"
+                            type="number"
+                            min="2"
+                            max="360"
+                            class="mt-1"
+                        />
+                        <p class="mt-1 text-xs text-muted-foreground">
+                            Serão criadas {{ form.total_installments }} parcelas mensais automaticamente.
+                        </p>
+                        <InputError :message="form.errors.total_installments" />
+                    </div>
+
+                    <div class="mt-4 flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            v-model="form.is_recurring"
+                            id="is_recurring"
+                            class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                        />
+                        <Label for="is_recurring" class="mb-0 cursor-pointer">
+                            Lançamento Recorrente
+                        </Label>
+                    </div>
+
+                    <div v-if="isRecurringEnabled" class="mt-4 grid grid-cols-2 gap-6">
+                        <div>
+                            <Label required>Frequência</Label>
+                            <select
+                                v-model="form.recurrence_frequency"
+                                class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            >
+                                <option value="">Selecione</option>
+                                <option
+                                    v-for="(label, value) in props.recurrenceFrequencies"
+                                    :key="value"
+                                    :value="value"
+                                >
+                                    {{ label }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.recurrence_frequency" />
+                        </div>
+                        <div>
+                            <Label required>Data Final</Label>
+                            <Input
+                                v-model="form.recurrence_end_date"
+                                type="date"
+                            />
+                            <InputError :message="form.errors.recurrence_end_date" />
+                        </div>
                     </div>
                 </div>
             </div>
