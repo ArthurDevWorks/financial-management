@@ -4,7 +4,6 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\GordonController;
-use App\Http\Controllers\InvestimentController;
 use App\Http\Controllers\CreditCardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvoiceController;
@@ -64,6 +63,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('gordon', [GordonController::class, 'index'])->name('gordon.index');
     Route::post('gordon', [GordonController::class, 'store'])->name('gordon.store');
     Route::put('gordon/{valuation}', [GordonController::class, 'update'])->name('gordon.update');
+
+    Route::get('dcf', [\App\Http\Controllers\DcfController::class, 'index'])->name('dcf.index');
+    Route::post('dcf', [\App\Http\Controllers\DcfController::class, 'store'])->name('dcf.store');
+    Route::put('dcf/{valuation}', [\App\Http\Controllers\DcfController::class, 'update'])->name('dcf.update');
 })->middleware(['auth', 'verified']);
 
 Route::prefix('screening')->name('screening.')->middleware(['auth', 'verified'])->group(function () {

@@ -17,6 +17,7 @@ class GordonValuationRequest extends FormRequest
             'asset_id' => 'required|integer|exists:assets,id',
             'dps' => 'required|numeric|min:0',
             'discount_rate' => 'required|numeric|min:0|max:100',
+            'risk_premium' => 'nullable|numeric|min:0|max:50',
             'growth_perpetuity' => 'required|numeric|min:0|max:100',
             'current_price' => 'nullable|numeric|min:0',
             'projection_years' => 'nullable|integer|min:1|max:50',

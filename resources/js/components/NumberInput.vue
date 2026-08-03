@@ -4,6 +4,7 @@ import { ref, watch } from 'vue';
 
 interface Props {
     modelValue: string | number;
+    precision?: number;
     error?: string;
     placeholder?: string;
     disabled?: boolean;
@@ -11,7 +12,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    placeholder: '0,00',
+    precision: 0,
+    placeholder: '0',
     disabled: false,
 });
 
@@ -22,8 +24,9 @@ const emit = defineEmits<{
 const displayValue = ref('');
 
 const formatter = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
+    style: 'decimal',
+    minimumFractionDigits: props.precision,
+    maximumFractionDigits: props.precision,
 });
 
 function parseBr(val: string | number): number {
@@ -36,7 +39,7 @@ function parseBr(val: string | number): number {
 }
 
 function toBrNumber(num: number): string {
-    return num.toFixed(2).replace('.', ',');
+    return formatter.format(num);
 }
 
 watch(
@@ -56,10 +59,9 @@ watch(
 
 function onFocus(e: FocusEvent) {
     const input = e.target as HTMLInputElement;
-    const num = parseBr(input.value);
-    if (!isNaN(num) && num !== 0) {
-        input.value = toBrNumber(num);
-        displayValue.value = toBrNumber(num);
+    const raw = input.value.replace(/\./g, '');
+    if (raw) {
+        displayValue.value = raw;
     }
 }
 
@@ -77,13 +79,7 @@ function onBlur(e: FocusEvent) {
 
 function onInput(e: Event) {
     const input = e.target as HTMLInputElement;
-    const raw = input.value.replace(/[^0-9,]/g, '');
-    const parts = raw.split(',');
-    let cleaned = parts[0];
-    if (parts.length > 1) {
-        cleaned += ',' + parts.slice(1).join('').slice(0, 2);
-    }
-    displayValue.value = cleaned;
+    displayValue.value = input.value.replace(/\D/g, '');
 }
 </script>
 

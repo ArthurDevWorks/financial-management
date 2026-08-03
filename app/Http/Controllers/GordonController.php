@@ -28,16 +28,27 @@ class GordonController extends Controller
             ->orderBy('ticker')
             ->get(['id', 'ticker', 'name', 'asset_type', 'current_price', 'logo_url', 'dividends_per_share']);
 
+        $assetFields = $asset ? [
+            'id' => $asset->id,
+            'ticker' => $asset->ticker,
+            'name' => $asset->name,
+            'current_price' => $asset->current_price,
+            'market_cap' => $asset->market_cap,
+            'dividend_yield' => $asset->dividend_yield,
+            'dividends_per_share' => $asset->dividends_per_share,
+            'price_to_book' => $asset->price_to_book,
+            'roe' => $asset->roe,
+            'payout' => $asset->payout,
+            'net_income' => $asset->net_income,
+            'total_shares' => $asset->total_shares,
+            'free_cash_flow' => $asset->free_cash_flow,
+            'net_debt_to_ebitda' => $asset->net_debt_to_ebitda,
+            'logo_url' => $asset->logo_url,
+            'asset_type' => $asset->asset_type,
+        ] : null;
+
         return Inertia::render('gordon/Index', [
-            'asset' => $asset ? [
-                'id' => $asset->id,
-                'ticker' => $asset->ticker,
-                'name' => $asset->name,
-                'current_price' => $asset->current_price,
-                'dividends_per_share' => $asset->dividends_per_share,
-                'logo_url' => $asset->logo_url,
-                'asset_type' => $asset->asset_type,
-            ] : null,
+            'asset' => $assetFields,
             'assets' => $assets->map(fn (Asset $a): array => [
                 'id' => $a->id,
                 'ticker' => $a->ticker,
@@ -57,13 +68,25 @@ class GordonController extends Controller
     public function store(GordonValuationRequest $request)
     {
         $validated = $request->validated();
+        $assetId = (int) $validated['asset_id'];
 
-        InvestimentValuation::create([
-            'asset_id' => (int) $validated['asset_id'],
-            'method' => InvestimentValuation::METHOD_GORDON,
-            'assumptions' => $validated,
-            'calculated_at' => now(),
-        ]);
+        $existing = InvestimentValuation::where('asset_id', $assetId)
+            ->where('method', InvestimentValuation::METHOD_GORDON)
+            ->first();
+
+        if ($existing) {
+            $existing->update([
+                'assumptions' => $validated,
+                'calculated_at' => now(),
+            ]);
+        } else {
+            InvestimentValuation::create([
+                'asset_id' => $assetId,
+                'method' => InvestimentValuation::METHOD_GORDON,
+                'assumptions' => $validated,
+                'calculated_at' => now(),
+            ]);
+        }
 
         return redirect()->route('valuations.index')
             ->with('success', 'Valuation de Gordon salva com sucesso');
@@ -90,7 +113,8 @@ class GordonController extends Controller
             $a = $valuation->assumptions;
             return [
                 'dps' => (string) ($a['dps'] ?? $asset->dividends_per_share ?? ''),
-                'discount_rate' => (string) ($a['discount_rate'] ?? '12.5'),
+                'discount_rate' => (string) ($a['discount_rate'] ?? '13'),
+                'risk_premium' => (string) ($a['risk_premium'] ?? '4'),
                 'growth_perpetuity' => (string) ($a['growth_perpetuity'] ?? '3'),
                 'current_price' => (string) ($a['current_price'] ?? $asset->current_price ?? ''),
                 'projection_years' => (string) ($a['projection_years'] ?? '5'),
@@ -100,7 +124,8 @@ class GordonController extends Controller
 
         return [
             'dps' => (string) ($asset->dividends_per_share ?? ''),
-            'discount_rate' => '12.5',
+            'discount_rate' => '13',
+            'risk_premium' => '4',
             'growth_perpetuity' => '3',
             'current_price' => (string) ($asset->current_price ?? ''),
             'projection_years' => '5',

@@ -109,7 +109,10 @@ const localFilters = ref<Record<string, string>>({
     dy_min: props.filters.dy_min || '',
     pe_max: props.filters.pe_max || '',
     roe_min: props.filters.roe_min || '',
-    pvp: props.filters.pvp || '',
+    pvp_min: props.filters.pvp_min || '',
+    pvp_max: props.filters.pvp_max || '',
+    net_debt_to_ebitda_min: props.filters.net_debt_to_ebitda_min || '',
+    net_debt_to_ebitda_max: props.filters.net_debt_to_ebitda_max || '',
     liq_min: props.filters.liq_min || '',
     search: props.filters.search || '',
 });
@@ -122,13 +125,6 @@ const assetTypes = [
     { value: 'stock', label: 'Ações' },
     { value: 'fii', label: 'FIIs' },
     { value: 'bdr', label: 'BDRs' },
-];
-
-const pvpOptions = [
-    { value: '', label: 'Qualquer' },
-    { value: 'abaixo_1', label: 'Abaixo de 1' },
-    { value: 'entre_0_2', label: 'Entre 0 e 2' },
-    { value: 'acima_1', label: 'Acima de 1' },
 ];
 
 function applyFilters() {
@@ -151,7 +147,9 @@ function applyFilters() {
 function clearFilters() {
     localFilters.value = {
         asset_type: '', sector: '', dy_min: '', pe_max: '',
-        roe_min: '', pvp: '', liq_min: '', search: '',
+        roe_min: '', pvp_min: '', pvp_max: '',
+        net_debt_to_ebitda_min: '', net_debt_to_ebitda_max: '',
+        liq_min: '', search: '',
     };
     router.get('/screening', {}, {
         preserveState: true,
@@ -257,14 +255,10 @@ function onSearchInput() {
                         <SlidersHorizontal class="h-4 w-4" />
                         Filtros
                     </Button>
-                    <Button variant="outline" size="sm" @click="goToCompare" :disabled="selectedForCompare.length < 2">
-                        <BarChart3 class="h-4 w-4" />
-                        Comparar ({{ selectedForCompare.length }})
-                    </Button>
-                    <Button variant="outline" size="sm">
+                    <!-- <Button variant="outline" size="sm">
                         <Download class="h-4 w-4" />
                         Exportar
-                    </Button>
+                    </Button> -->
                 </template>
             </PageHeader>
 
@@ -348,14 +342,40 @@ function onSearchInput() {
                         </div>
                     </div>
                     <div>
-                        <label class="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">P/VP</label>
-                        <select
-                            v-model="localFilters.pvp"
+                        <label class="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">P/VP mín.</label>
+                        <input
+                            v-model="localFilters.pvp_min"
+                            type="number" step="0.1" placeholder="0"
                             class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-all focus:border-ring focus:ring-[3px] focus:ring-primary/20 [color-scheme:dark]"
                             @change="applyFilters"
-                        >
-                            <option v-for="o in pvpOptions" :key="o.value" :value="o.value">{{ o.label }}</option>
-                        </select>
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">P/VP máx.</label>
+                        <input
+                            v-model="localFilters.pvp_max"
+                            type="number" step="0.1" placeholder="0"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-all focus:border-ring focus:ring-[3px] focus:ring-primary/20 [color-scheme:dark]"
+                            @change="applyFilters"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Div. L&iacute;q./EBITDA m&iacute;n.</label>
+                        <input
+                            v-model="localFilters.net_debt_to_ebitda_min"
+                            type="number" step="0.1" placeholder="0"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-all focus:border-ring focus:ring-[3px] focus:ring-primary/20 [color-scheme:dark]"
+                            @change="applyFilters"
+                        />
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Div. L&iacute;q./EBITDA m&aacute;x.</label>
+                        <input
+                            v-model="localFilters.net_debt_to_ebitda_max"
+                            type="number" step="0.1" placeholder="0"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-all focus:border-ring focus:ring-[3px] focus:ring-primary/20 [color-scheme:dark]"
+                            @change="applyFilters"
+                        />
                     </div>
                     <div>
                         <label class="mb-1 block text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Liq. (R$)</label>

@@ -59,15 +59,7 @@ const goBack = () => {
 };
 
 const goToEdit = () => {
-    if (props.valuation.method === 'preco_teto') {
-        router.visit(`/preco-teto?valuation_id=${props.valuation.id}`);
-        return;
-    }
-    if (props.valuation.method === 'gordon') {
-        router.visit(`/gordon?valuation_id=${props.valuation.id}`);
-        return;
-    }
-    router.visit(`/valuations?valuation_id=${props.valuation.id}`);
+    router.visit(`/screening/${props.valuation.asset.ticker}/valuation?valuation_id=${props.valuation.id}`);
 };
 
 const a = computed(() => props.valuation.assumptions ?? {});

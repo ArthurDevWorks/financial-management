@@ -38,7 +38,7 @@ const form = useForm<{
 
 const submit = () => {
     if (form.method === 'dcf') {
-        router.visit(`/valuations?asset_id=${form.asset_id}`);
+        router.visit(`/dcf?asset_id=${form.asset_id}`);
     } else if (form.method === 'preco_teto') {
         router.visit(`/preco-teto?asset_id=${form.asset_id}`);
     } else if (form.method === 'gordon') {

@@ -344,22 +344,8 @@ function formatNumber(value: unknown, decimals = 2): string {
                 </div>
             </div>
 
-            <!-- Company Description -->
-            <div v-if="asset.long_business_summary" class="mb-6 rounded-xl border border-border bg-card p-5">
-                <h3 class="mb-3 text-sm font-semibold">Sobre a <span class="text-primary">Empresa</span></h3>
-                <p class="text-sm leading-relaxed text-muted-foreground">{{ asset.long_business_summary }}</p>
-                <div v-if="asset.website || asset.full_time_employees" class="mt-4 flex flex-wrap gap-6 text-sm text-muted-foreground">
-                    <span v-if="asset.website">
-                        🌐 <a :href="asset.website" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">{{ asset.website }}</a>
-                    </span>
-                    <span v-if="asset.full_time_employees">
-                        👥 {{ asset.full_time_employees.toLocaleString('pt-BR') }} funcionários
-                    </span>
-                </div>
-            </div>
-
             <!-- Charts Row -->
-            <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <!-- <div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <div class="rounded-xl border border-border bg-card p-5">
                     <h3 class="mb-3 text-sm font-semibold">Preço <span class="text-primary">Histórico</span></h3>
                     <div class="h-[220px]">
@@ -372,7 +358,7 @@ function formatNumber(value: unknown, decimals = 2): string {
                         <ChartBar :data="dividendChartData" :options="dividendChartOptions" />
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Indicators by Category -->
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -384,6 +370,20 @@ function formatNumber(value: unknown, decimals = 2): string {
                             <span class="font-semibold" :class="{ 'text-revenue': item.highlight }">{{ item.value }}</span>
                         </div>
                     </div>
+                </div>
+            </div>
+
+             <!-- Company Description -->
+            <div v-if="asset.long_business_summary" class="mt-5 mb-6 rounded-xl border border-border bg-card p-5">
+                <h3 class="mb-3 text-sm font-semibold">Sobre a <span class="text-primary">Empresa</span></h3>
+                <p class="text-sm leading-relaxed text-muted-foreground">{{ asset.long_business_summary }}</p>
+                <div v-if="asset.website || asset.full_time_employees" class="mt-4 flex flex-wrap gap-6 text-sm text-muted-foreground">
+                    <span v-if="asset.website">
+                        🌐 <a :href="asset.website" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">{{ asset.website }}</a>
+                    </span>
+                    <span v-if="asset.full_time_employees">
+                        👥 {{ asset.full_time_employees.toLocaleString('pt-BR') }} funcionários
+                    </span>
                 </div>
             </div>
         </div>

@@ -22,6 +22,23 @@ it('calcula preço teto projetivo com lucro, ações, payout e yield desejado', 
     expect($resultado['summary']['margin_of_safety'])->toBe(-0.24);
 });
 
+it('usa o valor justo como base para a margem de segurança', function () {
+    $service = new PrecoTetoProjetivoValuationService;
+
+    $resultado = $service->calculate([
+        'desired_yield' => 10,
+        'projected_payout' => 50,
+        'projected_net_income' => 1000000,
+        'total_shares' => 1000000,
+        'projected_growth_rate' => 0,
+        'current_price_per_share' => 2.5,
+    ]);
+
+    expect($resultado['summary']['price_ceiling'])->toBe(5.0);
+    expect($resultado['summary']['margin_of_safety'])->toBe(50.0);
+    expect($resultado['summary']['upside'])->toBe(100.0);
+});
+
 it('não divide por zero quando recebe denominadores zerados', function () {
     $service = new PrecoTetoProjetivoValuationService;
 

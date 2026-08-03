@@ -66,7 +66,7 @@ it('atualiza uma simulação existente de preço teto projetivo', function () {
     $response->assertRedirect(route('valuations.show', $valuation));
 });
 
-it('lista valuations na rota index', function () {
+it('lista valuations agrupadas por ativo na rota index', function () {
     $user = User::factory()->create();
     $asset = Asset::factory()->stock()->create(['name' => 'PSSA3']);
 
@@ -89,10 +89,11 @@ it('lista valuations na rota index', function () {
     $response->assertOk();
     $response->assertInertia(fn ($page) => $page
         ->component('valuations/Index')
-        ->has('valuations.data', 2)
-        ->where('valuations.data.0.method', InvestimentValuation::METHOD_PRECO_TETO)
-        ->where('valuations.data.0.asset.name', 'PSSA3')
-        ->where('valuations.data.1.method', InvestimentValuation::METHOD_DCF)
-        ->where('valuations.data.1.asset.name', 'PSSA3')
+        ->has('valuations.data', 1)
+        ->where('valuations.data.0.name', 'PSSA3')
+        ->where('valuations.data.0.valuation_count', 2)
+        ->has('valuations.data.0.valuations', 2)
+        ->where('valuations.data.0.valuations.0.method', InvestimentValuation::METHOD_PRECO_TETO)
+        ->where('valuations.data.0.valuations.1.method', InvestimentValuation::METHOD_DCF)
     );
 });

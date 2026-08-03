@@ -19,7 +19,6 @@ const showUnsavedDialog = ref(false);
 const CARD_COLORS = [
     '#22c9a2', // teal (primário Fidax)
     '#f59e0b', // amber/gold
-    '#6366f1', // indigo
     '#ec4899', // pink
     '#10b981', // emerald
     '#3b82f6', // blue

@@ -37,7 +37,7 @@ it('permite criar conta e associa o usuário autenticado', function () {
 
 it('lista contas com saldo corrente calculado', function () {
     $user = User::factory()->create();
-    $bank = Bank::factory()->create();
+    $bank = Bank::factory()->create(['logo' => 'banks/logo-teste.png']);
     $account = Account::factory()->for($user)->for($bank)->create(['total' => 1000]);
     $revenueCategory = Category::factory()->create(['type' => CategoryType::REVENUE->value]);
     $expenseCategory = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
@@ -62,6 +62,7 @@ it('lista contas com saldo corrente calculado', function () {
         ->where('accounts.data.0.id', $account->id)
         ->where('accounts.data.0.revenue_sum', '250.00')
         ->where('accounts.data.0.expense_sum', '100.00')
+        ->where('accounts.data.0.bank.logo_url', asset('storage/banks/logo-teste.png'))
     );
 });
 

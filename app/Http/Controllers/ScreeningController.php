@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use App\Models\AssetFavorite;
+use App\Models\InvestimentValuation;
 use App\Models\ScreeningFilter;
 use App\Services\BrapiService;
 use Illuminate\Http\Request;
@@ -36,13 +37,20 @@ class ScreeningController extends Controller
             $query->where('roe', '>=', (float) $request->roe_min);
         }
 
-        if ($request->filled('pvp')) {
-            match ($request->pvp) {
-                'abaixo_1' => $query->where('price_to_book', '<', 1),
-                'entre_0_2' => $query->whereBetween('price_to_book', [0, 2]),
-                'acima_1' => $query->where('price_to_book', '>', 1),
-                default => null,
-            };
+        if ($request->filled('pvp_min')) {
+            $query->where('price_to_book', '>=', (float) $request->pvp_min);
+        }
+
+        if ($request->filled('pvp_max')) {
+            $query->where('price_to_book', '<=', (float) $request->pvp_max);
+        }
+
+        if ($request->filled('net_debt_to_ebitda_min')) {
+            $query->where('net_debt_to_ebitda', '>=', (float) $request->net_debt_to_ebitda_min);
+        }
+
+        if ($request->filled('net_debt_to_ebitda_max')) {
+            $query->where('net_debt_to_ebitda', '<=', (float) $request->net_debt_to_ebitda_max);
         }
 
         if ($request->filled('liq_min')) {
@@ -88,7 +96,8 @@ class ScreeningController extends Controller
             'favorites' => $favorites,
             'filters' => $request->only([
                 'asset_type', 'sector', 'dy_min', 'pe_max', 'roe_min',
-                'pvp', 'liq_min', 'search',
+                'pvp_min', 'pvp_max', 'net_debt_to_ebitda_min', 'net_debt_to_ebitda_max',
+                'liq_min', 'search',
             ]),
         ]);
     }
@@ -117,13 +126,20 @@ class ScreeningController extends Controller
             $query->where('roe', '>=', (float) $request->roe_min);
         }
 
-        if ($request->filled('pvp')) {
-            match ($request->pvp) {
-                'abaixo_1' => $query->where('price_to_book', '<', 1),
-                'entre_0_2' => $query->whereBetween('price_to_book', [0, 2]),
-                'acima_1' => $query->where('price_to_book', '>', 1),
-                default => null,
-            };
+        if ($request->filled('pvp_min')) {
+            $query->where('price_to_book', '>=', (float) $request->pvp_min);
+        }
+
+        if ($request->filled('pvp_max')) {
+            $query->where('price_to_book', '<=', (float) $request->pvp_max);
+        }
+
+        if ($request->filled('net_debt_to_ebitda_min')) {
+            $query->where('net_debt_to_ebitda', '>=', (float) $request->net_debt_to_ebitda_min);
+        }
+
+        if ($request->filled('net_debt_to_ebitda_max')) {
+            $query->where('net_debt_to_ebitda', '<=', (float) $request->net_debt_to_ebitda_max);
         }
 
         if ($request->filled('liq_min')) {
@@ -181,12 +197,26 @@ class ScreeningController extends Controller
         ]);
     }
 
-    public function valuation(string $ticker)
+    public function valuation(Request $request, string $ticker)
     {
         $asset = Asset::where('ticker', strtoupper($ticker))->firstOrFail();
 
+        $valuations = InvestimentValuation::query()
+            ->where('asset_id', $asset->id)
+            ->get();
+
+        $existingValuations = [];
+        foreach ($valuations as $v) {
+            $existingValuations[$v->method] = [
+                'id' => $v->id,
+                'assumptions' => $v->assumptions,
+            ];
+        }
+
         return Inertia::render('screening/Valuation', [
             'asset' => $asset,
+            'existingValuations' => $existingValuations,
+            'valuationId' => $request->query('valuation_id'),
         ]);
     }
 

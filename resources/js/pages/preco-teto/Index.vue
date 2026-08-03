@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CurrencyInput from '@/components/CurrencyInput.vue';
+import NumberInput from '@/components/NumberInput.vue';
 import InputError from '@/components/InputError.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SummaryCard from '@/components/SummaryCard.vue';
@@ -12,7 +13,6 @@ import {
     ArrowLeft,
     Banknote,
     Calculator,
-    Info,
     PiggyBank,
     ShieldCheck,
     TrendingUp,
@@ -60,10 +60,6 @@ const toInputValue = (value: Asset['current_price'] | undefined) => {
     return value === null || value === undefined ? '' : value.toString();
 };
 
-const formatShareQuantity = (value: string) => {
-    return value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-};
-
 const toFormValue = (value: string | number | null | undefined) => {
     return value === null || value === undefined ? '' : value.toString();
 };
@@ -75,7 +71,7 @@ const form = useForm({
     desired_yield: toFormValue(assumptions.desired_yield),
     projected_payout: toFormValue(assumptions.projected_payout),
     projected_net_income: toFormValue(assumptions.projected_net_income),
-    total_shares: formatShareQuantity(toFormValue(assumptions.total_shares)),
+    total_shares: toFormValue(assumptions.total_shares),
     projected_growth_rate:
         toFormValue(assumptions.projected_growth_rate) || '0',
     current_price_per_share:
@@ -135,16 +131,11 @@ const parseNumber = (value: string | number) => {
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const parseShareQuantity = (value: string) => {
-    const parsed = parseInt(value.replace(/\D/g, ''), 10);
+const parseShareQuantity = (value: string | number) => {
+    const str = typeof value === 'number' ? value.toString() : value;
+    const parsed = parseInt(str.replace(/\D/g, ''), 10);
 
     return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const onQuantidadeAcoesInput = (event: Event) => {
-    const input = event.target as HTMLInputElement;
-
-    form.total_shares = formatShareQuantity(input.value);
 };
 
 const percentToDecimal = (value: string | number) => parseNumber(value) / 100;
@@ -194,7 +185,7 @@ const margemSeguranca = computed(() => {
 
     if (preco <= 0 || precoTeto.value <= 0) return 0;
 
-    return ((precoTeto.value - preco) / precoTeto.value) * 100;
+    return ((precoTeto.value - preco) / preco) * 100;
 });
 
 const margemGaugePercent = computed(() => {
@@ -335,17 +326,7 @@ const submit = () => {
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label
-                                            >Dividend Yield Desejado (%)</Label
-                                        >
-                                        <span
-                                            class="group relative"
-                                            title="Retorno desejado em dividendos por ano"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
+                                        <Label>Dividend Yield Desejado (%)</Label>
                                     </div>
                                     <Input
                                         v-model="form.desired_yield"
@@ -362,14 +343,6 @@ const submit = () => {
                                 <div>
                                     <div class="flex items-center gap-1.5">
                                         <Label>Payout Projetado (%)</Label>
-                                        <span
-                                            class="group relative"
-                                            title="Percentual projetado do lucro distribuído como dividendos"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
                                     </div>
                                     <Input
                                         v-model="form.projected_payout"
@@ -385,17 +358,7 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label
-                                            >Lucro Líquido Projetado — R$</Label
-                                        >
-                                        <span
-                                            class="group relative"
-                                            title="Lucro líquido informado será ajustado pela taxa de crescimento projetada"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
+                                        <Label>Lucro Líquido (R$)</Label>
                                     </div>
                                     <CurrencyInput
                                         v-model="form.projected_net_income"
@@ -407,43 +370,18 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label>Quantidade de Ações</Label>
-                                        <span
-                                            class="group relative"
-                                            title="Quantidade total de ações considerada na projeção"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
+                                        <Label>Total de Ações</Label>
                                     </div>
-                                    <input
+                                    <NumberInput
                                         v-model="form.total_shares"
-                                        type="text"
-                                        inputmode="numeric"
-                                        autocomplete="off"
-                                        placeholder="Ex: 640.321.918"
-                                        class="mt-1.5 flex h-9 w-full min-w-0 rounded-md border border-input bg-surface px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                                        @input="onQuantidadeAcoesInput"
-                                    />
-                                    <InputError
-                                        :message="form.errors.total_shares"
+                                        :precision="0"
+                                        :error="form.errors.total_shares"
+                                        placeholder="Ex: 13.822.910.028"
                                     />
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label
-                                            >Taxa de Crescimento Projetada
-                                            (%)</Label
-                                        >
-                                        <span
-                                            class="group relative"
-                                            title="Taxa aplicada ao lucro líquido antes do cálculo do LPA"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
+                                        <Label>Crescimento</Label>
                                     </div>
                                     <Input
                                         v-model="form.projected_growth_rate"
@@ -459,7 +397,7 @@ const submit = () => {
                                     />
                                 </div>
                                 <div>
-                                    <Label>Preço Atual da Ação — R$</Label>
+                                    <Label>Preço Atual (R$)</Label>
                                     <CurrencyInput
                                         v-model="form.current_price_per_share"
                                         :error="

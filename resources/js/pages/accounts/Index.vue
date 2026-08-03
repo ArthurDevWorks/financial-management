@@ -34,7 +34,7 @@ interface Account {
     bank: {
         id: number;
         name: string;
-        logo?: string | null;
+        logo_url?: string | null;
     };
     agency?: string;
 }
@@ -57,7 +57,7 @@ interface PaginationMeta {
     links: { url: string | null; label: string; active: boolean }[];
 }
 
-const props = defineProps<{
+defineProps<{
     accounts: {
         data: Account[];
         meta: PaginationMeta;
@@ -281,8 +281,16 @@ function onSearchKeydown(e: KeyboardEvent) {
                     :style="{ animationDelay: `${i * 0.04}s` }"
                 >
                     <div class="flex items-start gap-4">
-                        <!-- Bank Avatar -->
+                        <!-- Bank Logo -->
+                        <img
+                            v-if="account.bank?.logo_url"
+                            :src="account.bank.logo_url"
+                            :alt="`Logo ${account.bank.name}`"
+                            class="h-12 w-12 shrink-0 rounded-xl object-contain"
+                        />
+                        <!-- Bank Avatar fallback -->
                         <div
+                            v-else
                             class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-sm font-bold tracking-wide"
                             :class="getBankColor(account.bank?.name || '')"
                         >

@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import MarginGauge from '@/components/MarginGauge.vue';
 import AssetDataCard from '@/components/AssetDataCard.vue';
+import NumberInput from '@/components/NumberInput.vue';
+import CurrencyInput from '@/components/CurrencyInput.vue';
 import { cn } from '@/lib/utils';
 import { Line as ChartLine } from 'vue-chartjs';
 import {
@@ -12,14 +14,16 @@ import {
     CategoryScale, LinearScale, PointElement, LineElement,
     Title, Tooltip, Legend,
 } from 'chart.js';
-import { ref, computed } from 'vue';
-import { ArrowLeft } from 'lucide-vue-next';
+import { ref, computed, watch } from 'vue';
+import { ArrowLeft, Save } from 'lucide-vue-next';
+import { router } from '@inertiajs/vue3';
 import { usePrecoTeto } from '@/composables/usePrecoTeto';
 import { useDcf } from '@/composables/useDcf';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface Asset {
+    id: number;
     ticker: string;
     name: string | null;
     current_price: number | null;
@@ -43,11 +47,35 @@ interface Asset {
     logo_url: string | null;
 }
 
+interface ExistingValuation {
+    id: number;
+    assumptions: Record<string, any>;
+}
+
 const props = defineProps<{
     asset: Asset;
+    existingValuations?: Record<string, ExistingValuation>;
+    valuationId?: string;
 }>();
 
-const activeTab = ref(props.asset.asset_type === 'fii' ? 'gordon' : 'preco-teto');
+const methodToRoute: Record<string, string> = {
+    'preco_teto': 'preco-teto',
+    'dcf': 'dcf',
+    'gordon': 'gordon',
+};
+
+function resolveInitialTab(): string {
+    if (props.valuationId && props.existingValuations) {
+        for (const [method, data] of Object.entries(props.existingValuations)) {
+            if (data.id?.toString() === props.valuationId) {
+                return method === 'preco_teto' ? 'preco-teto' : method;
+            }
+        }
+    }
+    return props.asset.asset_type === 'fii' ? 'gordon' : 'preco-teto';
+}
+
+const activeTab = ref(resolveInitialTab());
 
 function toNumber(value: unknown): number | null {
     if (value === null || value === undefined) return null;
@@ -68,13 +96,17 @@ function formatPercent(value: unknown): string {
 }
 
 // ─── Gordon Model ────────────────────────────────────────
-const dps = ref(props.asset.dividends_per_share ?? 0);
-const discountRate = ref(12.5);
-const growthPerpetuity = ref(3.0);
-const currentPrice = ref(props.asset.current_price ?? 0);
+const gordonData = props.existingValuations?.gordon?.assumptions;
+const dps = ref(gordonData?.dps ?? props.asset.dividends_per_share ?? 0);
+const discountRate = ref(gordonData?.discount_rate ?? 13);
+const riskPremium = ref(gordonData?.risk_premium ?? 4);
+const growthPerpetuity = ref(gordonData?.growth_perpetuity ?? 3.0);
+const currentPrice = ref(gordonData?.current_price ?? props.asset.current_price ?? 0);
+
+const gordonEffectiveKe = computed(() => discountRate.value + riskPremium.value);
 
 const gordonFairPrice = computed(() => {
-    const ke = discountRate.value / 100;
+    const ke = gordonEffectiveKe.value / 100;
     const g = growthPerpetuity.value / 100;
     if (ke <= g || !dps.value) return null;
     return dps.value / (ke - g);
@@ -97,12 +129,12 @@ const gordonMargin = computed(() => {
     return (1 - cp / fp) * 100;
 });
 
-const growthRates = ref([8.0, 7.0, 6.0, 5.0, 4.0]);
+const growthRates = ref<number[]>(gordonData?.growth_rates ?? [8.0, 7.0, 6.0, 5.0, 4.0]);
 
 const projectedDividends = computed(() => {
     let d = dps.value;
     const result: { year: number; growth: number; dps: number; pv: number }[] = [];
-    const ke = discountRate.value / 100;
+    const ke = gordonEffectiveKe.value / 100;
 
     growthRates.value.forEach((g, i) => {
         const gr = g / 100;
@@ -122,7 +154,8 @@ const projectedDividends = computed(() => {
 const dpsSens = computed(() => dps.value || 0);
 
 const sensitivityData = computed(() => {
-    const keValues = [10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15];
+    const baseKe = gordonEffectiveKe.value;
+    const keValues = Array.from({ length: 11 }, (_, i) => baseKe - 5 + i * 0.5);
     const gValues = [2.0, 2.5, 3.0, 3.5, 4.0];
     const colors = [
         'hsla(168, 75%, 42%, 0.85)',
@@ -200,12 +233,13 @@ const sensitivityOptions = {
 };
 
 // ─── Preço Teto ──────────────────────────────────
-const ptDesiredYield = ref(8);
-const ptProjectedPayout = ref(props.asset.payout ?? 50);
-const ptNetIncome = ref(props.asset.net_income ?? 0);
-const ptTotalShares = ref(props.asset.total_shares ?? 0);
-const ptGrowthRate = ref(5);
-const ptCurrentPrice = ref(props.asset.current_price ?? 0);
+const ptData = props.existingValuations?.preco_teto?.assumptions;
+const ptDesiredYield = ref(ptData?.desired_yield ?? 6);
+const ptProjectedPayout = ref(ptData?.projected_payout ?? props.asset.payout ?? 50);
+const ptNetIncome = ref(ptData?.projected_net_income ?? props.asset.net_income ?? 0);
+const ptTotalShares = ref(ptData?.total_shares ?? props.asset.total_shares ?? 0);
+const ptGrowthRate = ref(ptData?.projected_growth_rate ?? 5);
+const ptCurrentPrice = ref(ptData?.current_price_per_share ?? props.asset.current_price ?? 0);
 
 const {
     precoTeto: ptPrecoTeto,
@@ -224,14 +258,34 @@ const {
 });
 
 // ─── DCF ─────────────────────────────────────────
-const dcfFcf = ref(props.asset.free_cash_flow ?? 0);
-const dcfRoe = ref(props.asset.roe ?? 0);
-const dcfPayout = ref(props.asset.payout ?? 0);
-const dcfDiscountRate = ref(12.5);
-const dcfTerminalGrowth = ref(3.0);
-const dcfProjectionYears = ref(5);
-const dcfTotalShares = ref(props.asset.total_shares ?? 0);
-const dcfCurrentPrice = ref(props.asset.current_price ?? 0);
+const dcfData = props.existingValuations?.dcf?.assumptions;
+const dcfFcf = ref(dcfData?.current_fcf ?? props.asset.free_cash_flow ?? 0);
+const dcfRoe = ref(dcfData?.roe ?? props.asset.roe ?? 0);
+const dcfPayout = ref(dcfData?.payout ?? props.asset.payout ?? 0);
+const dcfDiscountRate = ref(dcfData?.discount_rate ?? 12.5);
+const dcfTerminalGrowth = ref(dcfData?.terminal_growth_rate ?? 3.0);
+const dcfProjectionYears = ref(dcfData?.projection_years ?? 5);
+const dcfTotalShares = ref(dcfData?.total_shares ?? props.asset.total_shares ?? 0);
+const dcfCurrentPrice = ref(dcfData?.current_price_per_share ?? props.asset.current_price ?? 0);
+
+const buildDefaultGrowthRates = (n: number) => {
+    return Array.from({ length: n }, () => 5);
+};
+
+const dcfGrowthRates = ref<number[]>(
+    dcfData?.growth_rates?.slice(0, dcfProjectionYears.value) ??
+    buildDefaultGrowthRates(dcfProjectionYears.value)
+);
+
+watch(dcfProjectionYears, (newLen, oldLen) => {
+    if (newLen > oldLen) {
+        while (dcfGrowthRates.value.length < newLen) {
+            dcfGrowthRates.value.push(5);
+        }
+    } else {
+        dcfGrowthRates.value = dcfGrowthRates.value.slice(0, newLen);
+    }
+});
 
 const {
     fairPrice: dcfFairPrice,
@@ -240,13 +294,11 @@ const {
     enterpriseValue: dcfEnterpriseValue,
     terminalValue: dcfTerminalValue,
     pvTerminal: dcfPvTerminal,
-    growthRate: dcfGrowthRate,
     projectedFcfs: dcfProjectedFcfs,
     podeCalcular: dcfPodeCalcular,
 } = useDcf({
     freeCashFlow: dcfFcf,
-    roe: dcfRoe,
-    payout: dcfPayout,
+    growthRates: dcfGrowthRates,
     discountRate: dcfDiscountRate,
     terminalGrowthRate: dcfTerminalGrowth,
     projectionYears: dcfProjectionYears,
@@ -254,6 +306,65 @@ const {
     currentPrice: dcfCurrentPrice,
     netDebt: ref(0),
 });
+
+// ─── Save functions ─────────────────────────────────
+function savePrecoTeto() {
+    const data = {
+        asset_id: props.asset.id,
+        desired_yield: ptDesiredYield.value,
+        projected_payout: ptProjectedPayout.value,
+        projected_net_income: ptNetIncome.value,
+        total_shares: ptTotalShares.value,
+        projected_growth_rate: ptGrowthRate.value,
+        current_price_per_share: ptCurrentPrice.value,
+    };
+    const existing = props.existingValuations?.preco_teto;
+    if (existing) {
+        router.put(`/preco-teto/${existing.id}`, data);
+    } else {
+        router.post('/preco-teto', data);
+    }
+}
+
+function saveDcf() {
+    const data = {
+        asset_id: props.asset.id,
+        current_fcf: dcfFcf.value,
+        roe: dcfRoe.value,
+        payout: dcfPayout.value,
+        discount_rate: dcfDiscountRate.value,
+        terminal_growth_rate: dcfTerminalGrowth.value,
+        projection_years: dcfProjectionYears.value,
+        total_shares: dcfTotalShares.value,
+        current_price_per_share: dcfCurrentPrice.value,
+        growth_rates: dcfGrowthRates.value,
+    };
+    const existing = props.existingValuations?.dcf;
+    if (existing) {
+        router.put(`/dcf/${existing.id}`, data);
+    } else {
+        router.post('/dcf', data);
+    }
+}
+
+function saveGordon() {
+    const data = {
+        asset_id: props.asset.id,
+        dps: dps.value,
+        discount_rate: discountRate.value,
+        risk_premium: riskPremium.value,
+        growth_perpetuity: growthPerpetuity.value,
+        current_price: currentPrice.value,
+        projection_years: 5,
+        growth_rates: growthRates.value,
+    };
+    const existing = props.existingValuations?.gordon;
+    if (existing) {
+        router.put(`/gordon/${existing.id}`, data);
+    } else {
+        router.post('/gordon', data);
+    }
+}
 </script>
 
 <template>
@@ -314,32 +425,35 @@ const {
                         <div>
                             <Label>Dividend Yield Desejado (%)</Label>
                             <Input v-model.number="ptDesiredYield" type="number" step="0.1" min="0" class="mt-1" />
-                            <p class="mt-0.5 text-xs text-muted-foreground">Retorno mínimo em dividendos que você espera</p>
                         </div>
                         <div>
                             <Label>Payout Projetado (%)</Label>
                             <Input v-model.number="ptProjectedPayout" type="number" step="0.1" min="0" class="mt-1" />
-                            <p class="mt-0.5 text-xs text-muted-foreground">% do lucro distribuído como dividendos</p>
                         </div>
                         <div>
-                            <Label>Lucro Líquido Projetado (R$)</Label>
-                            <Input v-model.number="ptNetIncome" type="number" step="0.01" class="mt-1" />
+                            <Label>Lucro Líquido (R$)</Label>
+                            <CurrencyInput v-model="ptNetIncome" placeholder="0,00" class="mt-1" />
                         </div>
                         <div>
-                            <Label>Qtd. de Ações</Label>
-                            <Input v-model.number="ptTotalShares" type="number" step="1" min="0" class="mt-1" />
+                            <Label>Total de Ações</Label>
+                            <NumberInput v-model.number="ptTotalShares" :precision="0" />
                         </div>
                         <div>
                             <Label class="flex items-center justify-between">
-                                <span>Crescimento (%)</span>
-                                <span class="text-xs text-muted-foreground">Opcional — 0 = sem crescimento</span>
+                                <span>Crescimento</span>
                             </Label>
                             <Input v-model.number="ptGrowthRate" type="number" step="0.1" class="mt-1" />
                         </div>
                         <div>
                             <Label>Preço Atual (R$)</Label>
-                            <Input v-model.number="ptCurrentPrice" type="number" step="0.01" class="mt-1" />
+                            <CurrencyInput v-model="ptCurrentPrice" placeholder="0,00" class="mt-1" />
                         </div>
+                    </div>
+                    <div class="mt-6">
+                        <Button class="w-full gap-2" @click="savePrecoTeto">
+                            <Save class="h-4 w-4" />
+                            Salvar Valuation
+                        </Button>
                     </div>
                 </div>
 
@@ -349,9 +463,9 @@ const {
                             <span class="text-primary">Resultados</span> do Preço Teto
                         </h3>
                         <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2">
+                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2 overflow-hidden">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Teto</p>
-                                <p class="mt-1 text-3xl font-bold text-primary">{{ formatCurrency(ptPrecoTeto) }}</p>
+                                <p class="mt-1 text-2xl font-bold text-primary">{{ formatCurrency(ptPrecoTeto) }}</p>
                             </div>
                             <div class="rounded-lg border border-border bg-surface p-3 text-center">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Yield Projetado</p>
@@ -386,14 +500,10 @@ const {
                     <h3 class="mb-4 text-sm font-semibold">
                         <span class="text-primary">Premissas</span> do Investidor
                     </h3>
-                    <p class="mb-4 text-xs text-muted-foreground">
-                        Configure os parâmetros para o fluxo de caixa descontado
-                    </p>
                     <div class="space-y-4">
                         <div>
-                            <Label>FCF Atual (R$)</Label>
-                            <Input v-model.number="dcfFcf" type="number" step="0.01" class="mt-1" />
-                            <p class="mt-0.5 text-xs text-muted-foreground">Free Cash Flow — base para projeção dos fluxos futuros</p>
+                            <Label>Lucro Líquido (R$)</Label>
+                            <CurrencyInput v-model="dcfFcf" placeholder="0,00" class="mt-1" />
                         </div>
                         <div>
                             <Label>ROE (%)</Label>
@@ -404,11 +514,11 @@ const {
                             <Input v-model.number="dcfPayout" type="number" step="0.1" min="0" class="mt-1" />
                         </div>
                         <div>
-                            <Label>Taxa de Desconto Ke (%)</Label>
+                            <Label>Taxa de Desconto (%)</Label>
                             <Input v-model.number="dcfDiscountRate" type="number" step="0.1" class="mt-1" />
                         </div>
                         <div>
-                            <Label>Cresc. Perpetuidade g (%)</Label>
+                            <Label>Crescimento Perpetuidade (%)</Label>
                             <Input v-model.number="dcfTerminalGrowth" type="number" step="0.1" class="mt-1" />
                         </div>
                         <div>
@@ -417,12 +527,18 @@ const {
                         </div>
                         <div>
                             <Label>Total de Ações</Label>
-                            <Input v-model.number="dcfTotalShares" type="number" step="1" min="0" class="mt-1" />
+                            <NumberInput v-model.number="dcfTotalShares" :precision="0" />
                         </div>
                         <div>
                             <Label>Preço Atual (R$)</Label>
-                            <Input v-model.number="dcfCurrentPrice" type="number" step="0.01" class="mt-1" />
+                            <CurrencyInput v-model="dcfCurrentPrice" placeholder="0,00" class="mt-1" />
                         </div>
+                    </div>
+                    <div class="mt-6">
+                        <Button class="w-full gap-2" @click="saveDcf">
+                            <Save class="h-4 w-4" />
+                            Salvar Valuation
+                        </Button>
                     </div>
                 </div>
 
@@ -431,10 +547,10 @@ const {
                         <h3 class="mb-4 text-sm font-semibold">
                             <span class="text-primary">Resultados</span> do DCF
                         </h3>
-                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2 overflow-hidden">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Justo</p>
-                                <p class="mt-1 text-3xl font-bold text-primary">{{ formatCurrency(dcfFairPrice) }}</p>
+                                <p class="mt-1 text-2xl font-bold text-primary">{{ formatCurrency(dcfFairPrice) }}</p>
                             </div>
                             <div class="rounded-lg border border-border bg-surface p-3 text-center">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Upside</p>
@@ -448,13 +564,13 @@ const {
                                     {{ formatPercent(dcfMarginOfSafety) }}
                                 </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
+                            <div class="rounded-lg border border-border bg-surface p-4 text-center sm:col-span-2 overflow-hidden">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Enterprise Value</p>
-                                <p class="mt-1 text-lg font-bold">{{ formatCurrency(dcfEnterpriseValue) }}</p>
+                                <p class="mt-1 text-xl font-bold">{{ formatCurrency(dcfEnterpriseValue) }}</p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
+                            <div class="rounded-lg border border-border bg-surface p-4 text-center sm:col-span-2 overflow-hidden">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Valor Terminal</p>
-                                <p class="mt-1 text-lg font-bold text-primary">{{ formatCurrency(dcfTerminalValue) }}</p>
+                                <p class="mt-1 text-xl font-bold text-primary">{{ formatCurrency(dcfTerminalValue) }}</p>
                             </div>
                         </div>
                     </div>
@@ -465,29 +581,53 @@ const {
 
                     <div class="rounded-xl border border-border bg-card p-5">
                         <h3 class="mb-4 text-sm font-semibold">
-                            Projeção <span class="text-primary">FCF</span>
+                            Projeção <span class="text-primary">Lucro Líquido</span>
                         </h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
-                                    <tr class="border-b border-border text-xs font-semibold text-muted-foreground">
-                                        <th class="pb-2 text-left">Ano</th>
-                                        <th class="pb-2 text-right">FCF Projetado</th>
-                                        <th class="pb-2 text-right">Valor Presente</th>
+                                    <tr class="border-b-2 border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        <th class="pb-3 pl-3 text-left">Ano</th>
+                                        <th class="pb-3 flex ml-3 text-start">Lucro Líquido</th>
+                                        <th class="pb-3 text-right">Crescimento</th>
+                                        <th class="pb-3 pr-3 text-right">VPL</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="proj in dcfProjectedFcfs" :key="proj.year" class="border-b border-border/50">
-                                        <td class="py-2 text-muted-foreground">Ano {{ proj.year }}</td>
-                                        <td class="py-2 text-right font-medium">{{ formatCurrency(proj.fcf) }}</td>
-                                        <td class="py-2 text-right font-medium text-primary">{{ formatCurrency(proj.pv) }}</td>
+                                    <tr class="border-b border-border/50 bg-primary/5">
+                                        <td class="py-2.5 pl-3 font-semibold text-foreground">{{ new Date().getFullYear() }}</td>
+                                        <td class="py-2.5">
+                                            <div class="flex justify-begin">
+                                                <CurrencyInput v-model="dcfFcf" placeholder="0,00" class="w-45 h-8 text-xs" />
+                                            </div>
+                                        </td>
+                                        <td class="py-2.5 text-center text-xs font-medium text-muted-foreground">Base</td>
+                                        <td class="py-2.5 pr-3 text-right text-muted-foreground">—</td>
+                                    </tr>
+                                    <tr v-for="(proj, i) in dcfProjectedFcfs" :key="proj.year" class="border-b border-border/30 hover:bg-surface/50 transition-colors">
+                                        <td class="py-2.5 pl-3 text-muted-foreground">{{ proj.year }}</td>
+                                        <td class="py-2.5 flex ml-3 font-medium text-foreground">{{ formatCurrency(proj.fcf) }}</td>
+                                        <td class="py-2.5">
+                                            <div class="flex items-center justify-end gap-1">
+                                                <Input
+                                                    v-model.number="dcfGrowthRates[i]"
+                                                    type="number"
+                                                    step="0.1"
+                                                    class="h-8 w-20 text-center text-xs font-medium"
+                                                />
+                                                <span class="text-xs text-muted-foreground">%</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-2.5 pr-3 text-right font-medium text-primary">{{ formatCurrency(proj.pv) }}</td>
+                                    </tr>
+                                    <tr class="border-t-2 border-primary/30 bg-primary/5">
+                                        <td class="py-3 pl-3 font-semibold text-primary">Pérpetuo</td>
+                                        <td class="py-3 text-right font-semibold text-primary">{{ formatCurrency(dcfTerminalValue) }}</td>
+                                        <td class="py-3 text-center text-xs text-muted-foreground"></td>
+                                        <td class="py-3 pr-3 text-right font-semibold text-primary">{{ formatCurrency(dcfPvTerminal) }}</td>
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-                        <div class="mt-3 space-y-1 text-xs text-muted-foreground">
-                            <p>VP Perpetuidade: <span class="font-semibold text-primary">{{ formatCurrency(dcfPvTerminal) }}</span></p>
-                            <p>Cresc. projetado (g): <span class="font-semibold text-foreground">{{ formatPercent(dcfGrowthRate * 100) }}</span></p>
                         </div>
                     </div>
                 </div>
@@ -499,35 +639,34 @@ const {
                     <h3 class="mb-4 text-sm font-semibold">
                         <span class="text-primary">Premissas</span> do Investidor
                     </h3>
-                    <p class="mb-4 text-xs text-muted-foreground">
-                        Informe o dividendo pago e suas expectativas de crescimento
-                    </p>
                     <div class="space-y-4">
-                        <div class="rounded-lg border border-primary/20 bg-primary/5 p-3">
-                            <p class="text-xs text-muted-foreground">DY pago (12m)</p>
-                            <p class="text-lg font-bold text-primary">{{ formatPercent(asset.dividend_yield) }}</p>
+                        <div>
+                            <Label>Dividendo Anual Esperado (R$)</Label>
+                            <CurrencyInput v-model="dps" placeholder="0,00" class="mt-1" />
                         </div>
                         <div>
-                            <Label>DPS atual (R$)</Label>
-                            <Input v-model.number="dps" type="number" step="0.01" class="mt-1" />
-                            <p class="mt-0.5 text-xs text-muted-foreground">Dividendos por ação nos últimos 12 meses</p>
+                            <Label>Taxa de Desconto — Tesouro IPCA (%)</Label>
+                            <Input v-model.number="discountRate" type="number" step="0.1" min="0" class="mt-1" />
                         </div>
                         <div>
-                            <Label>Taxa de desconto (Ke %)</Label>
-                            <Input v-model.number="discountRate" type="number" step="0.1" class="mt-1" />
-                            <p class="mt-0.5 text-xs text-muted-foreground">Sugestão: taxa do Tesouro IPCA + prêmio de risco</p>
+                            <Label>Prêmio de Risco (%)</Label>
+                            <Input v-model.number="riskPremium" type="number" step="0.1" min="0" class="mt-1" />
+                            <p class="mt-1 text-xs text-muted-foreground">Exigência adicional sobre o Tesouro IPCA</p>
                         </div>
                         <div>
-                            <Label class="flex items-center justify-between">
-                                <span>Cresc. perpetuidade (g %)</span>
-                                <span class="text-xs text-muted-foreground">0 = sem crescimento</span>
-                            </Label>
-                            <Input v-model.number="growthPerpetuity" type="number" step="0.1" class="mt-1" />
+                            <Label>Crescimento Perpetuidade (%)</Label>
+                            <Input v-model.number="growthPerpetuity" type="number" step="0.1" min="0" class="mt-1" />
                         </div>
                         <div>
-                            <Label>Preço atual (R$)</Label>
-                            <Input v-model.number="currentPrice" type="number" step="0.01" class="mt-1" />
+                            <Label>Preço Atual (R$)</Label>
+                            <CurrencyInput v-model="currentPrice" placeholder="0,00" class="mt-1" />
                         </div>
+                    </div>
+                    <div class="mt-6">
+                        <Button class="w-full gap-2" @click="saveGordon">
+                            <Save class="h-4 w-4" />
+                            Salvar Valuation
+                        </Button>
                     </div>
                 </div>
 
@@ -536,10 +675,10 @@ const {
                         <h3 class="mb-4 text-sm font-semibold">
                             <span class="text-primary">Resultados</span> do Gordon
                         </h3>
-                        <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Justo</p>
-                                <p class="mt-1 text-3xl font-bold text-primary">{{ formatCurrency(gordonFairPrice) }}</p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2 overflow-hidden">
+                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Teto</p>
+                                <p class="mt-1 text-2xl font-bold text-primary">{{ formatCurrency(gordonFairPrice) }}</p>
                                 <div v-if="gordonUpside !== null" class="mt-1">
                                     <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold" :class="gordonUpside >= 0 ? 'text-revenue' : 'text-destructive'">
                                         {{ gordonUpside >= 0 ? '+' : '' }}{{ gordonUpside.toFixed(1) }}% vs. preço atual
@@ -557,12 +696,9 @@ const {
                                     {{ formatPercent(gordonMargin) }}
                                 </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center sm:col-span-2">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Comparação: Tesouro IPCA</p>
-                                <p class="mt-1 text-lg font-bold">
-                                    {{ gordonFairPrice ? formatCurrency(gordonFairPrice) : '—' }}
-                                    <span class="text-sm font-normal text-muted-foreground">vs. IPCA+{{ (discountRate - growthPerpetuity).toFixed(1) }}%</span>
-                                </p>
+                            <div class="rounded-lg border border-border bg-surface p-3 text-center sm:col-span-2 overflow-hidden">
+                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Ke Efetivo (IPCA + Prêmio)</p>
+                                <p class="mt-1 text-xl font-bold">{{ formatPercent(gordonEffectiveKe) }}</p>
                             </div>
                         </div>
                     </div>
@@ -572,14 +708,13 @@ const {
                     </div>
 
                     <!-- Growth Table -->
-                    <div class="rounded-xl border border-border bg-card p-5">
+                    <!-- <div class="rounded-xl border border-border bg-card p-5">
                         <h3 class="mb-4 text-sm font-semibold">
                             Crescimento <span class="text-primary">Anual</span>
                         </h3>
-                        <p class="mb-4 text-xs text-muted-foreground">Ajuste a taxa de crescimento esperada para cada ano</p>
                         <div class="grid grid-cols-5 gap-2 sm:grid-cols-5">
                             <div v-for="(_, i) in 5" :key="i">
-                                <Label class="text-xs text-muted-foreground">Ano {{ i + 1 }}</Label>
+                                <Label class="text-xs text-muted-foreground">{{ new Date().getFullYear() + i + 1 }}</Label>
                                 <div class="mt-1 flex items-center gap-1">
                                     <Input v-model.number="growthRates[i]" type="number" step="0.1" class="h-8 text-xs" />
                                     <span class="text-xs text-muted-foreground">%</span>
@@ -596,7 +731,7 @@ const {
                                 <span class="font-semibold text-primary">{{ formatCurrency(projectedDividends.terminalPv) }}</span>
                             </p>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
             </div>
         </div>

@@ -15,6 +15,13 @@ class Bank extends Model
         'logo',
     ];
 
+    protected $appends = ['logo_url'];
+
+    public function getLogoUrlAttribute()
+    {
+        return $this->logo ? asset('storage/'.$this->logo) : null;
+    }
+
     public function accounts()
     {
         return $this->hasMany(Account::class);
