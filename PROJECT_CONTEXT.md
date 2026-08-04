@@ -406,3 +406,27 @@ O Fidax usa uma identidade dark premium com teal como cor primária e gold como 
 **Discovery:** As próximas prioridades não são finalizar a Release 1, mas documentar a entrega, estabilizar operação real e abrir milestones/issues para evolução do produto.
 **Solution:** O roadmap passa a tratar Release 1 como entregue, adiciona Release 1.1 para operação/localização/infraestrutura e define Release 2 como planejamento financeiro e lançamentos avançados.
 **Source:** User clarification (backlog and milestones request)
+
+### 2026-08-04 - Definição Unificada de Margem de Segurança nos Valuations
+
+**Contexto:** Durante a revisão de QA do merge `dev → main`, o cálculo de margem de segurança estava inconsistente entre os métodos de valuation: Preço Teto usava base na cotação atual, enquanto DCF, Gordon e o index de Valuations (`ValuationController::computeSummary`) usavam base no valor justo (fórmula de Graham). O teste unitário de Preço Teto apontava a divergência.
+
+**Discovery:** A "margem de segurança" pode ser calculada sobre duas bases, com significados diferentes:
+- **Graham** `(valor justo − preço) / valor justo` — mede tolerância a erro na estimativa, limitada a 100%. Responde "quanto meu valor justo pode estar errado antes de eu perder dinheiro".
+- **Base no preço** `(valor justo − preço) / preço` — mede o desconto relativo ao que se paga hoje; matematicamente idêntica ao upside (ilimitada).
+
+**Solution:** Decisão do usuário: unificar TODOS os métodos (Preço Teto, DCF, Gordon, index de Valuations e composables `usePrecoTeto`/`useDcf`) na definição **base no preço** (= upside). Arquivos ajustados: `PrecoTetoProjetivoValuationService`, `DcfValuationService`, `GordonValuationService`, `ValuationController`, `useDcf.ts`, `gordon/Index.vue`; teste de Preço Teto atualizado (teto 5,0 / preço 2,5 → `margin_of_safety = 100.0`). Consequência aceita: "Margem de Segurança" e "Upside" exibem o mesmo valor em todas as telas.
+
+**Source:** Decisão do usuário (revisão de QA do merge `dev → main`)
+
+### 2026-08-04 - Gordon: dps é trailing (D0), fair price deve crescer um período
+
+**Contexto:** Revisão do modelo Gordon com premissas reais (dps=9,57, discount_rate=10,54, risk_premium=1, growth=2, preço=100,82): o app retornava preço teto 100,31 enquanto a base de referência dava 102,36 (margem 1,53%).
+
+**Discovery:** A fórmula do app era `P = D0 / (ke − g)`, tratando o DPS digitado como dividendo do próximo ano (D1). Porém o usuário informa o DPS como **soma dos últimos 12 meses = trailing (D0)**. O Gordon clássico exige `P = D1 / (ke − g)` com `D1 = D0 × (1 + g)`. Verificação numérica: `9,57 × 1,02 / (0,1154 − 0,02) = 102,32` ≈ 102,36 da referência (diferença de centavos é arredondamento). A fórmula antiga subavaliava em ~2% (fator `1+g`). Também foi encontrado que `GordonValuationService` (PHP) era código morto e ignorava `risk_premium`.
+
+**Solution:** Crescer o dividendo em todos os pontos de cálculo, trocando `dps/(ke−g)` por `dps×(1+g)/(ke−g)`: `resources/js/pages/gordon/Index.vue`, `resources/js/pages/screening/Valuation.vue`, `app/Http/Controllers/ValuationController.php` (`computeSummary`) e `app/Services/GordonValuationService.php`. Convenção adotada: **campo dps = dividendo trailing 12m (D0)**; o fair price sempre projeta D1. Validação: 64 testes + build OK.
+
+**Source:** Revisão do modelo Gordon (usuário)
+
+**Action item (pendente):** decidir se o `GordonValuationService` PHP deve passar a ser usado (hoje é código morto) e se deve incorporar `risk_premium` no discount rate para alinhar com o frontend.

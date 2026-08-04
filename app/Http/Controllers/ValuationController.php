@@ -26,15 +26,15 @@ class ValuationController extends Controller
 
         return Inertia::render('valuations/Index', [
             'valuations' => $assets->through(fn (Asset $asset): array => [
-                'id' => $asset->id,
-                'ticker' => $asset->ticker,
-                'name' => $asset->name,
-                'logo_url' => $asset->logo_url,
+                'id'            => $asset->id,
+                'ticker'        => $asset->ticker,
+                'name'          => $asset->name,
+                'logo_url'      => $asset->logo_url,
                 'current_price' => $asset->current_price,
-                'asset_type' => $asset->asset_type,
+                'asset_type'    => $asset->asset_type,
                 'valuation_count' => $asset->valuations->count(),
                 'latest_calculated_at' => $asset->valuations->first()?->calculated_at,
-                'valuations' => $asset->valuations->map(fn (InvestimentValuation $v): array => [
+                'valuations'    => $asset->valuations->map(fn (InvestimentValuation $v): array => [
                     'id' => $v->id,
                     'method' => $v->method,
                     'method_label' => $v->methodLabel(),
@@ -68,7 +68,7 @@ class ValuationController extends Controller
             $g = ((float) ($a['growth_perpetuity'] ?? 0)) / 100;
             $effectiveKe = $ke + $riskPremium;
 
-            $fairValue = $effectiveKe > $g && $dps > 0 ? $dps / ($effectiveKe - $g) : 0;
+            $fairValue = $effectiveKe > $g && $dps > 0 ? ($dps * (1 + $g)) / ($effectiveKe - $g) : 0;
         } else {
             $fcf = (float) ($a['current_fcf'] ?? 0);
             $rates = $a['growth_rates'] ?? [];
@@ -95,7 +95,7 @@ class ValuationController extends Controller
         }
 
         $marginOfSafety = $fairValue > 0 && $price > 0
-            ? (($fairValue - $price) / $fairValue) * 100
+            ? (($fairValue - $price) / $price) * 100
             : null;
         $upside = $price > 0 && $fairValue > 0
             ? (($fairValue - $price) / $price) * 100

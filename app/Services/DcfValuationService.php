@@ -71,8 +71,9 @@ class DcfValuationService
             $upside = (($fairValuePerShare / $currentPricePerShare) - 1) * 100;
         }
 
-        if ($currentPricePerShare !== null && $fairValuePerShare > 0) {
-            $marginOfSafety = (1 - ($currentPricePerShare / $fairValuePerShare)) * 100;
+        if ($currentPricePerShare !== null && $currentPricePerShare > 0 && $fairValuePerShare > 0) {
+            // Margem de segurança unificada: base = cotação atual (= upside)
+            $marginOfSafety = (($fairValuePerShare / $currentPricePerShare) - 1) * 100;
         }
 
         return [

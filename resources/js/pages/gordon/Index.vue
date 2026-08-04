@@ -93,7 +93,7 @@ const fairPrice = computed(() => {
     const ke = effectiveKe.value / 100;
     const g = Number(form.growth_perpetuity) / 100;
     if (!dps || ke <= g) return null;
-    return dps / (ke - g);
+    return (dps * (1 + g)) / (ke - g);
 });
 
 const upside = computed(() => {
@@ -107,15 +107,7 @@ const marginOfSafety = computed(() => {
     const fp = fairPrice.value;
     const cp = Number(form.current_price);
     if (!fp || !cp) return null;
-    return (1 - cp / fp) * 100;
-});
-
-const gordonReturn = computed(() => {
-    const dps = Number(form.dps);
-    const cp = Number(form.current_price);
-    const g = Number(form.growth_perpetuity);
-    if (!dps || !cp) return null;
-    return (dps / cp) * 100 + g;
+    return ((fp - cp) / cp) * 100;
 });
 
 const isEditing = computed(() => !!props.valuation);
@@ -180,7 +172,7 @@ function formatPercent(value: number | null | undefined) {
             </div>
 
             <PageHeader
-                :title="isEditing ? 'Editar Gordon' : 'Gordon Growth Model'"
+                :title="isEditing ? 'Editar Gordon' : 'Modelo de Gordon Ajustado'"
                 description="Valuation de ativos pelo modelo de desconto de dividendos"
             />
 
@@ -280,11 +272,6 @@ function formatPercent(value: number | null | undefined) {
                                 </div>
                             </div>
                             <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Retorno Esperado</p>
-                                <p class="mt-1 text-xl font-bold text-revenue">{{ formatPercent(gordonReturn) }}</p>
-                                <p class="text-xs text-muted-foreground">a.a. (DY + g)</p>
-                            </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Margem</p>
                                 <p class="mt-1 text-xl font-bold" :class="(marginOfSafety ?? 0) >= 0 ? 'text-revenue' : 'text-destructive'">
                                     {{ formatPercent(marginOfSafety) }}
@@ -296,10 +283,6 @@ function formatPercent(value: number | null | undefined) {
                             </div>
                         </div>
                     </SectionCard>
-
-                    <div class="rounded-xl border border-border bg-card p-5">
-                        <MarginGauge :value="marginOfSafety ?? 0" label="Margem de Segurança" />
-                    </div>
                 </div>
             </div>
         </div>

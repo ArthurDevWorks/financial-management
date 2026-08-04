@@ -72,7 +72,7 @@ const methods: {
     },
     {
         value: 'gordon',
-        label: 'Gordon Growth Model',
+        label: 'Modelo de Gordon Ajustado',
         description:
             'Valuation de FIIs pelo modelo de desconto de dividendos com crescimento perpétuo.',
         icon: TrendingUp,

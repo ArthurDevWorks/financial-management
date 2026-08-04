@@ -65,10 +65,6 @@ const formatPercent = (value: number | null | undefined) => {
 
 const assetTypeLabel = (type: string) => (type === 'fii' ? 'FII' : 'Ação');
 
-const createValuation = () => {
-    router.visit('/valuations/create');
-};
-
 const openValuation = (valuation: ValuationResult) => {
     router.visit(`/valuations/${valuation.id}`);
 };
@@ -103,12 +99,6 @@ const gaugeWidth = (margin: number | null | undefined) => {
                 title="Valuations"
                 description="Histórico de cálculos de valuation realizados"
             >
-                <template #actions>
-                    <Button @click="createValuation">
-                        <Plus class="h-4 w-4" />
-                        Nova Valuation
-                    </Button>
-                </template>
             </PageHeader>
 
             <SectionCard

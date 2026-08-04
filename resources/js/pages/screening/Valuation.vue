@@ -109,7 +109,7 @@ const gordonFairPrice = computed(() => {
     const ke = gordonEffectiveKe.value / 100;
     const g = growthPerpetuity.value / 100;
     if (ke <= g || !dps.value) return null;
-    return dps.value / (ke - g);
+    return (dps.value * (1 + g)) / (ke - g);
 });
 
 const gordonUpside = computed(() => {
@@ -654,7 +654,7 @@ function saveGordon() {
                             <p class="mt-1 text-xs text-muted-foreground">Exigência adicional sobre o Tesouro IPCA</p>
                         </div>
                         <div>
-                            <Label>Crescimento Perpetuidade (%)</Label>
+                            <Label>Crescimento (%)</Label>
                             <Input v-model.number="growthPerpetuity" type="number" step="0.1" min="0" class="mt-1" />
                         </div>
                         <div>
@@ -688,7 +688,7 @@ function saveGordon() {
                             <div class="rounded-lg border border-border bg-surface p-3 text-center">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Retorno Esperado</p>
                                 <p class="mt-1 text-xl font-bold text-revenue">{{ formatPercent(gordonReturn) }}</p>
-                                <p class="text-xs text-muted-foreground">a.a. (DY + g)</p>
+                                <p class="text-xs text-muted-foreground"></p>
                             </div>
                             <div class="rounded-lg border border-border bg-surface p-3 text-center">
                                 <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Margem</p>
@@ -696,15 +696,7 @@ function saveGordon() {
                                     {{ formatPercent(gordonMargin) }}
                                 </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Ke Efetivo (IPCA + Prêmio)</p>
-                                <p class="mt-1 text-xl font-bold">{{ formatPercent(gordonEffectiveKe) }}</p>
-                            </div>
                         </div>
-                    </div>
-
-                    <div class="rounded-xl border border-border bg-card p-5">
-                        <MarginGauge :value="gordonMargin" label="Margem de Segurança" />
                     </div>
 
                     <!-- Growth Table -->

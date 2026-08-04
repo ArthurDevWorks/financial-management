@@ -24,9 +24,9 @@ class GordonValuationService
         }
         $growthRates = array_slice($growthRates, 0, $projectionYears);
 
-        // Fair price via Gordon: P = DPS / (Ke - g)
+        // Fair price via Gordon: P = D1 / (Ke - g), com D1 = DPS x (1 + g)
         $fairPrice = $discountRate > $growthPerpetuity && $dps > 0
-            ? $dps / ($discountRate - $growthPerpetuity)
+            ? ($dps * (1 + $growthPerpetuity)) / ($discountRate - $growthPerpetuity)
             : null;
 
         // Projected dividends
@@ -67,7 +67,8 @@ class GordonValuationService
 
         if ($fairPrice !== null && $currentPrice !== null && $currentPrice > 0) {
             $upside = (($fairPrice / $currentPrice) - 1) * 100;
-            $marginOfSafety = (1 - ($currentPrice / $fairPrice)) * 100;
+            // Margem de segurança unificada: base = cotação atual (= upside)
+            $marginOfSafety = (($fairPrice / $currentPrice) - 1) * 100;
         }
 
         return [

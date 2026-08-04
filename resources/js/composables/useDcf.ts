@@ -70,7 +70,7 @@ export function useDcf(params: {
     const cp = params.currentPrice.value
     const fp = fairPrice.value
     if (cp <= 0 || fp <= 0) return 0
-    return (1 - cp / fp) * 100
+    return ((fp - cp) / cp) * 100
   })
 
   const podeCalcular = computed(() =>

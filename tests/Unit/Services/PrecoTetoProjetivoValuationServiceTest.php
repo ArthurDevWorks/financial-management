@@ -22,7 +22,7 @@ it('calcula preço teto projetivo com lucro, ações, payout e yield desejado', 
     expect($resultado['summary']['margin_of_safety'])->toBe(-0.24);
 });
 
-it('usa o valor justo como base para a margem de segurança', function () {
+it('usa a cotação atual como base para a margem de segurança', function () {
     $service = new PrecoTetoProjetivoValuationService;
 
     $resultado = $service->calculate([
@@ -35,7 +35,7 @@ it('usa o valor justo como base para a margem de segurança', function () {
     ]);
 
     expect($resultado['summary']['price_ceiling'])->toBe(5.0);
-    expect($resultado['summary']['margin_of_safety'])->toBe(50.0);
+    expect($resultado['summary']['margin_of_safety'])->toBe(100.0);
     expect($resultado['summary']['upside'])->toBe(100.0);
 });
 

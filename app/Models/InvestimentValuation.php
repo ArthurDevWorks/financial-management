@@ -37,7 +37,7 @@ class InvestimentValuation extends Model
     {
         return match ($this->method) {
             self::METHOD_PRECO_TETO => 'Preço Teto Projetivo',
-            self::METHOD_GORDON => 'Gordon Growth Model',
+            self::METHOD_GORDON => 'Modelo de Gordon Ajustado',
             default => 'Fluxo de Caixa Descontado',
         };
     }
