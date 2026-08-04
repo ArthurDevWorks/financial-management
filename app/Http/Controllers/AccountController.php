@@ -22,8 +22,8 @@ class AccountController extends Controller
         $query = Account::query()
             ->where('user_id', Auth::id())
             ->with(['bank'])
-            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')], 'amount')
-            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')->where('status', 'paid')], 'amount')
             ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
                 $q->where('account', 'like', "%{$search}%")
                     ->orWhereHas('bank', fn ($q) => $q->where('name', 'like', "%{$search}%"));
@@ -105,8 +105,8 @@ class AccountController extends Controller
         $accounts = Account::query()
             ->where('user_id', Auth::id())
             ->with(['bank'])
-            ->withSum(['releases as revenue_sum' => fn ($q) => $q->where('type', 'revenue')], 'amount')
-            ->withSum(['releases as expense_sum' => fn ($q) => $q->where('type', 'expense')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($q) => $q->where('type', 'revenue')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($q) => $q->where('type', 'expense')->where('status', 'paid')], 'amount')
             ->orderBy('created_at', 'desc')
             ->get();
 

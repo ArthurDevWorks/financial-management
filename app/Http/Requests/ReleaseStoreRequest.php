@@ -24,7 +24,7 @@ class ReleaseStoreRequest extends FormRequest
             'payment_method' => 'nullable|in:cash,credit_card,debit_card,pix',
             'credit_card_id' => 'nullable|exists:credit_cards,id',
             'is_installment' => 'nullable|boolean',
-            'total_installments' => 'nullable|integer|min:2|max:360',
+            'total_installments' => 'nullable|integer|min:2|max:255',
             'is_recurring' => 'nullable|boolean',
             'recurrence_frequency' => 'nullable|in:monthly,yearly,weekly,biweekly,quarterly',
             'recurrence_end_date' => 'nullable|date|after:date',
@@ -45,6 +45,12 @@ class ReleaseStoreRequest extends FormRequest
                 if (!empty($data['is_installment'])) {
                     if (empty($data['total_installments']) || (int) $data['total_installments'] < 2) {
                         $validator->errors()->add('total_installments', 'Informe o número de parcelas (mínimo 2).');
+                    } else {
+                        $amount = (float) $data['amount'];
+                        $installments = (int) $data['total_installments'];
+                        if ($amount / $installments < 0.01) {
+                            $validator->errors()->add('total_installments', "O valor informado não pode ser dividido em {$installments} parcelas de pelo menos R$ 0,01.");
+                        }
                     }
                 }
             }
@@ -56,6 +62,10 @@ class ReleaseStoreRequest extends FormRequest
                 if (empty($data['recurrence_end_date'])) {
                     $validator->errors()->add('recurrence_end_date', 'Informe a data final da recorrência.');
                 }
+            }
+
+            if (!empty($data['is_installment']) && !empty($data['is_recurring'])) {
+                $validator->errors()->add('is_recurring', 'Um lançamento não pode ser parcelado e recorrente ao mesmo tempo.');
             }
         });
     }

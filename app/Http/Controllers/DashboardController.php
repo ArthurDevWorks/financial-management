@@ -22,7 +22,8 @@ class DashboardController extends Controller
         $endDate = $request->query('end_date');
 
         $query = Release::query()
-            ->where('user_id', $user_id);
+            ->where('user_id', $user_id)
+            ->where('status', 'paid');
 
         if ($period === 'month') {
             $query->whereMonth('date', $month)->whereYear('date', $year);
@@ -70,8 +71,8 @@ class DashboardController extends Controller
 
         $accounts = Account::query()
             ->with('bank')
-            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')], 'amount')
-            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')->where('status', 'paid')], 'amount')
             ->where('user_id', $user_id)
             ->get();
 

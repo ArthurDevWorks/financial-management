@@ -66,6 +66,36 @@ it('lista contas com saldo corrente calculado', function () {
     );
 });
 
+it('não considera lançamentos pendentes no saldo da conta', function () {
+    $user = User::factory()->create();
+    $bank = Bank::factory()->create();
+    $account = Account::factory()->for($user)->for($bank)->create(['total' => 1000]);
+    $revenueCategory = Category::factory()->create(['type' => CategoryType::REVENUE->value]);
+    $expenseCategory = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
+
+    Release::factory()->for($user)->for($account)->for($revenueCategory, 'category')->revenue()->create([
+        'amount' => 250,
+        'date' => now()->toDateString(),
+        'status' => 'paid',
+    ]);
+    Release::factory()->for($user)->for($account)->for($expenseCategory, 'category')->expense()->create([
+        'amount' => 100,
+        'date' => now()->toDateString(),
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get(route('accounts.index'));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('accounts/Index')
+        ->where('accounts.data.0.revenue_sum', '250.00')
+        ->where('accounts.data.0.expense_sum', '0.00')
+    );
+});
+
 it('atualiza e remove conta', function () {
     $user = User::factory()->create();
     $bank = Bank::factory()->create();

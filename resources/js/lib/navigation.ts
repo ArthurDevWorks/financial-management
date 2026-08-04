@@ -30,11 +30,11 @@ export const navSections: NavSection[] = [
     {
         title: 'Financeiro',
         items: [
+            { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
             { label: 'Bancos', icon: Landmark, href: '/banks' },
             { label: 'Cartões', icon: CreditCard, href: '/credit-cards' },
             { label: 'Categorias', icon: Tags, href: '/categories' },
             { label: 'Contas', icon: Wallet, href: '/accounts' },
-            { label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
             { label: 'Lançamentos', icon: ArrowRightLeft, href: '/releases' },
         ],
     },

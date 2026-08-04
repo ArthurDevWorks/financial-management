@@ -75,7 +75,7 @@ class ReleaseController extends Controller
                 $data['status'] = $i === 1 ? 'paid' : 'pending';
 
                 $data['date'] = \Carbon\Carbon::parse($validated['date'])
-                    ->addMonths($i - 1)
+                    ->addMonthsNoOverflow($i - 1)
                     ->format('Y-m-d');
 
                 $amount = $installmentAmount;

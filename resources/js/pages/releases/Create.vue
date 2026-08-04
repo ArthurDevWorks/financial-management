@@ -92,6 +92,20 @@ watch(
         }
     },
 );
+
+watch(
+    () => form.is_installment,
+    (installment) => {
+        if (installment) form.is_recurring = false;
+    },
+);
+
+watch(
+    () => form.is_recurring,
+    (recurring) => {
+        if (recurring) form.is_installment = false;
+    },
+);
 </script>
 
 <template>
@@ -314,7 +328,7 @@ watch(
                             v-model="form.total_installments"
                             type="number"
                             min="2"
-                            max="360"
+                            max="255"
                             class="mt-1"
                         />
                         <p class="mt-1 text-xs text-muted-foreground">

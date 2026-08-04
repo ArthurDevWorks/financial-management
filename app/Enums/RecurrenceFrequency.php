@@ -26,9 +26,9 @@ enum RecurrenceFrequency: string
         return match ($this) {
             self::WEEKLY         => $date->addWeek(),
             self::BIWEEKLY       => $date->addWeeks(2),
-            self::MONTHLY        => $date->addMonth(),
-            self::QUARTERLY      => $date->addMonths(3),
-            self::YEARLY         => $date->addYear(),
+            self::MONTHLY        => $date->addMonthsNoOverflow(),
+            self::QUARTERLY      => $date->addMonthsNoOverflow(3),
+            self::YEARLY         => $date->addYearsNoOverflow(),
         };
     }
 
