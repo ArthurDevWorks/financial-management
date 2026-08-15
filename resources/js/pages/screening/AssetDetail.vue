@@ -1,18 +1,33 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
-import PageHeader from '@/components/PageHeader.vue';
-import { Line as ChartLine, Bar as ChartBar } from 'vue-chartjs';
-import {
-    Chart as ChartJS,
-    CategoryScale, LinearScale, PointElement, LineElement, BarElement,
-    Title, Tooltip, Legend, Filler,
-} from 'chart.js';
-import { computed } from 'vue';
-import { Heart, ArrowLeft, BarChart3 } from 'lucide-vue-next';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
+import {
+    BarElement,
+    CategoryScale,
+    Chart as ChartJS,
+    Filler,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip,
+} from 'chart.js';
+import { ArrowLeft, BarChart3, Heart } from 'lucide-vue-next';
+import { computed } from 'vue';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title, Tooltip, Legend, Filler);
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    Filler,
+);
 
 interface Asset {
     id: number;
@@ -35,6 +50,9 @@ interface Asset {
     profit_margin: number | null;
     ebitda_margin: number | null;
     gross_margin: number | null;
+    ebitda: number | null;
+    net_debt: number | null;
+    gross_debt: number | null;
     debt_to_ebitda: number | null;
     net_debt_to_ebitda: number | null;
     current_liquidity: number | null;
@@ -47,6 +65,15 @@ interface Asset {
     earnings_per_share: number | null;
     book_value_per_share: number | null;
     total_shares: number | null;
+    p_vp: number | null;
+    cap_rate: number | null;
+    vacancy_rate: number | null;
+    vacancy_financial: number | null;
+    average_maturity: number | null;
+    number_of_properties: number | null;
+    rental_area: number | null;
+    ffo_yield: number | null;
+    net_worth: number | null;
     asset_type: string;
     long_business_summary: string | null;
     website: string | null;
@@ -86,8 +113,10 @@ function formatCurrency(value: unknown): string {
     const num = toNumber(value);
     if (num === null) return '—';
     return new Intl.NumberFormat('pt-BR', {
-        style: 'currency', currency: 'BRL',
-        minimumFractionDigits: 2, maximumFractionDigits: 2,
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
     }).format(num);
 }
 
@@ -112,19 +141,29 @@ function formatMarketCap(value: unknown): string {
     return formatCurrency(num);
 }
 
-const hasPriceData = computed(() => props.historicalPrices && props.historicalPrices.length > 0);
-const hasDividends = computed(() => props.dividends && props.dividends.length > 0);
+const hasPriceData = computed(
+    () => props.historicalPrices && props.historicalPrices.length > 0,
+);
+const hasDividends = computed(
+    () => props.dividends && props.dividends.length > 0,
+);
 
 function formatTimestamp(ts: number | null): string {
     if (!ts) return '';
-    return new Date(ts * 1000).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+    return new Date(ts * 1000).toLocaleDateString('pt-BR', {
+        month: 'short',
+        year: '2-digit',
+    });
 }
 
 const dividendLabels = computed(() => {
     if (!hasDividends.value) return [];
     return props.dividends!.map((d) => {
         if (!d.date) return '';
-        return new Date(d.date).toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
+        return new Date(d.date).toLocaleDateString('pt-BR', {
+            month: 'short',
+            year: '2-digit',
+        });
     });
 });
 
@@ -144,7 +183,9 @@ const priceChartValues = computed(() => {
     if (hasPriceData.value) {
         return props.historicalPrices!.map((p) => p.close);
     }
-    return props.asset.current_price !== null ? [props.asset.current_price] : [0];
+    return props.asset.current_price !== null
+        ? [props.asset.current_price]
+        : [0];
 });
 
 const priceChartData = computed(() => ({
@@ -175,7 +216,10 @@ const priceChartOptions = {
             borderWidth: 1,
             padding: 10,
             callbacks: {
-                label: (ctx: { parsed: { y: number | null } }) => ctx.parsed.y !== null ? `R$ ${ctx.parsed.y.toFixed(2)}` : '',
+                label: (ctx: { parsed: { y: number | null } }) =>
+                    ctx.parsed.y !== null
+                        ? `R$ ${ctx.parsed.y.toFixed(2)}`
+                        : '',
             },
         },
     },
@@ -186,13 +230,17 @@ const priceChartOptions = {
         },
         y: {
             grid: { color: 'hsla(228, 15%, 14%, 0.3)' },
-            ticks: { callback: (v: number) => 'R$ ' + v.toFixed(0), font: { size: 11 } },
+            ticks: {
+                callback: (v: number) => 'R$ ' + v.toFixed(0),
+                font: { size: 11 },
+            },
         },
     },
 };
 
 const dividendChartData = computed(() => ({
-    labels: dividendLabels.value.length > 0 ? dividendLabels.value : ['Sem dados'],
+    labels:
+        dividendLabels.value.length > 0 ? dividendLabels.value : ['Sem dados'],
     datasets: [
         {
             label: 'Dividendos (R$/ação)',
@@ -216,7 +264,8 @@ const dividendChartOptions = {
             borderWidth: 1,
             padding: 10,
             callbacks: {
-                label: (ctx: { parsed: { y: number } }) => `R$ ${ctx.parsed.y.toFixed(2)}/ação`,
+                label: (ctx: { parsed: { y: number } }) =>
+                    `R$ ${ctx.parsed.y.toFixed(2)}/ação`,
             },
         },
     },
@@ -224,45 +273,181 @@ const dividendChartOptions = {
         x: { grid: { display: false }, ticks: { font: { size: 11 } } },
         y: {
             grid: { color: 'hsla(228, 15%, 14%, 0.3)' },
-            ticks: { callback: (v: number) => 'R$ ' + v.toFixed(1), font: { size: 11 } },
+            ticks: {
+                callback: (v: number) => 'R$ ' + v.toFixed(1),
+                font: { size: 11 },
+            },
         },
     },
 };
 
-const sectors = [
-    { key: 'Valuation', items: [
-        { label: 'P/L', value: formatRatio(props.asset.price_to_earnings) },
-        { label: 'P/VP', value: formatRatio(props.asset.price_to_book) },
-        { label: 'EV/EBITDA', value: formatRatio(props.asset.ev_to_ebitda) },
-        { label: 'P/Sales', value: formatRatio(props.asset.price_to_sales) },
-        { label: 'DY', value: formatPercent(props.asset.dividend_yield), highlight: true },
-        { label: 'Payout', value: formatPercent(props.asset.payout) },
-    ]},
-    { key: 'Rentabilidade', items: [
-        { label: 'ROE', value: formatPercent(props.asset.roe), highlight: true },
-        { label: 'ROA', value: formatPercent(props.asset.roa) },
-        { label: 'Margem Líquida', value: formatPercent(props.asset.profit_margin), highlight: true },
-        { label: 'Margem EBITDA', value: formatPercent(props.asset.ebitda_margin) },
-        { label: 'Margem Bruta', value: formatPercent(props.asset.gross_margin) },
-    ]},
-    { key: 'Saúde Financeira', items: [
-        { label: 'Dívida/EBITDA', value: formatRatio(props.asset.debt_to_ebitda) },
-        { label: 'Dívida Líquida/EBITDA', value: formatRatio(props.asset.net_debt_to_ebitda), highlight: true },
-        { label: 'Liquidez Corrente', value: formatRatio(props.asset.current_liquidity) },
-    ]},
-    { key: 'Mercado', items: [
-        { label: 'Valor de Mercado', value: formatMarketCap(props.asset.market_cap) },
-        { label: 'Enterprise Value', value: formatMarketCap(props.asset.enterprise_value) },
-        { label: 'Volume Médio (30d)', value: formatCurrency(props.asset.volume_avg_30d) },
-        { label: 'Ações Totais', value: formatNumber(props.asset.total_shares) !== '—' ? (toNumber(props.asset.total_shares)! / 1e9).toFixed(2) + 'B' : '—' },
-    ]},
-];
+function formatShares(value: unknown): string {
+    const num = toNumber(value);
+    if (num === null) return '—';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    return num.toLocaleString('pt-BR');
+}
+
+const sectors = computed(() => {
+    const list = [
+        {
+            key: 'Valuation',
+            items: [
+                { label: 'P/L', value: formatRatio(props.asset.price_to_earnings) },
+                { label: 'P/VP', value: formatRatio(props.asset.price_to_book ?? props.asset.p_vp) },
+                {
+                    label: 'EV/EBITDA',
+                    value: formatRatio(props.asset.ev_to_ebitda),
+                },
+                {
+                    label: 'P/Sales',
+                    value: formatRatio(props.asset.price_to_sales),
+                },
+                {
+                    label: 'DY',
+                    value: formatPercent(props.asset.dividend_yield),
+                    highlight: true,
+                },
+                { label: 'Payout', value: formatPercent(props.asset.payout) },
+            ],
+        },
+        {
+            key: 'Rentabilidade',
+            items: [
+                {
+                    label: 'ROE',
+                    value: formatPercent(props.asset.roe),
+                    highlight: true,
+                },
+                { label: 'ROA', value: formatPercent(props.asset.roa) },
+                {
+                    label: 'Margem Líquida',
+                    value: formatPercent(props.asset.profit_margin),
+                    highlight: true,
+                },
+                {
+                    label: 'Margem EBITDA',
+                    value: formatPercent(props.asset.ebitda_margin),
+                },
+                {
+                    label: 'Margem Bruta',
+                    value: formatPercent(props.asset.gross_margin),
+                },
+            ],
+        },
+        {
+            key: 'Saúde Financeira',
+            items: [
+                {
+                    label: 'EBITDA',
+                    value: formatMarketCap(props.asset.ebitda),
+                    highlight: true,
+                },
+                {
+                    label: 'Dívida Líquida',
+                    value: formatMarketCap(props.asset.net_debt),
+                },
+                {
+                    label: 'Dívida Bruta',
+                    value: formatMarketCap(props.asset.gross_debt),
+                },
+                {
+                    label: 'Dívida/EBITDA',
+                    value: formatRatio(props.asset.debt_to_ebitda),
+                },
+                {
+                    label: 'Dívida Líquida/EBITDA',
+                    value: formatRatio(props.asset.net_debt_to_ebitda),
+                    highlight: true,
+                },
+                {
+                    label: 'Liquidez Corrente',
+                    value: formatRatio(props.asset.current_liquidity),
+                },
+            ],
+        },
+        {
+            key: 'Mercado',
+            items: [
+                {
+                    label: 'Valor de Mercado',
+                    value: formatMarketCap(props.asset.market_cap),
+                },
+                {
+                    label: 'Valor da Firma (EV)',
+                    value: formatMarketCap(props.asset.enterprise_value),
+                },
+                {
+                    label: 'Volume Médio (30d)',
+                    value: formatCurrency(props.asset.volume_avg_30d),
+                },
+                {
+                    label: props.asset.asset_type === 'fii' ? 'Cotas Totais' : 'Ações Totais',
+                    value: formatShares(props.asset.total_shares),
+                },
+            ],
+        },
+    ];
+
+    if (props.asset.asset_type === 'fii') {
+        list.push({
+            key: 'Indicadores de FII',
+            items: [
+                {
+                    label: 'Vacância Física',
+                    value: formatPercent(props.asset.vacancy_rate),
+                    highlight: true,
+                },
+                {
+                    label: 'Vacância Financeira',
+                    value: formatPercent(props.asset.vacancy_financial),
+                },
+                {
+                    label: 'P/VP',
+                    value: formatRatio(props.asset.p_vp ?? props.asset.price_to_book),
+                    highlight: true,
+                },
+                {
+                    label: 'Cap Rate',
+                    value: formatPercent(props.asset.cap_rate),
+                },
+                {
+                    label: 'FFO Yield',
+                    value: formatPercent(props.asset.ffo_yield),
+                },
+                {
+                    label: 'Patrimônio Líquido',
+                    value: formatMarketCap(props.asset.net_worth),
+                },
+                {
+                    label: 'Área Locável',
+                    value: props.asset.rental_area ? `${formatNumber(props.asset.rental_area)} m²` : '—',
+                },
+                {
+                    label: 'Nº de Imóveis',
+                    value: props.asset.number_of_properties !== null ? String(props.asset.number_of_properties) : '—',
+                },
+                {
+                    label: 'Vencimento Médio',
+                    value: props.asset.average_maturity ? `${props.asset.average_maturity} meses` : '—',
+                },
+            ],
+        });
+    }
+
+    return list;
+});
 
 function toggleFavorite() {
-    router.post('/screening/favorite', {
-        ticker: props.asset.ticker,
-        asset_type: props.asset.asset_type,
-    }, { preserveState: true, preserveScroll: true });
+    router.post(
+        '/screening/favorite',
+        {
+            ticker: props.asset.ticker,
+            asset_type: props.asset.asset_type,
+        },
+        { preserveState: true, preserveScroll: true },
+    );
 }
 
 function formatNumber(value: unknown, decimals = 2): string {
@@ -277,70 +462,181 @@ function formatNumber(value: unknown, decimals = 2): string {
         <div class="p-6 lg:p-8">
             <!-- Back + Actions -->
             <div class="mb-6 flex items-center justify-between">
-                <a href="/screening" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+                <a
+                    href="/screening"
+                    class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                >
                     <ArrowLeft class="h-4 w-4" />
                     Voltar ao Screening
                 </a>
                 <div class="flex items-center gap-2">
-                    <Button variant="outline" size="sm" @click="router.visit(`/screening/${asset.ticker}/valuation`)">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        @click="
+                            router.visit(`/screening/${asset.ticker}/valuation`)
+                        "
+                    >
                         <BarChart3 class="h-4 w-4" />
                         Valuation
                     </Button>
-                    <Button variant="outline" size="icon" :class="{ 'text-accent': isFavorite }" @click="toggleFavorite">
-                        <Heart class="h-4 w-4" :fill="isFavorite ? 'currentColor' : 'none'" />
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        :class="{ 'text-accent': isFavorite }"
+                        @click="toggleFavorite"
+                    >
+                        <Heart
+                            class="h-4 w-4"
+                            :fill="isFavorite ? 'currentColor' : 'none'"
+                        />
                     </Button>
                 </div>
             </div>
 
             <!-- Asset Header -->
             <div class="mb-6 rounded-xl border border-border bg-card p-6">
-                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div
+                    class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+                >
                     <div class="flex items-center gap-4">
-                        <img :src="asset.logo_url || '/images/default-logo.svg'" :alt="asset.ticker" class="h-14 w-14 rounded-xl border border-border object-contain" @error="($event.target as HTMLImageElement).src = '/images/default-logo.svg'" />
+                        <img
+                            :src="asset.logo_url || '/images/default-logo.svg'"
+                            :alt="asset.ticker"
+                            class="h-14 w-14 rounded-xl border border-border object-contain"
+                            @error="
+                                ($event.target as HTMLImageElement).src =
+                                    '/images/default-logo.svg'
+                            "
+                        />
                         <div>
-                            <h1 class="text-2xl font-bold tracking-tight">{{ asset.name || asset.ticker }}</h1>
+                            <h1 class="text-2xl font-bold tracking-tight">
+                                {{ asset.name || asset.ticker }}
+                            </h1>
                             <div class="mt-1 flex flex-wrap items-center gap-2">
-                                <span class="rounded-md bg-primary/10 px-2.5 py-0.5 font-mono text-sm font-bold text-primary">{{ asset.ticker }}</span>
-                                <span v-if="asset.sector" class="rounded-full bg-investment/10 px-2.5 py-0.5 text-xs font-medium text-investment">{{ asset.sector }}</span>
-                                <span v-if="asset.asset_type === 'fii'" class="rounded-full bg-investment/10 px-2.5 py-0.5 text-xs font-medium text-investment">FII</span>
-                                <span v-else-if="asset.asset_type === 'bdr'" class="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent">BDR</span>
-                                <span v-else-if="asset.asset_type === 'etf'" class="rounded-full bg-chart-3/10 px-2.5 py-0.5 text-xs font-medium text-chart-3">ETF</span>
-                                <span v-else class="rounded-full bg-revenue/10 px-2.5 py-0.5 text-xs font-medium text-revenue">Ação</span>
+                                <span
+                                    class="rounded-md bg-primary/10 px-2.5 py-0.5 font-mono text-sm font-bold text-primary"
+                                    >{{ asset.ticker }}</span
+                                >
+                                <span
+                                    v-if="asset.sector"
+                                    class="rounded-full bg-investment/10 px-2.5 py-0.5 text-xs font-medium text-investment"
+                                    >{{ asset.sector }}</span
+                                >
+                                <span
+                                    v-if="asset.asset_type === 'fii'"
+                                    class="rounded-full bg-investment/10 px-2.5 py-0.5 text-xs font-medium text-investment"
+                                    >FII</span
+                                >
+                                <span
+                                    v-else-if="asset.asset_type === 'bdr'"
+                                    class="rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent"
+                                    >BDR</span
+                                >
+                                <span
+                                    v-else-if="asset.asset_type === 'etf'"
+                                    class="rounded-full bg-chart-3/10 px-2.5 py-0.5 text-xs font-medium text-chart-3"
+                                    >ETF</span
+                                >
+                                <span
+                                    v-else
+                                    class="rounded-full bg-revenue/10 px-2.5 py-0.5 text-xs font-medium text-revenue"
+                                    >Ação</span
+                                >
                             </div>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-3xl font-bold tracking-tight">{{ formatCurrency(asset.current_price) }}</p>
-                        <p class="text-sm text-muted-foreground">último fechamento</p>
+                        <p class="text-3xl font-bold tracking-tight">
+                            {{ formatCurrency(asset.current_price) }}
+                        </p>
+                        <p class="text-sm text-muted-foreground">
+                            último fechamento
+                        </p>
                     </div>
                 </div>
             </div>
 
             <!-- Quick Stats -->
             <div class="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
-                <div class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60">
-                    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">DY</p>
-                    <p class="mt-0.5 text-lg font-bold text-revenue">{{ formatPercent(asset.dividend_yield) }}</p>
+                <div
+                    class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60"
+                >
+                    <p
+                        class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
+                        DY
+                    </p>
+                    <p class="mt-0.5 text-lg font-bold text-revenue">
+                        {{ formatPercent(asset.dividend_yield) }}
+                    </p>
                 </div>
-                <div class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60">
-                    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">P/L</p>
-                    <p class="mt-0.5 text-lg font-bold">{{ formatRatio(asset.price_to_earnings) }}</p>
+                <div
+                    class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60"
+                >
+                    <p
+                        class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
+                        P/L
+                    </p>
+                    <p class="mt-0.5 text-lg font-bold">
+                        {{ formatRatio(asset.price_to_earnings) }}
+                    </p>
                 </div>
-                <div class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60">
-                    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">P/VP</p>
-                    <p class="mt-0.5 text-lg font-bold">{{ formatRatio(asset.price_to_book) }}</p>
+                <div
+                    class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60"
+                >
+                    <p
+                        class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
+                        P/VP
+                    </p>
+                    <p class="mt-0.5 text-lg font-bold">
+                        {{ formatRatio(asset.price_to_book) }}
+                    </p>
                 </div>
-                <div class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60">
-                    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">ROE</p>
-                    <p class="mt-0.5 text-lg font-bold text-revenue">{{ formatPercent(asset.roe) }}</p>
+                <div
+                    class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60"
+                >
+                    <p
+                        class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
+                        ROE
+                    </p>
+                    <p class="mt-0.5 text-lg font-bold text-revenue">
+                        {{ formatPercent(asset.roe) }}
+                    </p>
                 </div>
-                <div class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60">
-                    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Margem</p>
-                    <p class="mt-0.5 text-lg font-bold text-revenue">{{ formatPercent(asset.profit_margin) }}</p>
+                <div
+                    class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60"
+                >
+                    <p
+                        class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
+                        Margem
+                    </p>
+                    <p class="mt-0.5 text-lg font-bold text-revenue">
+                        {{ formatPercent(asset.profit_margin) }}
+                    </p>
                 </div>
-                <div class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60">
-                    <p class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase">Dív./EBITDA</p>
-                    <p class="mt-0.5 text-lg font-bold" :class="(asset.net_debt_to_ebitda ?? 999) < 2 ? 'text-revenue' : 'text-destructive'">{{ formatRatio(asset.net_debt_to_ebitda) }}</p>
+                <div
+                    class="rounded-xl border border-border bg-card p-3 text-center transition-all hover:border-border/60"
+                >
+                    <p
+                        class="text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
+                        Dív./EBITDA
+                    </p>
+                    <p
+                        class="mt-0.5 text-lg font-bold"
+                        :class="
+                            (asset.net_debt_to_ebitda ?? 999) < 2
+                                ? 'text-revenue'
+                                : 'text-destructive'
+                        "
+                    >
+                        {{ formatRatio(asset.net_debt_to_ebitda) }}
+                    </p>
                 </div>
             </div>
 
@@ -362,27 +658,64 @@ function formatNumber(value: unknown, decimals = 2): string {
 
             <!-- Indicators by Category -->
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div v-for="section in sectors" :key="section.key" class="rounded-xl border border-border bg-card p-5">
-                    <h3 class="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase">{{ section.key }}</h3>
+                <div
+                    v-for="section in sectors"
+                    :key="section.key"
+                    class="rounded-xl border border-border bg-card p-5"
+                >
+                    <h3
+                        class="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
+                        {{ section.key }}
+                    </h3>
                     <div class="space-y-2">
-                        <div v-for="item in section.items" :key="item.label" class="flex items-center justify-between border-b border-border pb-1.5 text-sm last:border-0 last:pb-0">
-                            <span class="text-muted-foreground">{{ item.label }}</span>
-                            <span class="font-semibold" :class="{ 'text-revenue': item.highlight }">{{ item.value }}</span>
+                        <div
+                            v-for="item in section.items"
+                            :key="item.label"
+                            class="flex items-center justify-between border-b border-border pb-1.5 text-sm last:border-0 last:pb-0"
+                        >
+                            <span class="text-muted-foreground">{{
+                                item.label
+                            }}</span>
+                            <span
+                                class="font-semibold"
+                                :class="{ 'text-revenue': item.highlight }"
+                                >{{ item.value }}</span
+                            >
                         </div>
                     </div>
                 </div>
             </div>
 
-             <!-- Company Description -->
-            <div v-if="asset.long_business_summary" class="mt-5 mb-6 rounded-xl border border-border bg-card p-5">
-                <h3 class="mb-3 text-sm font-semibold">Sobre a <span class="text-primary">Empresa</span></h3>
-                <p class="text-sm leading-relaxed text-muted-foreground">{{ asset.long_business_summary }}</p>
-                <div v-if="asset.website || asset.full_time_employees" class="mt-4 flex flex-wrap gap-6 text-sm text-muted-foreground">
+            <!-- Company Description -->
+            <div
+                v-if="asset.long_business_summary"
+                class="mt-5 mb-6 rounded-xl border border-border bg-card p-5"
+            >
+                <h3 class="mb-3 text-sm font-semibold">
+                    Sobre a <span class="text-primary">Empresa</span>
+                </h3>
+                <p class="text-sm leading-relaxed text-muted-foreground">
+                    {{ asset.long_business_summary }}
+                </p>
+                <div
+                    v-if="asset.website || asset.full_time_employees"
+                    class="mt-4 flex flex-wrap gap-6 text-sm text-muted-foreground"
+                >
                     <span v-if="asset.website">
-                        🌐 <a :href="asset.website" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline">{{ asset.website }}</a>
+                        🌐
+                        <a
+                            :href="asset.website"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="text-primary hover:underline"
+                            >{{ asset.website }}</a
+                        >
                     </span>
                     <span v-if="asset.full_time_employees">
-                        👥 {{ asset.full_time_employees.toLocaleString('pt-BR') }} funcionários
+                        👥
+                        {{ asset.full_time_employees.toLocaleString('pt-BR') }}
+                        funcionários
                     </span>
                 </div>
             </div>

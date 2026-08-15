@@ -18,10 +18,17 @@ class InvoiceController extends Controller
             abort(403);
         }
 
-        $period   = $creditCard->invoicePeriod($month, $year);
+        if ($month < 1 || $month > 12 || $year < 2000 || $year > 2100) {
+            abort(404);
+        }
+
+        $period = $creditCard->invoicePeriod($month, $year);
         $releases = $creditCard->invoiceReleases($month, $year);
 
-        $total = $releases->where('type', 'expense')->sum('amount');
+        $total = (float) max(0,
+            $releases->where('type', 'expense')->sum('amount')
+            - $releases->where('type', 'revenue')->sum('amount')
+        );
 
         // Lista de meses disponíveis: 12 meses anteriores + atual + 2 futuros
         $months = collect();
@@ -30,7 +37,7 @@ class InvoiceController extends Controller
             $m = $ref->copy()->addMonths($i);
             $months->push([
                 'month' => $m->month,
-                'year'  => $m->year,
+                'year' => $m->year,
                 'label' => ucfirst($m->translatedFormat('M/Y')),
             ]);
         }
@@ -38,23 +45,23 @@ class InvoiceController extends Controller
         $currentMY = $creditCard->currentInvoiceMonthYear();
 
         return Inertia::render('credit-cards/Invoices', [
-            'card'           => [
-                'id'          => $creditCard->id,
-                'name'        => $creditCard->name,
-                'color'       => $creditCard->color,
-                'limit'       => $creditCard->limit,
+            'card' => [
+                'id' => $creditCard->id,
+                'name' => $creditCard->name,
+                'color' => $creditCard->color,
+                'limit' => $creditCard->limit,
                 'closing_day' => $creditCard->closing_day,
-                'due_day'     => $creditCard->due_day,
-                'bank'        => $creditCard->bank ? ['name' => $creditCard->bank->name] : null,
+                'due_day' => $creditCard->due_day,
+                'bank' => $creditCard->bank ? ['name' => $creditCard->bank->name] : null,
             ],
-            'period'         => $period,
-            'releases'       => $releases,
-            'total'          => $total,
-            'month'          => $month,
-            'year'           => $year,
-            'months'         => $months,
-            'current_month'  => $currentMY['month'],
-            'current_year'   => $currentMY['year'],
+            'period' => $period,
+            'releases' => $releases,
+            'total' => $total,
+            'month' => $month,
+            'year' => $year,
+            'months' => $months,
+            'current_month' => $currentMY['month'],
+            'current_year' => $currentMY['year'],
         ]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\InvestimentValuationRequest;
 use App\Models\Asset;
 use App\Models\InvestimentValuation;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DcfController extends Controller
@@ -17,6 +18,7 @@ class DcfController extends Controller
         $valuation = $valuationId
             ? InvestimentValuation::query()
                 ->with('asset')
+                ->where('user_id', Auth::id())
                 ->where('method', InvestimentValuation::METHOD_DCF)
                 ->findOrFail((int) $valuationId)
             : null;
@@ -67,7 +69,8 @@ class DcfController extends Controller
         $validated = $request->validated();
         $assetId = (int) $validated['asset_id'];
 
-        $existing = InvestimentValuation::where('asset_id', $assetId)
+        $existing = InvestimentValuation::where('user_id', Auth::id())
+            ->where('asset_id', $assetId)
             ->where('method', InvestimentValuation::METHOD_DCF)
             ->first();
 
@@ -78,6 +81,7 @@ class DcfController extends Controller
             ]);
         } else {
             InvestimentValuation::create([
+                'user_id' => Auth::id(),
                 'asset_id' => $assetId,
                 'method' => InvestimentValuation::METHOD_DCF,
                 'assumptions' => $validated,
@@ -85,13 +89,14 @@ class DcfController extends Controller
             ]);
         }
 
-        return redirect()->route('valuations.index')
+        return redirect()->back()
             ->with('success', 'Valuation DCF salva com sucesso');
     }
 
     public function update(InvestimentValuationRequest $request, InvestimentValuation $valuation)
     {
         abort_unless($valuation->method === InvestimentValuation::METHOD_DCF, 404);
+        abort_unless($valuation->user_id === Auth::id(), 403);
 
         $validated = $request->validated();
 
@@ -100,7 +105,7 @@ class DcfController extends Controller
             'calculated_at' => now(),
         ]);
 
-        return redirect()->route('valuations.show', $valuation)
+        return redirect()->back()
             ->with('success', 'Valuation DCF atualizada com sucesso');
     }
 
@@ -108,6 +113,7 @@ class DcfController extends Controller
     {
         if ($valuation) {
             $a = $valuation->assumptions;
+
             return [
                 'current_fcf' => (string) ($a['current_fcf'] ?? $asset->free_cash_flow ?? ''),
                 'roe' => (string) ($a['roe'] ?? $asset->roe ?? '15'),

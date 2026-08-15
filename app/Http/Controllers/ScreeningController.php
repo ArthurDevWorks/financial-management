@@ -30,7 +30,8 @@ class ScreeningController extends Controller
         }
 
         if ($request->filled('pe_max')) {
-            $query->where('price_to_earnings', '<=', (float) $request->pe_max);
+            $query->where('price_to_earnings', '>=', 0)
+                ->where('price_to_earnings', '<=', (float) $request->pe_max);
         }
 
         if ($request->filled('roe_min')) {
@@ -61,7 +62,7 @@ class ScreeningController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('ticker', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -150,7 +151,7 @@ class ScreeningController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('ticker', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%");
             });
         }
 
@@ -202,6 +203,7 @@ class ScreeningController extends Controller
         $asset = Asset::where('ticker', strtoupper($ticker))->firstOrFail();
 
         $valuations = InvestimentValuation::query()
+            ->where('user_id', Auth::id())
             ->where('asset_id', $asset->id)
             ->get();
 
@@ -233,6 +235,7 @@ class ScreeningController extends Controller
 
         if ($favorite) {
             $favorite->delete();
+
             return back()->with('success', 'Removido dos favoritos.');
         }
 

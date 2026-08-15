@@ -72,6 +72,7 @@ it('bloqueia edição atualização e exclusão de lançamento de outro usuário
     $otherUser = User::factory()->create();
     $bank = Bank::factory()->create();
     $account = Account::factory()->for($otherUser)->for($bank)->create();
+    $ownAccount = Account::factory()->for($user)->for($bank)->create();
     $category = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
     $release = Release::factory()->for($otherUser)->for($account)->for($category, 'category')->expense()->create();
 
@@ -79,7 +80,7 @@ it('bloqueia edição atualização e exclusão de lançamento de outro usuário
 
     $this->get(route('releases.edit', $release))->assertForbidden();
     $this->put(route('releases.update', $release), [
-        'account_id' => $account->id,
+        'account_id' => $ownAccount->id,
         'category_id' => $category->id,
         'title' => 'Tentativa',
         'description' => null,

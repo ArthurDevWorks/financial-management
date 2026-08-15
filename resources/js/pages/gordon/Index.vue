@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import MarginGauge from '@/components/MarginGauge.vue';
+import AssetDataCard from '@/components/AssetDataCard.vue';
+import InputError from '@/components/InputError.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SectionCard from '@/components/SectionCard.vue';
-import AssetDataCard from '@/components/AssetDataCard.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import InputError from '@/components/InputError.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Calculator, TrendingUp } from 'lucide-vue-next';
-import { computed, ref, watch } from 'vue';
+import { ArrowLeft, Calculator } from 'lucide-vue-next';
+import { computed } from 'vue';
 
 interface Asset {
     id: number;
@@ -81,12 +80,17 @@ const form = useForm<{
     discount_rate: (d.discount_rate as number | string) ?? 13,
     risk_premium: (d.risk_premium as number | string) ?? 4,
     growth_perpetuity: (d.growth_perpetuity as number | string) ?? 3.0,
-    current_price: (d.current_price as number | string) ?? props.asset?.current_price ?? '',
+    current_price:
+        (d.current_price as number | string) ??
+        props.asset?.current_price ??
+        '',
     projection_years: (d.projection_years as number | string) ?? 5,
     growth_rates: (d.growth_rates as number[]) ?? [8.0, 7.0, 6.0, 5.0, 4.0],
 });
 
-const effectiveKe = computed(() => Number(form.discount_rate) + Number(form.risk_premium));
+const effectiveKe = computed(
+    () => Number(form.discount_rate) + Number(form.risk_premium),
+);
 
 const fairPrice = computed(() => {
     const dps = Number(form.dps);
@@ -132,12 +136,10 @@ const submit = () => {
     if (isEditing.value) {
         form.put(`/gordon/${props.valuation!.id}`, {
             ...payload,
-            onSuccess: () => router.visit(`/valuations/${props.valuation!.id}`),
         });
     } else {
         form.post('/gordon', {
             ...payload,
-            onSuccess: () => { /* redirect handled by server */ },
         });
     }
 };
@@ -145,7 +147,8 @@ const submit = () => {
 function formatCurrency(value: number | null | undefined) {
     if (value === null || value === undefined) return '—';
     return new Intl.NumberFormat('pt-BR', {
-        style: 'currency', currency: 'BRL',
+        style: 'currency',
+        currency: 'BRL',
     }).format(value);
 }
 
@@ -153,8 +156,6 @@ function formatPercent(value: number | null | undefined) {
     if (value === null || value === undefined) return '—';
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 }
-
-
 </script>
 
 <template>
@@ -172,7 +173,9 @@ function formatPercent(value: number | null | undefined) {
             </div>
 
             <PageHeader
-                :title="isEditing ? 'Editar Gordon' : 'Modelo de Gordon Ajustado'"
+                :title="
+                    isEditing ? 'Editar Gordon' : 'Modelo de Gordon Ajustado'
+                "
                 description="Valuation de ativos pelo modelo de desconto de dividendos"
             />
 
@@ -181,13 +184,13 @@ function formatPercent(value: number | null | undefined) {
 
             <div class="mt-6 grid gap-6 xl:grid-cols-3">
                 <!-- Left: Premissas -->
-                <div class="xl:col-span-1 space-y-6">
+                <div class="space-y-6 xl:col-span-1">
                     <SectionCard title="Ativo">
                         <div>
                             <Label>Selecione o Ativo</Label>
                             <select
                                 v-model="form.asset_id"
-                                class="mt-1 h-[42px] w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground outline-none transition-all focus:border-ring focus:ring-[3px] focus:ring-primary/20 [color-scheme:dark]"
+                                class="mt-1 h-[42px] w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
                                 :disabled="isEditing"
                             >
                                 <option value="">Selecione...</option>
@@ -207,29 +210,71 @@ function formatPercent(value: number | null | undefined) {
                         <div class="space-y-4">
                             <div>
                                 <Label>Dividendo Anual Esperado (R$)</Label>
-                                <Input v-model="form.dps" type="number" step="0.01" min="0" class="mt-1" />
+                                <Input
+                                    v-model="form.dps"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="mt-1"
+                                />
                                 <InputError :message="form.errors.dps" />
                             </div>
                             <div>
-                                <Label>Taxa de Desconto — Tesouro IPCA (%)</Label>
-                                <Input v-model="form.discount_rate" type="number" step="0.1" min="0" class="mt-1" />
-                                <InputError :message="form.errors.discount_rate" />
+                                <Label
+                                    >Taxa de Desconto — Tesouro IPCA (%)</Label
+                                >
+                                <Input
+                                    v-model="form.discount_rate"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.discount_rate"
+                                />
                             </div>
                             <div>
                                 <Label>Prêmio de Risco (%)</Label>
-                                <Input v-model="form.risk_premium" type="number" step="0.1" min="0" class="mt-1" />
-                                <p class="mt-1 text-xs text-muted-foreground">Exigência adicional sobre o Tesouro IPCA</p>
-                                <InputError :message="form.errors.risk_premium" />
+                                <Input
+                                    v-model="form.risk_premium"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <p class="mt-1 text-xs text-muted-foreground">
+                                    Exigência adicional sobre o Tesouro IPCA
+                                </p>
+                                <InputError
+                                    :message="form.errors.risk_premium"
+                                />
                             </div>
                             <div>
                                 <Label>Crescimento Perpetuidade (%)</Label>
-                                <Input v-model="form.growth_perpetuity" type="number" step="0.1" min="0" class="mt-1" />
-                                <InputError :message="form.errors.growth_perpetuity" />
+                                <Input
+                                    v-model="form.growth_perpetuity"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.growth_perpetuity"
+                                />
                             </div>
                             <div>
                                 <Label>Preço Atual (R$)</Label>
-                                <Input v-model="form.current_price" type="number" step="0.01" min="0" class="mt-1" />
-                                <InputError :message="form.errors.current_price" />
+                                <Input
+                                    v-model="form.current_price"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.current_price"
+                                />
                             </div>
                         </div>
                     </SectionCard>
@@ -250,7 +295,9 @@ function formatPercent(value: number | null | undefined) {
                     </SectionCard> -->
 
                     <div class="flex justify-end gap-3">
-                        <Button type="button" variant="outline" @click="goBack">Cancelar</Button>
+                        <Button type="button" variant="outline" @click="goBack"
+                            >Cancelar</Button
+                        >
                         <Button @click="submit" :disabled="form.processing">
                             <Calculator class="h-4 w-4" />
                             {{ isEditing ? 'Atualizar' : 'Calcular' }}
@@ -259,27 +306,65 @@ function formatPercent(value: number | null | undefined) {
                 </div>
 
                 <!-- Right: Results -->
-                <div class="xl:col-span-2 space-y-6">
+                <div class="space-y-6 xl:col-span-2">
                     <SectionCard title="Resultados do Gordon">
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Teto</p>
-                                <p class="mt-1 text-2xl font-bold text-primary">{{ formatCurrency(fairPrice) }}</p>
+                            <div
+                                class="overflow-hidden rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Preço Teto
+                                </p>
+                                <p class="mt-1 text-2xl font-bold text-primary">
+                                    {{ formatCurrency(fairPrice) }}
+                                </p>
                                 <div v-if="upside !== null" class="mt-1">
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold" :class="upside >= 0 ? 'text-revenue' : 'text-destructive'">
-                                        {{ upside >= 0 ? '+' : '' }}{{ upside.toFixed(1) }}% vs. preço atual
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold"
+                                        :class="
+                                            upside >= 0
+                                                ? 'text-revenue'
+                                                : 'text-destructive'
+                                        "
+                                    >
+                                        {{ upside >= 0 ? '+' : ''
+                                        }}{{ upside.toFixed(1) }}% vs. preço
+                                        atual
                                     </span>
                                 </div>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Margem</p>
-                                <p class="mt-1 text-xl font-bold" :class="(marginOfSafety ?? 0) >= 0 ? 'text-revenue' : 'text-destructive'">
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Margem
+                                </p>
+                                <p
+                                    class="mt-1 text-xl font-bold"
+                                    :class="
+                                        (marginOfSafety ?? 0) >= 0
+                                            ? 'text-revenue'
+                                            : 'text-destructive'
+                                    "
+                                >
                                     {{ formatPercent(marginOfSafety) }}
                                 </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Ke Efetivo (IPCA + Prêmio)</p>
-                                <p class="mt-1 text-xl font-bold">{{ formatPercent(effectiveKe) }}</p>
+                            <div
+                                class="overflow-hidden rounded-lg border border-border bg-surface p-3 text-center sm:col-span-2"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Ke Efetivo (IPCA + Prêmio)
+                                </p>
+                                <p class="mt-1 text-xl font-bold">
+                                    {{ formatPercent(effectiveKe) }}
+                                </p>
                             </div>
                         </div>
                     </SectionCard>

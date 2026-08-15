@@ -17,19 +17,22 @@ class SyncAssets extends Command
 
     public function handle(AssetSyncService $syncService): int
     {
-        $ticker = $this->option('ticker');
-        $type = $this->option('type');
-        $force = $this->option('force');
-        $hours = (int) $this->option('hours');
+        $ticker     = $this->option('ticker');
+        $type       = $this->option('type');
+        $force      = $this->option('force');
+        $hours      = (int) $this->option('hours');
 
         $this->info('Iniciando sincronização de ativos...');
         $this->newLine();
 
         $start = now();
 
-        if ($ticker) {
+        if ($ticker)
+        {
             $success = $syncService->syncSingle($ticker, $force);
-            if ($success) {
+
+            if ($success)
+            {
                 $this->info("Ativo {$ticker} sincronizado com sucesso.");
             } else {
                 $this->warn("Não foi possível sincronizar {$ticker}.");

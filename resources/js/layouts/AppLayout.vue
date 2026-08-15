@@ -2,12 +2,10 @@
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarMobile from '@/components/AppSidebarMobile.vue';
 import { Button } from '@/components/ui/button';
-import { useFlashMessages } from '@/composables/useToast';
 import type { BreadcrumbItemType } from '@/types';
 import { router } from '@inertiajs/vue3';
 import { Menu } from 'lucide-vue-next';
 import { ref } from 'vue';
-import { Toaster } from 'vue-sonner';
 
 interface Props {
     breadcrumbs?: BreadcrumbItemType[];
@@ -18,8 +16,6 @@ withDefaults(defineProps<Props>(), {
     breadcrumbs: () => [],
     wide: false,
 });
-
-useFlashMessages();
 
 const mobileSidebarOpen = ref(false);
 
@@ -70,14 +66,5 @@ router.on('finish', () => {
                 <slot />
             </div>
         </main>
-
-        <Toaster
-            richColors
-            closeButton
-            position="top-right"
-            :toast-options="{
-                class: '!font-sans',
-            }"
-        />
     </div>
 </template>

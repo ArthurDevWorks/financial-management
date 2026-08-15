@@ -66,7 +66,7 @@ class RecurrencePlan extends Model
 
     public function generateNextRelease(): ?Release
     {
-        if (!$this->active) {
+        if (! $this->active) {
             return null;
         }
 
@@ -76,6 +76,7 @@ class RecurrencePlan extends Model
 
         if ($this->next_generation->gt($this->end_date)) {
             $this->update(['active' => false]);
+
             return null;
         }
 
@@ -94,7 +95,7 @@ class RecurrencePlan extends Model
             'recurrence_id' => $this->id,
         ]);
 
-        $nextDate = $this->frequency->addToDate(clone $this->next_generation);
+        $nextDate = $this->nextDateAfter(clone $this->next_generation);
 
         $updates = ['next_generation' => $nextDate->format('Y-m-d')];
 
@@ -105,5 +106,43 @@ class RecurrencePlan extends Model
         $this->update($updates);
 
         return $release;
+    }
+
+    /**
+     * Calcula a próxima data de geração ancorada na data base (start_date),
+     * evitando o drift de fim de mês (ex.: 31/01 -> 28/02 -> 28/03).
+     */
+    private function nextDateAfter(\Carbon\Carbon $current): \Carbon\Carbon
+    {
+        if (
+            $this->frequency === RecurrenceFrequency::WEEKLY
+            || $this->frequency === RecurrenceFrequency::BIWEEKLY
+        ) {
+            return $this->frequency->addToDate(clone $current);
+        }
+
+        $start = $this->start_date?->copy() ?? $current;
+
+        $months = ($current->year - $start->year) * 12 + ($current->month - $start->month);
+
+        $step = match ($this->frequency) {
+            RecurrenceFrequency::QUARTERLY => 3,
+            RecurrenceFrequency::YEARLY => 12,
+            default => 1,
+        };
+
+        $alignedMonths = intdiv($months, $step) * $step;
+        $anchorDay = $start->day;
+
+        $next = $start->copy()->startOfMonth()->addMonthsNoOverflow($alignedMonths + $step);
+        $next->setDay(min($anchorDay, $next->daysInMonth));
+
+        // Garante que o próximo seja estritamente maior que o atual
+        if (! $next->gt($current)) {
+            $next = $start->copy()->startOfMonth()->addMonthsNoOverflow($alignedMonths + $step * 2);
+            $next->setDay(min($anchorDay, $next->daysInMonth));
+        }
+
+        return $next;
     }
 }

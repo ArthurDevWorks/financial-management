@@ -17,6 +17,7 @@ class InvestimentValuation extends Model
     public const METHOD_GORDON = 'gordon';
 
     protected $fillable = [
+        'user_id',
         'asset_id',
         'method',
         'assumptions',
@@ -31,6 +32,11 @@ class InvestimentValuation extends Model
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function methodLabel(): string

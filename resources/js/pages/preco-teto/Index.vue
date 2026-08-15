@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CurrencyInput from '@/components/CurrencyInput.vue';
-import NumberInput from '@/components/NumberInput.vue';
 import InputError from '@/components/InputError.vue';
+import NumberInput from '@/components/NumberInput.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SummaryCard from '@/components/SummaryCard.vue';
 import { Button } from '@/components/ui/button';
@@ -64,7 +64,8 @@ const toFormValue = (value: string | number | null | undefined) => {
     return value === null || value === undefined ? '' : value.toString();
 };
 
-const assumptions = props.valuation?.assumptions ?? props.defaultAssumptions ?? {};
+const assumptions =
+    props.valuation?.assumptions ?? props.defaultAssumptions ?? {};
 
 const form = useForm({
     asset_id: props.asset?.id?.toString() ?? '',
@@ -91,11 +92,7 @@ watch(selectedId, (id) => {
 });
 
 watch(
-    () =>
-        [
-            props.asset?.id,
-            props.asset?.current_price,
-        ] as const,
+    () => [props.asset?.id, props.asset?.current_price] as const,
     ([id, currentPrice]) => {
         form.asset_id = id?.toString() ?? '';
 
@@ -326,7 +323,9 @@ const submit = () => {
                             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label>Dividend Yield Desejado (%)</Label>
+                                        <Label
+                                            >Dividend Yield Desejado (%)</Label
+                                        >
                                     </div>
                                     <Input
                                         v-model="form.desired_yield"
@@ -465,7 +464,11 @@ const submit = () => {
                 <div class="space-y-4">
                     <SummaryCard
                         label="Preço Teto"
-                        :value="podeCalcularPrecoTeto ? formatCurrency(precoTeto) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto
+                                ? formatCurrency(precoTeto)
+                                : '—'
+                        "
                         variant="investment"
                         :icon="Calculator"
                     />
@@ -473,7 +476,9 @@ const submit = () => {
                     <SummaryCard
                         label="Margem de Segurança"
                         :value="
-                            podeCalcularPrecoTeto && temPrecoAtual ? formatPercent(margemSeguranca) : '—'
+                            podeCalcularPrecoTeto && temPrecoAtual
+                                ? formatPercent(margemSeguranca)
+                                : '—'
                         "
                         :variant="margemSeguranca >= 0 ? 'revenue' : 'expense'"
                         :icon="ShieldCheck"
@@ -486,21 +491,33 @@ const submit = () => {
 
                     <SummaryCard
                         label="LPA Projetado"
-                        :value="podeCalcularPrecoTeto ? formatCurrency(lpaProjetado) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto
+                                ? formatCurrency(lpaProjetado)
+                                : '—'
+                        "
                         variant="default"
                         :icon="Banknote"
                     />
 
                     <SummaryCard
                         label="DPA Projetado"
-                        :value="podeCalcularPrecoTeto ? formatCurrency(dpaProjetado) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto
+                                ? formatCurrency(dpaProjetado)
+                                : '—'
+                        "
                         variant="default"
                         :icon="PiggyBank"
                     />
 
                     <SummaryCard
                         label="Yield Projetado"
-                        :value="podeCalcularPrecoTeto && temPrecoAtual ? formatPercent(yieldProjetado) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto && temPrecoAtual
+                                ? formatPercent(yieldProjetado)
+                                : '—'
+                        "
                         variant="profit"
                         :icon="TrendingUp"
                         :trend="

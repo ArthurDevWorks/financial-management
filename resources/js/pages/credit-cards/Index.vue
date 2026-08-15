@@ -27,7 +27,10 @@ interface Card {
 defineProps<{ cards: Card[] }>();
 
 const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
 
 const monthName = (month: number, year: number) => {
     const date = new Date(year, month - 1, 1);
@@ -94,7 +97,8 @@ const formatDate = (dateStr: string) => {
                     Nenhum cartão cadastrado
                 </p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    Cadastre seu primeiro cartão de crédito para controlar suas faturas
+                    Cadastre seu primeiro cartão de crédito para controlar suas
+                    faturas
                 </p>
                 <Button class="mt-6" @click="createCard">
                     <Plus class="h-4 w-4" />
@@ -107,7 +111,7 @@ const formatDate = (dateStr: string) => {
                 <div
                     v-for="card in cards"
                     :key="card.id"
-                    class="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:shadow-lg hover:border-border/80"
+                    class="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-all hover:border-border/80 hover:shadow-lg"
                 >
                     <!-- Color stripe -->
                     <div
@@ -121,15 +125,22 @@ const formatDate = (dateStr: string) => {
                             <div class="flex items-center gap-3">
                                 <div
                                     class="flex h-10 w-10 items-center justify-center rounded-xl"
-                                    :style="{ backgroundColor: card.color + '22', color: card.color }"
+                                    :style="{
+                                        backgroundColor: card.color + '22',
+                                        color: card.color,
+                                    }"
                                 >
                                     <CreditCard class="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p class="font-semibold text-foreground leading-tight">
+                                    <p
+                                        class="leading-tight font-semibold text-foreground"
+                                    >
                                         {{ card.name }}
                                     </p>
-                                    <p class="text-xs text-muted-foreground mt-0.5">
+                                    <p
+                                        class="mt-0.5 text-xs text-muted-foreground"
+                                    >
                                         {{ card.bank?.name ?? 'Sem banco' }}
                                     </p>
                                 </div>
@@ -143,8 +154,16 @@ const formatDate = (dateStr: string) => {
 
                         <!-- Fatura atual -->
                         <div class="mt-5 rounded-xl bg-surface p-4">
-                            <p class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                Fatura {{ monthName(card.current_invoice.month, card.current_invoice.year) }}
+                            <p
+                                class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
+                                Fatura
+                                {{
+                                    monthName(
+                                        card.current_invoice.month,
+                                        card.current_invoice.year,
+                                    )
+                                }}
                             </p>
                             <p class="mt-1 text-2xl font-bold text-foreground">
                                 {{ formatCurrency(card.current_invoice.total) }}
@@ -152,33 +171,67 @@ const formatDate = (dateStr: string) => {
 
                             <!-- Progress bar -->
                             <div class="mt-3">
-                                <div class="mb-1 flex justify-between text-[11px] text-muted-foreground">
-                                    <span>{{ usagePercent(card.current_invoice.total, card.limit) }}% do limite</span>
-                                    <span>{{ formatCurrency(card.limit) }}</span>
+                                <div
+                                    class="mb-1 flex justify-between text-[11px] text-muted-foreground"
+                                >
+                                    <span
+                                        >{{
+                                            usagePercent(
+                                                card.current_invoice.total,
+                                                card.limit,
+                                            )
+                                        }}% do limite</span
+                                    >
+                                    <span>{{
+                                        formatCurrency(card.limit)
+                                    }}</span>
                                 </div>
-                                <div class="h-1.5 w-full overflow-hidden rounded-full bg-border">
+                                <div
+                                    class="h-1.5 w-full overflow-hidden rounded-full bg-border"
+                                >
                                     <div
                                         class="h-full rounded-full transition-all duration-500"
-                                        :class="usageColor(usagePercent(card.current_invoice.total, card.limit))"
+                                        :class="
+                                            usageColor(
+                                                usagePercent(
+                                                    card.current_invoice.total,
+                                                    card.limit,
+                                                ),
+                                            )
+                                        "
                                         :style="{
-                                            width: usagePercent(card.current_invoice.total, card.limit) + '%',
+                                            width:
+                                                usagePercent(
+                                                    card.current_invoice.total,
+                                                    card.limit,
+                                                ) + '%',
                                         }"
                                     />
                                 </div>
                             </div>
 
                             <!-- Datas -->
-                            <div class="mt-3 flex gap-4 text-[11px] text-muted-foreground">
+                            <div
+                                class="mt-3 flex gap-4 text-[11px] text-muted-foreground"
+                            >
                                 <span>
                                     Fechamento
                                     <strong class="text-foreground">
-                                        {{ formatDate(card.current_invoice.period.end) }}
+                                        {{
+                                            formatDate(
+                                                card.current_invoice.period.end,
+                                            )
+                                        }}
                                     </strong>
                                 </span>
                                 <span>
                                     Vencimento
                                     <strong class="text-foreground">
-                                        {{ formatDate(card.current_invoice.period.due) }}
+                                        {{
+                                            formatDate(
+                                                card.current_invoice.period.due,
+                                            )
+                                        }}
                                     </strong>
                                 </span>
                             </div>

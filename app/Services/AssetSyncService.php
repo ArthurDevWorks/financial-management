@@ -12,6 +12,7 @@ class AssetSyncService
         private readonly BrapiService $brapi,
         private readonly StatusInvestScraperService $statusInvest,
         private readonly Investidor10ScraperService $investidor10,
+        private readonly FundamentusScraperService $fundamentus,
     ) {}
 
     public function sync(
@@ -81,12 +82,32 @@ class AssetSyncService
                     $data = array_merge($data, $indicators);
                 }
             } else {
-                $indicators = $this->statusInvest->fetchStockIndicators($ticker);
-                if ($indicators === null) {
-                    $indicators = $this->investidor10->fetchStockIndicators($ticker);
+                // Coleta de todas as fontes disponíveis e mescla campo a campo
+                // para garantir máxima cobertura de indicadores
+                $sources = [];
+
+                $si = $this->statusInvest->fetchStockIndicators($ticker);
+                if ($si) {
+                    $sources[] = $si;
                 }
-                if ($indicators) {
-                    $data = array_merge($data, $indicators);
+
+                $fund = $this->fundamentus->fetchStockIndicators($ticker);
+                if ($fund) {
+                    $sources[] = $fund;
+                }
+
+                $inv10 = $this->investidor10->fetchStockIndicators($ticker);
+                if ($inv10) {
+                    $sources[] = $inv10;
+                }
+
+                // Mescla: cada fonte só preenche campos ainda ausentes
+                foreach ($sources as $source) {
+                    foreach ($source as $key => $value) {
+                        if ($value !== null && ($data[$key] ?? null) === null) {
+                            $data[$key] = $value;
+                        }
+                    }
                 }
             }
 
@@ -103,15 +124,32 @@ class AssetSyncService
                     'dividend_yield', 'price_to_earnings', 'price_to_book',
                     'ev_to_ebitda', 'roe', 'net_income', 'revenue',
                     'free_cash_flow', 'dividends_per_share', 'earnings_per_share',
-                    'book_value_per_share', 'total_shares',
+                    'book_value_per_share', 'total_shares', 'ebitda', 'net_debt', 'gross_debt',
                 ], fn ($key) => isset($quote[$key]) && $quote[$key] !== null);
 
                 foreach ($stockIndicators as $key) {
                     $data[$key] ??= $quote[$key];
                 }
 
-                if (empty($data['total_shares']) && !empty($data['market_cap']) && !empty($data['current_price'])) {
+                if (empty($data['ebitda']) && ! empty($data['enterprise_value']) && ! empty($data['ev_to_ebitda']) && $data['ev_to_ebitda'] > 0) {
+                    $data['ebitda'] = round($data['enterprise_value'] / $data['ev_to_ebitda'], 2);
+                }
+
+                if (empty($data['net_debt']) && ! empty($data['ebitda']) && isset($data['net_debt_to_ebitda']) && $data['net_debt_to_ebitda'] !== null) {
+                    $data['net_debt'] = round($data['ebitda'] * $data['net_debt_to_ebitda'], 2);
+                } elseif (empty($data['net_debt']) && ! empty($data['enterprise_value']) && ! empty($data['market_cap'])) {
+                    $data['net_debt'] = round($data['enterprise_value'] - $data['market_cap'], 2);
+                }
+
+                if (empty($data['total_shares']) && ! empty($data['market_cap']) && ! empty($data['current_price']) && $data['current_price'] > 0) {
                     $data['total_shares'] = (int) round($data['market_cap'] / $data['current_price']);
+                }
+
+                if (! empty($data['total_shares']) && ! empty($data['current_price']) && $data['current_price'] > 0) {
+                    $expectedCap = round($data['total_shares'] * $data['current_price'], 2);
+                    if (empty($data['market_cap']) || $data['market_cap'] < ($expectedCap * 0.2)) {
+                        $data['market_cap'] = $expectedCap;
+                    }
                 }
             }
 
@@ -123,11 +161,17 @@ class AssetSyncService
             $data['asset_type'] = $assetType;
             $data['fetched_at'] = now();
 
+            // Normalização de setor, nome e segmento
+            $data = $this->applyNormalizers($data, $ticker, $assetType);
+
+            $data = $this->sanitizeAssetData($data);
+
             Asset::updateOrCreate(['ticker' => $ticker], $data);
 
             return true;
         } catch (\Throwable $e) {
             Log::warning("Error syncing single asset {$ticker}: {$e->getMessage()}");
+
             return false;
         }
     }
@@ -152,7 +196,7 @@ class AssetSyncService
         foreach ($tickers as $i => $item) {
             $ticker = is_array($item) ? ($item['ticker'] ?? $item['code'] ?? null) : null;
 
-            if ($ticker === null || !$this->isStockOrFii($ticker, 'stock')) {
+            if ($ticker === null || ! $this->isStockOrFii($ticker, 'stock')) {
                 continue;
             }
 
@@ -200,7 +244,7 @@ class AssetSyncService
         foreach ($tickers as $i => $item) {
             $ticker = is_array($item) ? ($item['ticker'] ?? $item['code'] ?? null) : null;
 
-            if ($ticker === null || !$this->isStockOrFii($ticker, 'fii')) {
+            if ($ticker === null || ! $this->isStockOrFii($ticker, 'fii')) {
                 continue;
             }
 
@@ -278,6 +322,9 @@ class AssetSyncService
                     'profit_margin' => $quote['profit_margin'] ?? null,
                     'ebitda_margin' => $quote['ebitda_margin'] ?? null,
                     'gross_margin' => $quote['gross_margin'] ?? null,
+                    'ebitda' => $quote['ebitda'] ?? null,
+                    'net_debt' => $quote['net_debt'] ?? null,
+                    'gross_debt' => $quote['gross_debt'] ?? null,
                     'debt_to_ebitda' => $quote['debt_to_ebitda'] ?? null,
                     'net_debt_to_ebitda' => $quote['net_debt_to_ebitda'] ?? null,
                     'current_liquidity' => $quote['current_liquidity'] ?? null,
@@ -295,6 +342,11 @@ class AssetSyncService
                     'website' => $quote['website'] ?? null,
                     'full_time_employees' => $quote['full_time_employees'] ?? null,
                 ], fn ($v) => $v !== null);
+
+                // Normalização de setor, nome e segmento
+                $fieldsToUpdate = $this->applyNormalizers($fieldsToUpdate, $ticker, $existing->asset_type);
+
+                $fieldsToUpdate = $this->sanitizeAssetData($fieldsToUpdate);
 
                 if (! empty($fieldsToUpdate)) {
                     $existing->update($fieldsToUpdate);
@@ -320,7 +372,7 @@ class AssetSyncService
     ): bool {
         $existing = Asset::where('ticker', $ticker)->first();
 
-        if (!$force && $existing && $existing->fetched_at && $existing->fetched_at->diffInHours(now()) < $maxHoursSinceUpdate) {
+        if (! $force && $existing && $existing->fetched_at && $existing->fetched_at->diffInHours(now()) < $maxHoursSinceUpdate) {
             return false;
         }
 
@@ -329,6 +381,11 @@ class AssetSyncService
         $data['ticker'] = $ticker;
         $data['asset_type'] = $assetType;
         $data['fetched_at'] = now();
+
+        // Normalização de setor, nome e segmento
+        $data = $this->applyNormalizers($data, $ticker, $assetType);
+
+        $data = $this->sanitizeAssetData($data);
 
         if ($existing) {
             $existing->update($data);
@@ -343,27 +400,52 @@ class AssetSyncService
     {
         $get = fn (string $key) => $item[$key] ?? null;
 
+        $currentPrice = $this->toFloat($get('price'));
+        $dividendYield = $this->toPercent($get('dy'));
+
+        $ebitda = $this->toFloat($get('ebitda')) ?? $this->toFloat($get('lajida'));
+        $netDebt = $this->toFloat($get('dividaliquida')) ?? $this->toFloat($get('divida_liquida'));
+        $grossDebt = $this->toFloat($get('dividabruta')) ?? $this->toFloat($get('divida_bruta'));
+
+        $evEbitda = $this->toFloat($get('ev_ebit'));
+        $marketCap = $this->toFloat($get('valormercado'));
+        $netDebtToEbitda = $this->toFloat($get('dividaliquidaebit'));
+
+        if ($ebitda === null && $marketCap !== null && $evEbitda !== null && $evEbitda > 0) {
+            $ev = $marketCap + ($netDebt ?? 0);
+            $ebitda = round($ev / $evEbitda, 2);
+        }
+
+        if ($netDebt === null && $ebitda !== null && $netDebtToEbitda !== null) {
+            $netDebt = round($ebitda * $netDebtToEbitda, 2);
+        }
+
         $data = [
             'name' => $get('companyname') ?? $get('name'),
-            'current_price' => $this->toFloat($get('price')),
-            'dividend_yield' => $this->toPercent($get('dy')),
+            'current_price' => $currentPrice,
+            'dividend_yield' => $dividendYield,
             'price_to_earnings' => $this->toFloat($get('p_l')),
             'price_to_book' => $this->toFloat($get('p_vp')),
             'price_to_assets' => $this->toFloat($get('p_ativo')),
             'price_to_cash_flow' => $this->toFloat($get('p_capitalgiro')),
-            'ev_to_ebitda' => $this->toFloat($get('ev_ebit')),
+            'ev_to_ebitda' => $evEbitda,
             'price_to_sales' => $this->toFloat($get('p_sr')),
             'roe' => $this->toPercent($get('roe')),
             'roa' => $this->toPercent($get('roa')),
             'profit_margin' => $this->toPercent($get('margemliquida')),
             'ebitda_margin' => $this->toPercent($get('margemebit')),
             'gross_margin' => $this->toPercent($get('margembruta')),
-            'net_debt_to_ebitda' => $this->toFloat($get('dividaliquidaebit')),
+            'ebitda' => $ebitda,
+            'net_debt' => $netDebt,
+            'gross_debt' => $grossDebt,
+            'net_debt_to_ebitda' => $netDebtToEbitda,
             'current_liquidity' => $this->toFloat($get('liquidezcorrente')),
             'payout' => $this->toPercent($get('payout')),
             'market_cap' => $this->toFloat($get('valormercado')),
             'volume_avg_30d' => $this->toFloat($get('liquidezmediadiaria')),
-            'dividends_per_share' => $this->toFloat($get('div_Yield')),
+            'dividends_per_share' => $currentPrice !== null && $dividendYield !== null
+                ? round($dividendYield / 100 * $currentPrice, 4)
+                : null,
             'total_shares' => $this->computeTotalSharesFromMarketCap(
                 $this->toFloat($get('valormercado')),
                 $this->toFloat($get('price')),
@@ -482,6 +564,9 @@ class AssetSyncService
                 'profit_margin' => $quote['profit_margin'] ?? null,
                 'ebitda_margin' => $quote['ebitda_margin'] ?? null,
                 'gross_margin' => $quote['gross_margin'] ?? null,
+                'ebitda' => $quote['ebitda'] ?? null,
+                'net_debt' => $quote['net_debt'] ?? null,
+                'gross_debt' => $quote['gross_debt'] ?? null,
                 'debt_to_ebitda' => $quote['debt_to_ebitda'] ?? null,
                 'net_debt_to_ebitda' => $quote['net_debt_to_ebitda'] ?? null,
                 'current_liquidity' => $quote['current_liquidity'] ?? null,
@@ -505,6 +590,11 @@ class AssetSyncService
 
             $clean = array_filter($data, fn ($v) => $v !== null);
 
+            // Normalização de setor, nome e segmento
+            $clean = $this->applyNormalizers($clean, $ticker, $assetType);
+
+            $clean = $this->sanitizeAssetData($clean);
+
             if (empty($clean)) {
                 return false;
             }
@@ -514,6 +604,7 @@ class AssetSyncService
             return true;
         } catch (\Throwable $e) {
             Log::warning("Error syncing asset from Brapi {$ticker}: {$e->getMessage()}");
+
             return false;
         }
     }
@@ -527,6 +618,52 @@ class AssetSyncService
         }
 
         return $detected === 'stock';
+    }
+
+    /**
+     * Complementa campos ausentes buscando nas fontes disponíveis.
+     * Garante que nenhum campo importante fique null se alguma fonte tiver o dado.
+     */
+    private function fillMissingFields(array &$data, string $ticker): void
+    {
+        $needsInvestidor10 = $this->hasMissingCriticalFields($data);
+
+        if ($needsInvestidor10) {
+            $inv10 = $this->investidor10->fetchStockIndicators($ticker);
+            if ($inv10) {
+                foreach ($inv10 as $key => $value) {
+                    if (($data[$key] ?? null) === null && $value !== null) {
+                        $data[$key] = $value;
+                    }
+                }
+            }
+        }
+
+        $needsFundamentus = $this->hasMissingCriticalFields($data);
+
+        if ($needsFundamentus) {
+            $fund = $this->fundamentus->fetchStockIndicators($ticker);
+            if ($fund) {
+                foreach ($fund as $key => $value) {
+                    if (($data[$key] ?? null) === null && $value !== null) {
+                        $data[$key] = $value;
+                    }
+                }
+            }
+        }
+    }
+
+    private function hasMissingCriticalFields(array $data): bool
+    {
+        $critical = ['dividend_yield', 'price_to_earnings', 'price_to_book', 'roe', 'profit_margin'];
+
+        foreach ($critical as $field) {
+            if (($data[$field] ?? null) === null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function detectAssetType(string $ticker): string
@@ -545,21 +682,28 @@ class AssetSyncService
         if (preg_match('/^[3-8]$/', $suffix)) {
             return 'stock';
         }
+
         return 'invalid';
     }
 
     private function toFloat(mixed $value): ?float
     {
-        if ($value === null || $value === '' || $value === '-') {
+        if ($value === null || $value === '' || $value === '-' || $value === '--' || $value === 'N/A') {
+            return null;
+        }
+        if (is_bool($value) || is_array($value) || is_object($value)) {
             return null;
         }
         if (is_numeric($value)) {
             return (float) $value;
         }
-        $clean = str_replace(['.', ','], ['', '.'], (string) $value);
+        $clean = preg_replace('/[\s\xA0\x{00A0}]+/u', '', (string) $value);
+        $clean = str_replace(['R$', '$', '%'], '', $clean);
+        $clean = str_replace(['.', ','], ['', '.'], $clean);
         if (is_numeric($clean)) {
             return (float) $clean;
         }
+
         return null;
     }
 
@@ -569,6 +713,7 @@ class AssetSyncService
         if ($float === null) {
             return null;
         }
+
         return round($float, 4);
     }
 
@@ -577,14 +722,86 @@ class AssetSyncService
         if ($marketCap !== null && $price !== null && $price > 0) {
             return (int) round($marketCap / $price);
         }
+
         return null;
     }
 
     private function toInt(mixed $value): ?int
     {
-        if ($value === null || $value === '' || $value === '-') {
+        $float = $this->toFloat($value);
+        if ($float === null) {
             return null;
         }
-        return (int) $value;
+
+        return (int) round($float);
+    }
+
+    private function sanitizeAssetData(array $data): array
+    {
+        $decimalFields = [
+            'current_price', 'market_cap', 'enterprise_value', 'volume_avg_30d',
+            'dividend_yield', 'price_to_earnings', 'price_to_book', 'ev_to_ebitda',
+            'price_to_sales', 'price_to_assets', 'price_to_cash_flow',
+            'roe', 'roa', 'profit_margin', 'ebitda_margin', 'gross_margin',
+            'ebitda', 'net_debt', 'gross_debt', 'debt_to_ebitda', 'net_debt_to_ebitda',
+            'current_liquidity', 'payout', 'net_income', 'revenue', 'free_cash_flow',
+            'dividends_per_share', 'earnings_per_share', 'book_value_per_share',
+            'p_vp', 'cap_rate', 'vacancy_rate', 'vacancy_financial',
+            'average_maturity', 'rental_area', 'ffo_yield', 'net_worth',
+        ];
+
+        $intFields = [
+            'total_shares', 'number_of_properties', 'full_time_employees',
+        ];
+
+        foreach ($decimalFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $data[$field] = $this->toFloat($data[$field]);
+            }
+        }
+
+        foreach ($intFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $data[$field] = $this->toInt($data[$field]);
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Aplica normalizadores de setor, nome e segmento ao array de dados.
+     */
+    private function applyNormalizers(array $data, string $ticker, string $assetType): array
+    {
+        $sector = $data['sector'] ?? null;
+        $subsector = $data['subsector'] ?? null;
+        $segment = $data['segment'] ?? null;
+        $name = $data['name'] ?? null;
+
+        if ($assetType === 'fii') {
+            $fii = FiiSegmentMapper::normalize($segment ?? $subsector, $subsector, $assetType);
+            if ($fii['segment'] !== null) {
+                $data['segment'] = $fii['segment'];
+            }
+            if ($fii['subsector'] !== null) {
+                $data['subsector'] = $fii['subsector'];
+            }
+        } else {
+            $mapped = SectorMapper::normalize($sector, $subsector);
+            if ($mapped['sector'] !== null) {
+                $data['sector'] = $mapped['sector'];
+            }
+            if ($mapped['subsector'] !== null) {
+                $data['subsector'] = $mapped['subsector'];
+            }
+        }
+
+        $normalizedName = NameNormalizer::normalize($ticker, $name);
+        if ($normalizedName !== null) {
+            $data['name'] = $normalizedName;
+        }
+
+        return $data;
     }
 }

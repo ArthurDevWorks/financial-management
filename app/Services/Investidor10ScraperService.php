@@ -7,39 +7,41 @@ use Illuminate\Support\Facades\Log;
 
 class Investidor10ScraperService
 {
+    private const HEADERS = [
+        'Accept'          => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language' => 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer'         => 'https://investidor10.com.br/',
+        'User-Agent'      => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+    ];
+
     public function fetchStockIndicators(string $ticker): ?array
     {
         $ticker = strtoupper(trim($ticker));
-        $html = $this->fetchPage("https://investidor10.com.br/acoes/{$ticker}/");
+        $html   = $this->fetchPage("https://investidor10.com.br/acoes/{$ticker}/");
 
         if ($html === null) {
             return null;
         }
 
-        return $this->parseIndicators($html);
+        return $this->parseFromEmbeddedJson($html);
     }
 
     public function fetchFiiIndicators(string $ticker): ?array
     {
         $ticker = strtoupper(trim($ticker));
-        $html = $this->fetchPage("https://investidor10.com.br/fiis/{$ticker}/");
+        $html   = $this->fetchPage("https://investidor10.com.br/fiis/{$ticker}/");
 
         if ($html === null) {
             return null;
         }
 
-        return $this->parseIndicators($html);
+        return $this->parseFiiFromEmbeddedJson($html);
     }
 
     private function fetchPage(string $url): ?string
     {
         try {
-            $response = Http::withHeaders([
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                'Accept-Language' => 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
-                'Referer' => 'https://investidor10.com.br/',
-                'User-Agent' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-            ])
+            $response = Http::withHeaders(self::HEADERS)
                 ->timeout(15)
                 ->get($url);
 
@@ -50,141 +52,111 @@ class Investidor10ScraperService
             return $response->body();
         } catch (\Throwable $e) {
             Log::warning("Investidor10 fetch error: {$e->getMessage()}");
+
             return null;
         }
     }
 
-    private function parseIndicators(string $html): array
+    /**
+     * Extrai indicadores fundamentalistas do JSON embutido na página.
+     * O Investidor10 embute os dados como pares "chave":valor no HTML.
+     */
+    private function parseFromEmbeddedJson(string $html): array
     {
-        $doc = new \DOMDocument();
+        $n = fn (string $key) => $this->extractFloat($key, $html);
 
-        @$doc->loadHTML(mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8'));
+        $data = array_filter([
+            // Preço e cotação
+            'current_price'        => $n('price'),
 
-        $xpath = new \DOMXPath($doc);
+            // Valuation
+            'price_to_earnings'    => $n('p_l'),
+            'price_to_book'        => $n('p_vp'),
+            'price_to_sales'       => $n('psr'),
+            'price_to_assets'      => $n('p_assets'),
+            'price_to_cash_flow'   => $n('p_working_capital'),
+            'ev_to_ebitda'         => $n('ev_ebitda'),
 
-        $indicators = [];
-        $nodes = $xpath->query("//div[contains(@class, '_card-body_') or contains(@class, 'indicator') or contains(@class, 'value')]");
+            // Rentabilidade
+            'roe'                  => $n('roe'),
+            'roa'                  => $n('roa'),
+            'roic'                 => $n('roic'),
+            'profit_margin'        => $n('net_margin'),
+            'ebitda_margin'        => $n('ebitda_margin'),
+            'gross_margin'         => $n('gross_margin'),
+            'ebitda_margin_alt'    => $n('ebit_margin'),     // fallback
 
-        foreach ($nodes as $node) {
-            $text = trim($node->textContent);
-            $text = preg_replace('/\s+/', ' ', $text);
+            // Dívida e endividamento
+            'net_debt_to_ebitda'   => $n('net_debt_ebitda'),
+            'current_liquidity'    => $n('current_liquidity'),
 
-            $parent = $node->parentNode;
-            if ($parent) {
-                $labelNode = $xpath->query(".//*[contains(@class, 'label') or contains(@class, 'title')]", $parent);
-                $label = $labelNode && $labelNode->length > 0
-                    ? trim($labelNode->item(0)->textContent)
-                    : '';
-                $label = preg_replace('/\s+/', ' ', $label);
+            // Dados do balanço
+            'ebitda'               => $n('balance_ebitda'),
+            'net_debt'             => $n('balance_net_debt'),
+            'gross_debt'           => $n('balance_gross_debt'),
+            'net_income'           => $n('balance_net_profit'),
+            'revenue'              => $n('net_revenue'),
+            'net_worth'            => $n('balance_net_worth'),
 
-                $value = $text;
-                if (!empty($label)) {
-                    $indicators[$this->normalizeLabel($label)] = $this->cleanValue($value);
-                }
-            }
-        }
+            // Dividendos
+            'payout'               => $n('payout'),
+            'dividend_yield'       => $n('dividend_yield_last_12_months'),
 
-        $scriptBased = $this->extractFromScripts($html);
+            // Mercado
+            'market_cap'           => $n('market_value'),
+            'enterprise_value'     => $n('enterprise_value'),
 
-        return array_merge($indicators, $scriptBased);
-    }
+            // Por ação
+            'earnings_per_share'   => $n('lpa'),
+            'book_value_per_share' => $n('vpa'),
+            'total_shares'         => $this->extractInt('total_tickers', $html),
+        ], fn ($v) => $v !== null);
 
-    private function extractFromScripts(string $html): array
-    {
-        $data = [];
-
-        if (preg_match('/"currentPrice"\s*:\s*([\d.]+)/', $html, $m)) {
-            $data['current_price'] = (float) $m[1];
-        }
-
-        if (preg_match('/"dividendYield"\s*:\s*([\d.]+)/', $html, $m)) {
-            $data['dividend_yield'] = (float) $m[1];
-        }
-
-        if (preg_match('/"priceToEarnings"\s*:\s*([\d.]+)/', $html, $m)) {
-            $data['price_to_earnings'] = (float) $m[1];
-        }
-
-        if (preg_match('/"priceToBook"\s*:\s*([\d.]+)/', $html, $m)) {
-            $data['price_to_book'] = (float) $m[1];
-        }
-
-        if (preg_match('/"returnOnEquity"\s*:\s*([\d.]+)/', $html, $m)) {
-            $data['roe'] = (float) $m[1];
-        }
-
-        if (preg_match('/"marketCap"\s*:\s*([\d.]+)/', $html, $m)) {
-            $data['market_cap'] = (float) $m[1];
-        }
-
-        if (preg_match('/"totalShares"\s*:\s*(\d+)/', $html, $m)) {
-            $data['total_shares'] = (int) $m[1];
-        }
-
-        if (preg_match('/"payout"\s*:\s*([\d.]+)/', $html, $m)) {
-            $data['payout'] = (float) $m[1];
-        }
+        // Remove campo auxiliar gerado internamente
+        unset($data['ebitda_margin_alt']);
 
         return $data;
     }
 
-    private function normalizeLabel(string $label): string
+    private function parseFiiFromEmbeddedJson(string $html): array
     {
-        $label = strtolower(trim($label));
-        $label = preg_replace('/[^a-z0-9\x{00E0}-\x{00FC}]/u', '_', $label);
-        $label = preg_replace('/_+/', '_', $label);
-        $label = trim($label, '_');
+        $n = fn (string $key) => $this->extractFloat($key, $html);
 
-        $map = [
-            'cotacao' => 'current_price',
-            'dividend_yield' => 'dividend_yield',
-            'p_l' => 'price_to_earnings',
-            'p_vp' => 'price_to_book',
-            'roe' => 'roe',
-            'roa' => 'roa',
-            'margem_liquida' => 'profit_margin',
-            'margem_ebit' => 'ebitda_margin',
-            'margem_bruta' => 'gross_margin',
-            'payout' => 'payout',
-            'valor_de_mercado' => 'market_cap',
-            'liquidez_media' => 'volume_avg_30d',
-            'vagas_fisicas' => 'vacancy_rate',
-            'vagas_financeiras' => 'vacancy_financial',
-            'cap_rate' => 'cap_rate',
-            'numero_de_imoveis' => 'number_of_properties',
-            'patrimonio_liquido' => 'net_worth',
-            'p_ativo' => 'price_to_assets',
-            'p_cap_giro' => 'price_to_cash_flow',
-            'ev_ebit' => 'ev_to_ebitda',
-            'p_sr' => 'price_to_sales',
-            'divida_liquida_ebitda' => 'net_debt_to_ebitda',
-            'liquidez_corrente' => 'current_liquidity',
-            'dy' => 'dividend_yield',
-        ];
-
-        return $map[$label] ?? $label;
+        return array_filter([
+            'current_price'        => $n('price'),
+            'dividend_yield'       => $n('dividend_yield_last_12_months'),
+            'price_to_book'        => $n('p_vp'),
+            'p_vp'                 => $n('p_vp'),
+            'net_worth'            => $n('balance_net_worth'),
+            'book_value_per_share' => $n('vpa'),
+            'market_cap'           => $n('market_value'),
+            'payout'               => $n('payout'),
+            'vacancy_rate'         => $n('vacancy_rate'),
+            'vacancy_financial'    => $n('vacancy_financial'),
+            'cap_rate'             => $n('cap_rate'),
+            'number_of_properties' => $this->extractInt('number_of_properties', $html),
+            'total_shares'         => $this->extractInt('total_tickers', $html),
+        ], fn ($v) => $v !== null);
     }
 
-    private function cleanValue(string $value): mixed
+    /**
+     * Extrai um valor float de um JSON embutido no HTML pelo nome da chave.
+     */
+    private function extractFloat(string $key, string $html): ?float
     {
-        $value = trim($value);
+        $pattern = '/"' . preg_quote($key, '/') . '"\s*:\s*([\-]?[\d]+(?:\.[\d]+)?)/';
 
-        if ($value === '' || $value === '-' || $value === '--') {
-            return null;
+        if (preg_match($pattern, $html, $m)) {
+            return (float) $m[1];
         }
 
-        $isPercent = str_ends_with($value, '%');
-        $clean = str_replace(['%', 'R$', ' ', '.'], ['', '', '', ''], $value);
-        $clean = str_replace(',', '.', $clean);
+        return null;
+    }
 
-        if (is_numeric($clean)) {
-            $num = (float) $clean;
-            if ($isPercent) {
-                return round($num, 4);
-            }
-            return $num;
-        }
+    private function extractInt(string $key, string $html): ?int
+    {
+        $v = $this->extractFloat($key, $html);
 
-        return $value;
+        return $v !== null ? (int) round($v) : null;
     }
 }

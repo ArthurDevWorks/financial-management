@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Enums\RecurrenceFrequency;
 use App\Http\Requests\ReleaseStoreRequest;
 use App\Http\Requests\ReleaseUpdateRequest;
@@ -41,12 +40,12 @@ class ReleaseController extends Controller
     public function create()
     {
         return Inertia::render('releases/Create', [
-            'accounts'              => Account::with('bank')->where('user_id', Auth::id())->get(),
-            'categories'            => Category::where('type', 'receita')->orWhere('type', 'despesa')->get(),
-            'paymentMethods'        => \App\Enums\PaymentMethod::options(),
+            'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
+            'categories' => Category::where('type', 'receita')->orWhere('type', 'despesa')->get(),
+            'paymentMethods' => \App\Enums\PaymentMethod::options(),
             'recurrenceFrequencies' => \App\Enums\RecurrenceFrequency::options(),
-            'releaseStatuses'       => \App\Enums\ReleaseStatus::options(),
-            'creditCards'           => CreditCard::where('user_id', Auth::id())->orderBy('name')->get(['id', 'name', 'color', 'limit']),
+            'releaseStatuses' => \App\Enums\ReleaseStatus::options(),
+            'creditCards' => CreditCard::where('user_id', Auth::id())->orderBy('name')->get(['id', 'name', 'color', 'limit']),
         ]);
     }
 
@@ -55,11 +54,15 @@ class ReleaseController extends Controller
         $validated = $request->validated();
         $validated['user_id'] = Auth::id();
 
-        $isInstallment = !empty($validated['is_installment']);
-        $isRecurring = !empty($validated['is_recurring']);
+        $isInstallment = ! empty($validated['is_installment']);
+        $isRecurring = ! empty($validated['is_recurring']);
 
         unset($validated['is_installment'], $validated['is_recurring']);
         unset($validated['recurrence_frequency'], $validated['recurrence_end_date']);
+
+        if (! $isInstallment) {
+            unset($validated['total_installments']);
+        }
 
         if ($isInstallment && $validated['payment_method'] === 'credit_card') {
             $totalInstallments = (int) ($request->input('total_installments', 1));
@@ -72,7 +75,7 @@ class ReleaseController extends Controller
                 $data = $validated;
                 $data['installment_number'] = $i;
                 $data['total_installments'] = $totalInstallments;
-                $data['status'] = $i === 1 ? 'paid' : 'pending';
+                $data['status'] = $i === 1 ? ($validated['status'] ?? 'paid') : 'pending';
 
                 $data['date'] = \Carbon\Carbon::parse($validated['date'])
                     ->addMonthsNoOverflow($i - 1)
@@ -138,13 +141,13 @@ class ReleaseController extends Controller
         }
 
         return Inertia::render('releases/Edit', [
-            'release'               => $release->load('parent', 'recurrencePlan', 'creditCard'),
-            'accounts'              => Account::with('bank')->where('user_id', Auth::id())->get(),
-            'categories'            => Category::all(),
-            'paymentMethods'        => \App\Enums\PaymentMethod::options(),
+            'release' => $release->load('parent', 'recurrencePlan', 'creditCard'),
+            'accounts' => Account::with('bank')->where('user_id', Auth::id())->get(),
+            'categories' => Category::all(),
+            'paymentMethods' => \App\Enums\PaymentMethod::options(),
             'recurrenceFrequencies' => \App\Enums\RecurrenceFrequency::options(),
-            'releaseStatuses'       => \App\Enums\ReleaseStatus::options(),
-            'creditCards'           => CreditCard::where('user_id', Auth::id())->orderBy('name')->get(['id', 'name', 'color', 'limit']),
+            'releaseStatuses' => \App\Enums\ReleaseStatus::options(),
+            'creditCards' => CreditCard::where('user_id', Auth::id())->orderBy('name')->get(['id', 'name', 'color', 'limit']),
         ]);
     }
 

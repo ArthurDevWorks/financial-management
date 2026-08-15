@@ -33,7 +33,8 @@ const props = defineProps<{
 }>();
 
 const formatCurrency = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
+    if (value === null || value === undefined || Number.isNaN(value))
+        return 'N/A';
     return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
@@ -41,7 +42,8 @@ const formatCurrency = (value: number | null | undefined) => {
 };
 
 const formatPercent = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
+    if (value === null || value === undefined || Number.isNaN(value))
+        return 'N/A';
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 };
 
@@ -50,7 +52,8 @@ const formatDate = (date: string) => {
 };
 
 const formatNumber = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value)) return 'N/A';
+    if (value === null || value === undefined || Number.isNaN(value))
+        return 'N/A';
     return new Intl.NumberFormat('pt-BR').format(value);
 };
 
@@ -59,7 +62,9 @@ const goBack = () => {
 };
 
 const goToEdit = () => {
-    router.visit(`/screening/${props.valuation.asset.ticker}/valuation?valuation_id=${props.valuation.id}`);
+    router.visit(
+        `/screening/${props.valuation.asset.ticker}/valuation?valuation_id=${props.valuation.id}`,
+    );
 };
 
 const a = computed(() => props.valuation.assumptions ?? {});
@@ -71,31 +76,73 @@ const assumptionItems = computed(() => {
     if (isGordon) {
         return [
             { label: 'DPS atual', value: formatCurrency(a.value.dps) },
-            { label: 'Taxa de desconto (Ke)', value: `${a.value.discount_rate ?? 'N/A'}%` },
-            { label: 'Cresc. perpetuidade (g)', value: `${a.value.growth_perpetuity ?? 'N/A'}%` },
-            { label: 'Preço atual', value: formatCurrency(a.value.current_price) },
-            { label: 'Anos de projeção', value: `${a.value.projection_years ?? 'N/A'}` },
+            {
+                label: 'Taxa de desconto (Ke)',
+                value: `${a.value.discount_rate ?? 'N/A'}%`,
+            },
+            {
+                label: 'Cresc. perpetuidade (g)',
+                value: `${a.value.growth_perpetuity ?? 'N/A'}%`,
+            },
+            {
+                label: 'Preço atual',
+                value: formatCurrency(a.value.current_price),
+            },
+            {
+                label: 'Anos de projeção',
+                value: `${a.value.projection_years ?? 'N/A'}`,
+            },
         ];
     }
     if (isPrecoTeto) {
         return [
-            { label: 'Dividend yield desejado', value: `${a.value.desired_yield ?? 'N/A'}%` },
-            { label: 'Payout projetado', value: `${a.value.projected_payout ?? 'N/A'}%` },
-            { label: 'Lucro líquido projetado', value: formatCurrency(a.value.projected_net_income) },
-            { label: 'Quantidade de ações', value: formatNumber(a.value.total_shares) },
-            { label: 'Crescimento projetado', value: `${a.value.projected_growth_rate ?? 'N/A'}%` },
-            { label: 'Preço atual por ação', value: formatCurrency(a.value.current_price_per_share) },
+            {
+                label: 'Dividend yield desejado',
+                value: `${a.value.desired_yield ?? 'N/A'}%`,
+            },
+            {
+                label: 'Payout projetado',
+                value: `${a.value.projected_payout ?? 'N/A'}%`,
+            },
+            {
+                label: 'Lucro líquido projetado',
+                value: formatCurrency(a.value.projected_net_income),
+            },
+            {
+                label: 'Quantidade de ações',
+                value: formatNumber(a.value.total_shares),
+            },
+            {
+                label: 'Crescimento projetado',
+                value: `${a.value.projected_growth_rate ?? 'N/A'}%`,
+            },
+            {
+                label: 'Preço atual por ação',
+                value: formatCurrency(a.value.current_price_per_share),
+            },
         ];
     }
     return [
         { label: 'FCF atual', value: formatCurrency(a.value.current_fcf) },
-        { label: 'Taxa de desconto', value: `${a.value.discount_rate ?? 'N/A'}%` },
+        {
+            label: 'Taxa de desconto',
+            value: `${a.value.discount_rate ?? 'N/A'}%`,
+        },
         { label: 'Payout', value: `${a.value.payout ?? 'N/A'}%` },
         { label: 'ROE', value: `${a.value.roe ?? 'N/A'}%` },
-        { label: 'Crescimento na perpetuidade', value: `${a.value.terminal_growth_rate ?? 'N/A'}%` },
-        { label: 'Anos de projeção', value: `${a.value.projection_years ?? 'N/A'}` },
+        {
+            label: 'Crescimento na perpetuidade',
+            value: `${a.value.terminal_growth_rate ?? 'N/A'}%`,
+        },
+        {
+            label: 'Anos de projeção',
+            value: `${a.value.projection_years ?? 'N/A'}`,
+        },
         { label: 'Total de ações', value: formatNumber(a.value.total_shares) },
-        { label: 'Preço atual por ação', value: formatCurrency(a.value.current_price_per_share) },
+        {
+            label: 'Preço atual por ação',
+            value: formatCurrency(a.value.current_price_per_share),
+        },
     ];
 });
 </script>
@@ -117,17 +164,27 @@ const assumptionItems = computed(() => {
             <div class="mb-8 flex items-start justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <img
-                        :src="valuation.asset.logo_url || '/images/default-logo.svg'"
+                        :src="
+                            valuation.asset.logo_url ||
+                            '/images/default-logo.svg'
+                        "
                         :alt="valuation.asset.ticker"
                         class="h-10 w-10 rounded-full object-contain"
-                        @error="($event.target as HTMLImageElement).src = '/images/default-logo.svg'"
+                        @error="
+                            ($event.target as HTMLImageElement).src =
+                                '/images/default-logo.svg'
+                        "
                     />
                     <div class="min-w-0">
-                        <h1 class="text-2xl font-bold tracking-tight text-foreground">
+                        <h1
+                            class="text-2xl font-bold tracking-tight text-foreground"
+                        >
                             {{ valuation.asset.name }}
                         </h1>
                         <p class="mt-1 text-sm text-muted-foreground">
-                            {{ valuation.asset.ticker }} · {{ valuation.method_label }} · {{ formatDate(valuation.calculated_at) }}
+                            {{ valuation.asset.ticker }} ·
+                            {{ valuation.method_label }} ·
+                            {{ formatDate(valuation.calculated_at) }}
                         </p>
                     </div>
                 </div>
@@ -145,21 +202,72 @@ const assumptionItems = computed(() => {
                     description="Informações atuais do ativo na tabela Assets"
                 >
                     <div class="grid gap-3 sm:grid-cols-2">
-                        <div class="rounded-lg border border-border bg-surface px-4 py-3">
-                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Cotação Atual</p>
-                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatCurrency(valuation.asset.current_price) }}</p>
+                        <div
+                            class="rounded-lg border border-border bg-surface px-4 py-3"
+                        >
+                            <p
+                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                            >
+                                Cotação Atual
+                            </p>
+                            <p
+                                class="mt-1 text-lg font-semibold text-foreground"
+                            >
+                                {{
+                                    formatCurrency(
+                                        valuation.asset.current_price,
+                                    )
+                                }}
+                            </p>
                         </div>
-                        <div v-if="valuation.asset.dividends_per_share !== null" class="rounded-lg border border-border bg-surface px-4 py-3">
-                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Dividendos por Ação</p>
-                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatCurrency(valuation.asset.dividends_per_share) }}</p>
+                        <div
+                            v-if="valuation.asset.dividends_per_share !== null"
+                            class="rounded-lg border border-border bg-surface px-4 py-3"
+                        >
+                            <p
+                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                            >
+                                Dividendos por Ação
+                            </p>
+                            <p
+                                class="mt-1 text-lg font-semibold text-foreground"
+                            >
+                                {{
+                                    formatCurrency(
+                                        valuation.asset.dividends_per_share,
+                                    )
+                                }}
+                            </p>
                         </div>
-                        <div v-if="valuation.asset.net_income !== null" class="rounded-lg border border-border bg-surface px-4 py-3">
-                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Lucro Líquido</p>
-                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatCurrency(valuation.asset.net_income) }}</p>
+                        <div
+                            v-if="valuation.asset.net_income !== null"
+                            class="rounded-lg border border-border bg-surface px-4 py-3"
+                        >
+                            <p
+                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                            >
+                                Lucro Líquido
+                            </p>
+                            <p
+                                class="mt-1 text-lg font-semibold text-foreground"
+                            >
+                                {{ formatCurrency(valuation.asset.net_income) }}
+                            </p>
                         </div>
-                        <div v-if="valuation.asset.total_shares !== null" class="rounded-lg border border-border bg-surface px-4 py-3">
-                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">Total de Ações</p>
-                            <p class="mt-1 text-lg font-semibold text-foreground">{{ formatNumber(valuation.asset.total_shares) }}</p>
+                        <div
+                            v-if="valuation.asset.total_shares !== null"
+                            class="rounded-lg border border-border bg-surface px-4 py-3"
+                        >
+                            <p
+                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                            >
+                                Total de Ações
+                            </p>
+                            <p
+                                class="mt-1 text-lg font-semibold text-foreground"
+                            >
+                                {{ formatNumber(valuation.asset.total_shares) }}
+                            </p>
                         </div>
                     </div>
                 </SectionCard>
@@ -174,10 +282,14 @@ const assumptionItems = computed(() => {
                             :key="item.label"
                             class="rounded-lg border border-border bg-surface px-4 py-3"
                         >
-                            <p class="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                            <p
+                                class="text-xs font-medium tracking-wide text-muted-foreground uppercase"
+                            >
                                 {{ item.label }}
                             </p>
-                            <p class="mt-1 text-lg font-semibold text-foreground">
+                            <p
+                                class="mt-1 text-lg font-semibold text-foreground"
+                            >
                                 {{ item.value }}
                             </p>
                         </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\PrecoTetoValuationRequest;
 use App\Models\Asset;
 use App\Models\InvestimentValuation;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PrecoTetoController extends Controller
@@ -17,6 +18,7 @@ class PrecoTetoController extends Controller
         $valuation = $valuationId
             ? InvestimentValuation::query()
                 ->with('asset')
+                ->where('user_id', Auth::id())
                 ->where('method', InvestimentValuation::METHOD_PRECO_TETO)
                 ->findOrFail((int) $valuationId)
             : null;
@@ -60,7 +62,8 @@ class PrecoTetoController extends Controller
         $validated = $request->validated();
         $assetId = (int) $validated['asset_id'];
 
-        $existing = InvestimentValuation::where('asset_id', $assetId)
+        $existing = InvestimentValuation::where('user_id', Auth::id())
+            ->where('asset_id', $assetId)
             ->where('method', InvestimentValuation::METHOD_PRECO_TETO)
             ->first();
 
@@ -71,6 +74,7 @@ class PrecoTetoController extends Controller
             ]);
         } else {
             InvestimentValuation::create([
+                'user_id' => Auth::id(),
                 'asset_id' => $assetId,
                 'method' => InvestimentValuation::METHOD_PRECO_TETO,
                 'assumptions' => $validated,
@@ -78,13 +82,14 @@ class PrecoTetoController extends Controller
             ]);
         }
 
-        return redirect()->route('valuations.index')
+        return redirect()->back()
             ->with('success', 'Valuation de Preço Teto salva com sucesso');
     }
 
     public function update(PrecoTetoValuationRequest $request, InvestimentValuation $valuation)
     {
         abort_unless($valuation->method === InvestimentValuation::METHOD_PRECO_TETO, 404);
+        abort_unless($valuation->user_id === Auth::id(), 403);
 
         $validated = $request->validated();
 
@@ -93,7 +98,7 @@ class PrecoTetoController extends Controller
             'calculated_at' => now(),
         ]);
 
-        return redirect()->route('valuations.show', $valuation)
+        return redirect()->back()
             ->with('success', 'Valuation de Preço Teto atualizada com sucesso');
     }
 
@@ -101,6 +106,7 @@ class PrecoTetoController extends Controller
     {
         if ($valuation) {
             $a = $valuation->assumptions;
+
             return [
                 'desired_yield' => (string) ($a['desired_yield'] ?? '8'),
                 'projected_payout' => (string) ($a['projected_payout'] ?? '50'),

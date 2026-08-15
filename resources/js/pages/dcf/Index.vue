@@ -1,42 +1,39 @@
 <script setup lang="ts">
-import CurrencyInput from '@/components/CurrencyInput.vue';
 import InputError from '@/components/InputError.vue';
 import PageHeader from '@/components/PageHeader.vue';
-import SummaryCard from '@/components/SummaryCard.vue';
+import SectionCard from '@/components/SectionCard.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import AppLayout from '@/layouts/AppLayout.vue';
 import { useDcf } from '@/composables/useDcf';
+import AppLayout from '@/layouts/AppLayout.vue';
 import { router, useForm } from '@inertiajs/vue3';
-import {
-    ArrowLeft,
-    Calculator,
-    ShieldCheck,
-    TrendingUp,
-    Wallet,
-} from 'lucide-vue-next';
+import { ArrowLeft, Calculator } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
 interface Asset {
     id: number;
     ticker: string;
     name: string;
-    current_price?: number | string | null;
-    net_income?: number | string | null;
-    total_shares?: number | string | null;
-    fcf?: number | string | null;
+    current_price?: number | null;
+    free_cash_flow?: number | null;
+    roe?: number | null;
+    payout?: number | null;
+    total_shares?: number | null;
     logo_url?: string | null;
     asset_type?: string;
 }
 
 interface DcfAssumptions {
-    discount_rate?: number | string;
-    perpetuity_growth_rate?: number | string;
-    projection_years?: number;
+    current_fcf?: number | string | null;
+    roe?: number | string | null;
+    payout?: number | string | null;
+    discount_rate?: number | string | null;
+    terminal_growth_rate?: number | string | null;
+    projection_years?: number | string | null;
+    total_shares?: number | string | null;
+    current_price_per_share?: number | string | null;
     growth_rates?: number[];
-    fcf_base?: number | string;
-    current_price?: number | string;
 }
 
 interface DcfValuation {
@@ -51,141 +48,128 @@ const props = defineProps<{
     asset: Asset | null;
     assets: Asset[];
     valuation: DcfValuation | null;
-    defaultAssumptions?: DcfAssumptions | null;
+    defaultAssumptions?: Record<string, unknown> | null;
 }>();
 
-const selectedId = ref(props.asset?.id?.toString() ?? '');
+const defaults = (props.valuation?.assumptions ??
+    props.defaultAssumptions ??
+    {}) as DcfAssumptions;
 
-const assumptions = props.valuation?.assumptions ?? props.defaultAssumptions ?? {};
-
-const form = useForm({
+const form = useForm<{
+    asset_id: string;
+    current_fcf: number | string;
+    roe: number | string;
+    payout: number | string;
+    discount_rate: number | string;
+    terminal_growth_rate: number | string;
+    projection_years: number | string;
+    total_shares: number | string;
+    current_price_per_share: number | string;
+    growth_rates: number[];
+}>({
     asset_id: props.asset?.id?.toString() ?? '',
-    discount_rate: assumptions.discount_rate?.toString() ?? '10',
-    perpetuity_growth_rate: assumptions.perpetuity_growth_rate?.toString() ?? '3',
-    projection_years: (assumptions.projection_years ?? 5).toString(),
-    fcf_base: assumptions.fcf_base?.toString() ?? '',
-    current_price: assumptions.current_price?.toString() ?? '',
+    current_fcf: defaults.current_fcf ?? props.asset?.free_cash_flow ?? '',
+    roe: defaults.roe ?? props.asset?.roe ?? 15,
+    payout: defaults.payout ?? props.asset?.payout ?? 50,
+    discount_rate: defaults.discount_rate ?? 12.5,
+    terminal_growth_rate: defaults.terminal_growth_rate ?? 3,
+    projection_years: defaults.projection_years ?? 5,
+    total_shares: defaults.total_shares ?? props.asset?.total_shares ?? '',
+    current_price_per_share:
+        defaults.current_price_per_share ?? props.asset?.current_price ?? '',
+    growth_rates: defaults.growth_rates ?? [8.0, 7.0, 6.0, 5.0, 4.0],
 });
 
-const dcfProjectionYears = ref(
-    assumptions.projection_years ?? 5,
-);
+const isEditing = computed(() => !!props.valuation);
 
-const dcfGrowthRates = ref<number[]>(
-    assumptions.growth_rates?.slice(0, dcfProjectionYears.value) ??
-    Array(dcfProjectionYears.value).fill(5),
-);
+const projectionYears = computed(() => {
+    const years = Math.max(3, Math.min(15, Number(form.projection_years) || 5));
+    return years;
+});
 
-watch(dcfProjectionYears, (newLen, oldLen) => {
-    if (newLen > oldLen) {
-        while (dcfGrowthRates.value.length < newLen) {
-            dcfGrowthRates.value.push(5);
+watch(
+    projectionYears,
+    (newLen, oldLen) => {
+        if (newLen > oldLen) {
+            while (form.growth_rates.length < newLen) {
+                form.growth_rates.push(5);
+            }
+        } else {
+            form.growth_rates = form.growth_rates.slice(0, newLen);
         }
-    } else {
-        dcfGrowthRates.value = dcfGrowthRates.value.slice(0, newLen);
-    }
-});
+    },
+    { immediate: false },
+);
 
-const fcfBase = computed(() => {
-    const val = parseFloat(form.fcf_base);
-    return isNaN(val) || val < 0 ? 0 : val;
-});
+const fcfBase = computed(() => Number(form.current_fcf) || 0);
+const totalShares = computed(() => Number(form.total_shares) || 0);
+const discountRate = computed(() => Number(form.discount_rate) || 0);
+const terminalGrowthRate = computed(
+    () => Number(form.terminal_growth_rate) || 0,
+);
+const currentPrice = computed(() => Number(form.current_price_per_share) || 0);
 
-const discountRate = computed(() => {
-    const val = parseFloat(form.discount_rate);
-    return isNaN(val) || val < 0 ? 0 : val;
-});
-
-const perpetuityGrowthRate = computed(() => {
-    const val = parseFloat(form.perpetuity_growth_rate);
-    return isNaN(val) || val < 0 ? 0 : val;
-});
-
-const currentPrice = computed(() => {
-    const val = parseFloat(form.current_price);
-    return isNaN(val) || val < 0 ? 0 : val;
-});
-
-const { fairValue, marginOfSafety, projectedFcfs } = useDcf({
+const { fairPrice, upside, marginOfSafety, projectedFcfs } = useDcf({
     freeCashFlow: fcfBase,
-    growthRates: dcfGrowthRates,
+    growthRates: computed(() => form.growth_rates.map(Number)),
     discountRate,
-    terminalGrowthRate: perpetuityGrowthRate,
-    projectionYears: dcfProjectionYears,
-    totalShares: ref(1),
+    terminalGrowthRate,
+    projectionYears,
+    totalShares,
     currentPrice,
     netDebt: ref(0),
 });
 
-const upside = computed(() => {
-    const price = parseFloat(form.current_price);
-    if (isNaN(price) || price <= 0 || fairValue.value <= 0) return null;
-    return ((fairValue.value - price) / price) * 100;
-});
-
-watch(selectedId, (id) => {
-    if (id) {
-        router.visit(`/dcf?asset_id=${id}`, {
-            preserveState: true,
-            replace: true,
-        });
-    } else {
-        router.visit('/dcf', { preserveState: true, replace: true });
-    }
-});
-
-watch(
-    () => [props.asset?.id, props.asset?.current_price, props.asset?.fcf] as const,
-    ([id, currentPrice, fcf]) => {
-        form.asset_id = id?.toString() ?? '';
-
-        if (!props.valuation) {
-            form.current_price = currentPrice?.toString() ?? '';
-            form.fcf_base = fcf?.toString() ?? '';
-        }
-    },
-);
-
-const parseNumber = (value: string | number) => {
-    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-    const numeric = value.trim().replace(/[^\d,.-]/g, '');
-    const lastComma = numeric.lastIndexOf(',');
-    const lastDot = numeric.lastIndexOf('.');
-    let normalized = numeric;
-    if (lastComma >= 0 && lastDot >= 0) {
-        normalized = lastComma > lastDot
-            ? numeric.replace(/\./g, '').replace(',', '.')
-            : numeric.replace(/,/g, '');
-    } else if (lastComma >= 0) {
-        normalized = numeric.replace(/\./g, '').replace(',', '.');
-    } else if ((numeric.match(/\./g) ?? []).length > 1) {
-        normalized = numeric.replace(/\./g, '');
-    }
-    const parsed = parseFloat(normalized);
-    return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
-const formatPercent = (value: number) => `${value.toFixed(2)}%`;
-
-const currentYear = new Date().getFullYear();
-
-const goBack = () => router.visit('/valuations/create');
+const goBack = () => router.visit('/valuations');
 
 const submit = () => {
-    if (props.valuation) {
-        form.put(`/dcf/${props.valuation.id}`);
-        return;
+    const payload = {
+        asset_id: Number(form.asset_id),
+        current_fcf: Number(form.current_fcf),
+        roe: Number(form.roe),
+        payout: Number(form.payout),
+        discount_rate: Number(form.discount_rate),
+        terminal_growth_rate: Number(form.terminal_growth_rate),
+        projection_years: Number(form.projection_years),
+        total_shares: Number(form.total_shares),
+        current_price_per_share: Number(form.current_price_per_share) || null,
+        growth_rates: form.growth_rates
+            .slice(0, projectionYears.value)
+            .map(Number),
+    };
+
+    if (isEditing.value) {
+        form.put(`/dcf/${props.valuation!.id}`, {
+            ...payload,
+        });
+    } else {
+        form.post('/dcf', {
+            ...payload,
+        });
     }
-    form.post('/dcf');
 };
+
+function formatCurrency(value: number | null | undefined) {
+    if (value === null || value === undefined || !Number.isFinite(value))
+        return '—';
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
+}
+
+function formatPercent(value: number | null | undefined) {
+    if (value === null || value === undefined || !Number.isFinite(value))
+        return '—';
+    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+}
+
+const currentYear = new Date().getFullYear();
 </script>
 
 <template>
     <AppLayout>
-        <div class="p-8">
+        <div class="p-6 lg:p-8">
             <div class="mb-2">
                 <button
                     type="button"
@@ -198,138 +182,210 @@ const submit = () => {
             </div>
 
             <PageHeader
-                title="Fluxo de Caixa Descontado"
-                description="Calcule o valor intrínseco com base no fluxo de caixa projetado"
-            >
-                <template #actions>
-                    <div class="flex items-center gap-2">
-                        <Wallet class="h-4 w-4 text-muted-foreground" />
-                        <select
-                            v-model="selectedId"
-                            :disabled="!!valuation"
-                            class="h-9 rounded-md border border-border bg-surface py-1 pr-8 pl-3 text-sm text-foreground transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
-                        >
-                            <option value="">Selecione um ativo...</option>
-                            <option v-for="item in assets" :key="item.id" :value="item.id">
-                                {{ item.name }}
-                            </option>
-                        </select>
-                    </div>
-                </template>
-            </PageHeader>
+                :title="isEditing ? 'Editar DCF' : 'Fluxo de Caixa Descontado'"
+                description="Valor intrínseco com base no fluxo de caixa livre projetado"
+            />
 
-            <form class="grid grid-cols-1 gap-6 lg:grid-cols-3" @submit.prevent="submit">
-                <!-- Inputs -->
-                <div class="lg:col-span-2">
-                    <div class="rounded-xl border border-border bg-card">
-                        <div class="border-b border-border px-6 py-4">
-                            <h3 class="text-base font-semibold text-foreground">
-                                Parâmetros do Cálculo
-                            </h3>
-                            <p class="text-sm text-muted-foreground">
-                                Preencha os campos para calcular o valor intrínseco
-                            </p>
+            <div class="mt-6 grid gap-6 xl:grid-cols-3">
+                <!-- Left: Premissas -->
+                <div class="space-y-6 xl:col-span-1">
+                    <SectionCard title="Ativo">
+                        <div>
+                            <Label>Selecione o Ativo</Label>
+                            <select
+                                v-model="form.asset_id"
+                                class="mt-1 h-[42px] w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                                :disabled="isEditing"
+                            >
+                                <option value="">Selecione...</option>
+                                <option
+                                    v-for="a in assets"
+                                    :key="a.id"
+                                    :value="a.id"
+                                >
+                                    {{ a.name }}
+                                </option>
+                            </select>
+                            <InputError :message="form.errors.asset_id" />
                         </div>
-                        <div class="p-6">
-                            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <Label>Taxa de Desconto (%)</Label>
-                                    </div>
-                                    <Input
-                                        v-model="form.discount_rate"
-                                        type="number"
-                                        step="0.1"
-                                        min="0"
-                                        placeholder="Ex: 10"
-                                        class="mt-1.5"
-                                    />
-                                    <InputError :message="form.errors.discount_rate" />
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <Label>Crescimento Perpetuidade (%)</Label>
-                                    </div>
-                                    <Input
-                                        v-model="form.perpetuity_growth_rate"
-                                        type="number"
-                                        step="0.1"
-                                        min="0"
-                                        placeholder="Ex: 3"
-                                        class="mt-1.5"
-                                    />
-                                    <InputError :message="form.errors.perpetuity_growth_rate" />
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <Label>Anos de Projeção</Label>
-                                    </div>
-                                    <Input
-                                        v-model.number="dcfProjectionYears"
-                                        type="number"
-                                        min="1"
-                                        max="20"
-                                        placeholder="Ex: 5"
-                                        class="mt-1.5"
-                                    />
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <Label>FCF Base (R$)</Label>
-                                    </div>
-                                    <CurrencyInput
-                                        v-model="form.fcf_base"
-                                        :error="form.errors.fcf_base"
-                                        placeholder="0,00"
-                                    />
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <Label>Preço Atual (R$)</Label>
-                                    </div>
-                                    <CurrencyInput
-                                        v-model="form.current_price"
-                                        :error="form.errors.current_price"
-                                        placeholder="0,00"
-                                    />
-                                </div>
+                    </SectionCard>
+
+                    <SectionCard title="Premissas">
+                        <div class="space-y-4">
+                            <div>
+                                <Label>FCF Base (R$)</Label>
+                                <Input
+                                    v-model="form.current_fcf"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.current_fcf"
+                                />
+                            </div>
+                            <div>
+                                <Label>Total de Ações</Label>
+                                <Input
+                                    v-model="form.total_shares"
+                                    type="number"
+                                    step="1"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.total_shares"
+                                />
+                            </div>
+                            <div>
+                                <Label>Preço Atual (R$)</Label>
+                                <Input
+                                    v-model="form.current_price_per_share"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="
+                                        form.errors.current_price_per_share
+                                    "
+                                />
+                            </div>
+                            <div>
+                                <Label>ROE (%)</Label>
+                                <Input
+                                    v-model="form.roe"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="100"
+                                    class="mt-1"
+                                />
+                                <InputError :message="form.errors.roe" />
+                            </div>
+                            <div>
+                                <Label>Payout (%)</Label>
+                                <Input
+                                    v-model="form.payout"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    max="100"
+                                    class="mt-1"
+                                />
+                                <InputError :message="form.errors.payout" />
+                            </div>
+                            <div>
+                                <Label>Taxa de Desconto (Ke, %)</Label>
+                                <Input
+                                    v-model="form.discount_rate"
+                                    type="number"
+                                    step="0.1"
+                                    min="0.01"
+                                    max="100"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.discount_rate"
+                                />
+                            </div>
+                            <div>
+                                <Label>Crescimento Perpetuidade (%)</Label>
+                                <Input
+                                    v-model="form.terminal_growth_rate"
+                                    type="number"
+                                    step="0.1"
+                                    min="0"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.terminal_growth_rate"
+                                />
+                            </div>
+                            <div>
+                                <Label>Anos de Projeção</Label>
+                                <Input
+                                    v-model="form.projection_years"
+                                    type="number"
+                                    step="1"
+                                    min="3"
+                                    max="15"
+                                    class="mt-1"
+                                />
+                                <InputError
+                                    :message="form.errors.projection_years"
+                                />
                             </div>
                         </div>
-                    </div>
+                    </SectionCard>
 
-                    <!-- Tabela de Projeção -->
-                    <div class="mt-6 rounded-xl border border-border bg-card">
-                        <div class="border-b border-border px-6 py-4">
-                            <h3 class="text-base font-semibold text-foreground">
-                                Projeção de Fluxo de Caixa
-                            </h3>
-                            <p class="text-sm text-muted-foreground">
-                                Taxas de crescimento por ano e valores projetados
-                            </p>
-                        </div>
+                    <div class="flex justify-end gap-3">
+                        <Button type="button" variant="outline" @click="goBack"
+                            >Cancelar</Button
+                        >
+                        <Button
+                            @click="submit"
+                            :disabled="
+                                form.processing ||
+                                !form.asset_id ||
+                                fcfBase <= 0 ||
+                                totalShares <= 0
+                            "
+                        >
+                            <Calculator class="h-4 w-4" />
+                            {{ isEditing ? 'Atualizar' : 'Calcular' }}
+                        </Button>
+                    </div>
+                </div>
+
+                <!-- Right: Results -->
+                <div class="space-y-6 xl:col-span-2">
+                    <!-- Projeção de FCF -->
+                    <SectionCard title="Projeção de Fluxo de Caixa">
+                        <p class="mb-3 text-xs text-muted-foreground">
+                            Taxas de crescimento por ano e FCF projetado
+                        </p>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-border">
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                        <th
+                                            class="px-4 py-2 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                                        >
                                             Ano
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                        <th
+                                            class="px-4 py-2 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                                        >
                                             Crescimento (%)
                                         </th>
-                                        <th class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                                        <th
+                                            class="px-4 py-2 text-right text-xs font-medium tracking-wider text-muted-foreground uppercase"
+                                        >
                                             FCF Projetado
                                         </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="border-b border-border bg-muted/30">
-                                        <td class="px-4 py-2.5 font-medium text-foreground">
+                                    <tr
+                                        class="border-b border-border bg-muted/30"
+                                    >
+                                        <td
+                                            class="px-4 py-2 font-medium text-foreground"
+                                        >
                                             Base
                                         </td>
-                                        <td class="px-4 py-2.5 text-muted-foreground">—</td>
-                                        <td class="px-4 py-2.5 text-right font-medium text-foreground">
-                                            {{ fcfBase > 0 ? formatCurrency(fcfBase) : '—' }}
+                                        <td
+                                            class="px-4 py-2 text-muted-foreground"
+                                        >
+                                            —
+                                        </td>
+                                        <td
+                                            class="px-4 py-2 text-right font-medium text-foreground"
+                                        >
+                                            {{ formatCurrency(fcfBase) }}
                                         </td>
                                     </tr>
                                     <tr
@@ -337,105 +393,113 @@ const submit = () => {
                                         :key="index"
                                         class="border-b border-border last:border-0"
                                     >
-                                        <td class="px-4 py-2.5 text-foreground">
+                                        <td class="px-4 py-2 text-foreground">
                                             {{ currentYear + index + 1 }}
                                         </td>
-                                        <td class="px-4 py-2.5">
+                                        <td class="px-4 py-2">
                                             <Input
-                                                v-model.number="dcfGrowthRates[index]"
+                                                v-model.number="
+                                                    form.growth_rates[index]
+                                                "
                                                 type="number"
                                                 step="0.1"
                                                 class="h-8 w-24 text-right text-sm"
                                             />
                                         </td>
-                                        <td class="px-4 py-2.5 text-right font-medium text-foreground">
+                                        <td
+                                            class="px-4 py-2 text-right font-medium text-foreground"
+                                        >
                                             {{ formatCurrency(item.fcf) }}
-                                        </td>
-                                    </tr>
-                                    <tr class="bg-muted/20 font-semibold">
-                                        <td class="px-4 py-2.5 text-foreground" colspan="2">
-                                            Total Projetado
-                                        </td>
-                                        <td class="px-4 py-2.5 text-right text-foreground">
-                                            {{ formatCurrency(projectedFcfs.reduce((sum, item) => sum + item.fcf, 0)) }}
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                    </div>
+                    </SectionCard>
 
-                    <!-- Upside badge -->
-                    <div
-                        v-if="upside !== null"
-                        class="mt-6 rounded-xl border border-border bg-card p-6"
-                    >
-                        <div class="flex items-center justify-between">
-                            <span class="text-sm font-semibold text-foreground">
-                                Potencial de Valorização
-                            </span>
-                            <span
-                                class="rounded-full px-3 py-1 text-xs font-bold"
-                                :class="upside >= 0 ? 'bg-revenue/10 text-revenue' : 'bg-expense/10 text-expense'"
+                    <SectionCard title="Resultados do DCF">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div
+                                class="overflow-hidden rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2"
                             >
-                                {{ upside >= 0 ? '+' : '' }}{{ formatPercent(upside) }}
-                            </span>
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Valor Intrínseco / Ação
+                                </p>
+                                <p class="mt-1 text-2xl font-bold text-primary">
+                                    {{ formatCurrency(fairPrice) }}
+                                </p>
+                                <div
+                                    v-if="
+                                        upside !== null &&
+                                        Number.isFinite(upside)
+                                    "
+                                    class="mt-1"
+                                >
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-full px-3 py-0.5 text-xs font-semibold"
+                                        :class="
+                                            upside >= 0
+                                                ? 'bg-revenue/10 text-revenue'
+                                                : 'bg-expense/10 text-expense'
+                                        "
+                                    >
+                                        {{ formatPercent(upside) }} vs. preço
+                                        atual
+                                    </span>
+                                </div>
+                            </div>
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Margem
+                                </p>
+                                <p
+                                    class="mt-1 text-xl font-bold"
+                                    :class="
+                                        (marginOfSafety ?? 0) >= 0
+                                            ? 'text-revenue'
+                                            : 'text-expense'
+                                    "
+                                >
+                                    {{ formatPercent(marginOfSafety) }}
+                                </p>
+                            </div>
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Upside
+                                </p>
+                                <p
+                                    class="mt-1 text-xl font-bold"
+                                    :class="
+                                        (upside ?? 0) >= 0
+                                            ? 'text-revenue'
+                                            : 'text-expense'
+                                    "
+                                >
+                                    {{ formatPercent(upside) }}
+                                </p>
+                            </div>
                         </div>
-                        <p class="mt-2 text-sm text-muted-foreground">
-                            {{ upside >= 0
-                                ? 'O ativo está sendo negociado abaixo do valor intrínseco.'
-                                : 'O ativo está sendo negociado acima do valor intrínseco.' }}
-                        </p>
-                    </div>
+                    </SectionCard>
                 </div>
-
-                <!-- Results -->
-                <div class="space-y-4">
-                    <SummaryCard
-                        label="Valor Intrínseco"
-                        :value="fcfBase > 0 ? formatCurrency(fairValue) : '—'"
-                        variant="investment"
-                        :icon="Calculator"
-                    />
-
-                    <SummaryCard
-                        label="Margem de Segurança"
-                        :value="fcfBase > 0 && upside !== null ? formatPercent(marginOfSafety) : '—'"
-                        :variant="marginOfSafety >= 0 ? 'revenue' : 'expense'"
-                        :icon="ShieldCheck"
-                        :trend="fcfBase > 0 && upside !== null ? parseFloat(marginOfSafety.toFixed(2)) : undefined"
-                    />
-
-                    <SummaryCard
-                        label="Upside"
-                        :value="upside !== null ? (upside >= 0 ? '+' : '') + formatPercent(upside) : '—'"
-                        :variant="upside !== null && upside >= 0 ? 'profit' : 'expense'"
-                        :icon="TrendingUp"
-                        :trend="upside !== null ? parseFloat(upside.toFixed(2)) : undefined"
-                    />
-
-                    <Button
-                        type="submit"
-                        class="w-full"
-                        :disabled="form.processing || fcfBase <= 0 || !form.asset_id"
-                    >
-                        {{
-                            form.processing
-                                ? 'Salvando...'
-                                : valuation
-                                  ? 'Atualizar valuation'
-                                  : 'Salvar simulação'
-                        }}
-                    </Button>
-                </div>
-            </form>
+            </div>
 
             <div
                 v-if="!assets.length"
                 class="mt-6 rounded-xl border border-border bg-card p-6 text-center"
             >
                 <p class="text-sm text-muted-foreground">
-                    Nenhum ativo cadastrado. Adicione um ativo primeiro para usar esta ferramenta.
+                    Nenhum ativo cadastrado. Adicione um ativo primeiro para
+                    usar esta ferramenta.
                 </p>
             </div>
         </div>

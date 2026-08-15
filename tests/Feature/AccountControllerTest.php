@@ -119,3 +119,45 @@ it('atualiza e remove conta', function () {
 
     $this->assertSoftDeleted('accounts', ['id' => $account->id]);
 });
+
+it('bloqueia edição, atualização e exclusão de conta de outro usuário', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $bank = Bank::factory()->create();
+    $account = Account::factory()->for($otherUser)->for($bank)->create();
+
+    $this->actingAs($user);
+
+    $this->get(route('accounts.edit', $account))->assertForbidden();
+    $this->put(route('accounts.update', $account), [
+        'bank_id' => $bank->id,
+        'type' => AccountType::CHECKING->value,
+        'agency' => '1234',
+        'account' => '999999',
+        'total' => '100.00',
+    ])->assertForbidden();
+    $this->delete(route('accounts.destroy', $account))->assertForbidden();
+
+    $this->assertDatabaseHas('accounts', ['id' => $account->id]);
+});
+
+it('rejeita lançamento em conta de outro usuário', function () {
+    $user = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $bank = Bank::factory()->create();
+    $otherAccount = Account::factory()->for($otherUser)->for($bank)->create();
+    $category = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
+
+    $this->actingAs($user);
+
+    $this->post(route('releases.store'), [
+        'account_id' => $otherAccount->id,
+        'category_id' => $category->id,
+        'title' => 'Tentativa',
+        'amount' => '10.00',
+        'type' => 'expense',
+        'date' => now()->toDateString(),
+    ])->assertSessionHasErrors('account_id');
+
+    $this->assertDatabaseMissing('releases', ['title' => 'Tentativa']);
+});

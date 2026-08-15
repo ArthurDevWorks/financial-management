@@ -181,7 +181,7 @@
 
 /* ─── Temas de cor (data-theme) ──────────────────── */
 
-[data-theme="teal"] {
+[data-theme='teal'] {
     --primary: hsl(188 78% 42%);
     --primary-foreground: hsl(0 0% 100%);
     --ring: hsl(188 78% 42%);
@@ -190,7 +190,7 @@
     --sidebar-ring: hsl(188 78% 42%);
 }
 
-[data-theme="blue"] {
+[data-theme='blue'] {
     --primary: hsl(221.2 83.2% 53.3%);
     --primary-foreground: hsl(210 40% 98%);
     --ring: hsl(221.2 83.2% 53.3%);
@@ -199,7 +199,7 @@
     --sidebar-ring: hsl(221.2 83.2% 53.3%);
 }
 
-[data-theme="violet"] {
+[data-theme='violet'] {
     --primary: hsl(271 75% 60%);
     --primary-foreground: hsl(0 0% 100%);
     --ring: hsl(271 75% 60%);
@@ -208,7 +208,7 @@
     --sidebar-ring: hsl(271 75% 60%);
 }
 
-[data-theme="amber"] {
+[data-theme='amber'] {
     --primary: hsl(32 88% 52%);
     --primary-foreground: hsl(0 0% 100%);
     --ring: hsl(32 88% 52%);
@@ -217,7 +217,7 @@
     --sidebar-ring: hsl(32 88% 52%);
 }
 
-[data-theme="emerald"] {
+[data-theme='emerald'] {
     --primary: hsl(168 65% 35%);
     --primary-foreground: hsl(0 0% 100%);
     --ring: hsl(168 65% 35%);
@@ -226,26 +226,25 @@
     --sidebar-ring: hsl(168 75% 42%);
 }
 
-.dark[data-theme="blue"] {
+.dark[data-theme='blue'] {
     --primary: hsl(217.2 91.2% 59.8%);
     --sidebar-primary: hsl(217.2 91.2% 59.8%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
 }
 
-
-.dark[data-theme="violet"] {
+.dark[data-theme='violet'] {
     --primary: hsl(272 78% 68%);
     --sidebar-primary: hsl(272 78% 68%);
     --sidebar-ring: hsl(272 78% 68%);
 }
 
-.dark[data-theme="amber"] {
+.dark[data-theme='amber'] {
     --primary: hsl(35 90% 58%);
     --sidebar-primary: hsl(35 90% 58%);
     --sidebar-ring: hsl(35 90% 58%);
 }
 
-.dark[data-theme="emerald"] {
+.dark[data-theme='emerald'] {
     --primary: hsl(168 75% 42%);
     --primary-foreground: hsl(210 20% 98%);
     --chart-1: hsl(168 75% 42%);

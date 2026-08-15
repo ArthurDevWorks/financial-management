@@ -5,6 +5,7 @@ import { send } from '@/routes/verification';
 import { Form, Head, Link, usePage } from '@inertiajs/vue3';
 
 import DeleteUser from '@/components/DeleteUser.vue';
+import { useToast } from '@/composables/useToast';
 import InputError from '@/components/InputError.vue';
 import SectionCard from '@/components/SectionCard.vue';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,10 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const page = usePage();
 const user = page.props.auth.user;
+
+const onSaved = () => {
+    useToast().success('Perfil atualizado com sucesso.');
+};
 </script>
 
 <template>
@@ -46,7 +51,8 @@ const user = page.props.auth.user;
                     <Form
                         v-bind="ProfileController.update.form()"
                         class="space-y-6"
-                        v-slot="{ errors, processing, recentlySuccessful }"
+                        :on-success="onSaved"
+                        v-slot="{ errors, processing }"
                     >
                         <div class="grid gap-2">
                             <Label for="name" required>Nome</Label>
@@ -105,20 +111,6 @@ const user = page.props.auth.user;
                                 data-test="update-profile-button"
                                 >Salvar</Button
                             >
-
-                            <Transition
-                                enter-active-class="transition ease-in-out"
-                                enter-from-class="opacity-0"
-                                leave-active-class="transition ease-in-out"
-                                leave-to-class="opacity-0"
-                            >
-                                <p
-                                    v-show="recentlySuccessful"
-                                    class="text-sm text-muted-foreground"
-                                >
-                                    Salvo.
-                                </p>
-                            </Transition>
                         </div>
                     </Form>
                 </SectionCard>

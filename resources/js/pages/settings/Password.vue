@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
+import { useToast } from '@/composables/useToast';
 import InputError from '@/components/InputError.vue';
 import SectionCard from '@/components/SectionCard.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -22,6 +23,10 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const passwordInput = ref<HTMLInputElement | null>(null);
 const currentPasswordInput = ref<HTMLInputElement | null>(null);
+
+const onSaved = () => {
+    useToast().success('Senha atualizada com sucesso.');
+};
 </script>
 
 <template>
@@ -46,7 +51,8 @@ const currentPasswordInput = ref<HTMLInputElement | null>(null);
                             'current_password',
                         ]"
                         class="space-y-6"
-                        v-slot="{ errors, processing, recentlySuccessful }"
+                        :on-success="onSaved"
+                        v-slot="{ errors, processing }"
                     >
                         <div class="grid gap-2">
                             <Label for="current_password">Senha atual</Label>
@@ -99,20 +105,6 @@ const currentPasswordInput = ref<HTMLInputElement | null>(null);
                                 data-test="update-password-button"
                                 >Salvar senha</Button
                             >
-
-                            <Transition
-                                enter-active-class="transition ease-in-out"
-                                enter-from-class="opacity-0"
-                                leave-active-class="transition ease-in-out"
-                                leave-to-class="opacity-0"
-                            >
-                                <p
-                                    v-show="recentlySuccessful"
-                                    class="text-sm text-muted-foreground"
-                                >
-                                    Salvo.
-                                </p>
-                            </Transition>
                         </div>
                     </Form>
                 </SectionCard>

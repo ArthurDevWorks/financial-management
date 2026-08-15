@@ -1,27 +1,28 @@
 <script setup lang="ts">
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import PageHeader from '@/components/PageHeader.vue';
+import PaginationLinks from '@/components/PaginationLinks.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import AppLayout from '@/layouts/AppLayout.vue';
-import PageHeader from '@/components/PageHeader.vue';
-import PaginationLinks from '@/components/PaginationLinks.vue';
 import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
 import {
-    ArrowUpRight,
     ArrowDownRight,
+    ArrowUpRight,
+    Briefcase,
     Building2,
+    CreditCard,
     Download,
     Edit3,
+    PiggyBank,
     Plus,
     Search,
     Trash2,
-    X,
-    Wallet,
-    PiggyBank,
     TrendingUp,
-    CreditCard,
-    Briefcase,
+    Wallet,
+    X,
 } from 'lucide-vue-next';
+import { ref } from 'vue';
 
 interface Account {
     id: number;
@@ -66,6 +67,8 @@ defineProps<{
 }>();
 
 const search = ref('');
+const showDeleteDialog = ref(false);
+const accountToDelete = ref<Account | null>(null);
 
 // Account type label map (matches AccountType enum)
 const accountTypeLabels: Record<string, string> = {
@@ -87,17 +90,32 @@ const accountTypeIcons: Record<string, any> = {
 
 // Account type color map
 const accountTypeColors: Record<string, { badge: string; dot: string }> = {
-    corrente: { badge: 'bg-primary/10 text-primary border-primary/20', dot: 'bg-primary' },
-    poupanca: { badge: 'bg-revenue/10 text-revenue border-revenue/20', dot: 'bg-revenue' },
-    digital: { badge: 'bg-investment/10 text-investment border-investment/20', dot: 'bg-investment' },
-    investimento: { badge: 'bg-accent/10 text-accent border-accent/20', dot: 'bg-accent' },
-    salario: { badge: 'bg-surface/50 text-muted-foreground border-border', dot: 'bg-muted-foreground' },
+    corrente: {
+        badge: 'bg-primary/10 text-primary border-primary/20',
+        dot: 'bg-primary',
+    },
+    poupanca: {
+        badge: 'bg-revenue/10 text-revenue border-revenue/20',
+        dot: 'bg-revenue',
+    },
+    digital: {
+        badge: 'bg-investment/10 text-investment border-investment/20',
+        dot: 'bg-investment',
+    },
+    investimento: {
+        badge: 'bg-accent/10 text-accent border-accent/20',
+        dot: 'bg-accent',
+    },
+    salario: {
+        badge: 'bg-surface/50 text-muted-foreground border-border',
+        dot: 'bg-muted-foreground',
+    },
 };
 
 function getBankInitials(name: string): string {
     return name
         .split(' ')
-        .map(w => w.charAt(0))
+        .map((w) => w.charAt(0))
         .slice(0, 2)
         .join('')
         .toUpperCase();
@@ -114,13 +132,14 @@ function getBankColor(name: string): string {
     ];
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
-        hash = ((hash << 5) - hash) + name.charCodeAt(i);
+        hash = (hash << 5) - hash + name.charCodeAt(i);
     }
     return colors[Math.abs(hash) % colors.length];
 }
 
 function formatCurrency(value: number | null | undefined): string {
-    if (value === null || value === undefined || Number.isNaN(value)) return 'R$ 0,00';
+    if (value === null || value === undefined || Number.isNaN(value))
+        return 'R$ 0,00';
     return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL',
@@ -128,7 +147,8 @@ function formatCurrency(value: number | null | undefined): string {
 }
 
 function formatCompactCurrency(value: number | null | undefined): string {
-    if (value === null || value === undefined || Number.isNaN(value)) return 'R$ 0,00';
+    if (value === null || value === undefined || Number.isNaN(value))
+        return 'R$ 0,00';
     // Abrevia apenas para bilhões+; abaixo disso mostra valor exato com centavos
     if (Math.abs(value) >= 1e9) {
         return `R$ ${(value / 1e9).toFixed(2)}B`;
@@ -159,10 +179,10 @@ function goToEdit(account: Account) {
     router.visit(`/accounts/${account.id}/edit`);
 }
 
-function deleteAccount(account: Account) {
-    if (confirm(`Tem certeza que deseja excluir a conta "${account.account}"?`)) {
-        router.delete(`/accounts/${account.id}`);
-    }
+function deleteAccount() {
+    if (!accountToDelete.value) return;
+    router.delete(`/accounts/${accountToDelete.value.id}`);
+    accountToDelete.value = null;
 }
 
 // Search with enter key
@@ -175,9 +195,18 @@ function onSearchKeydown(e: KeyboardEvent) {
     <AppLayout>
         <div class="p-6 lg:p-8">
             <!-- Header -->
-            <PageHeader title="Contas" description="Gerencie suas contas bancárias e acompanhe seu saldo">
+            <PageHeader
+                title="Contas"
+                description="Gerencie suas contas bancárias e acompanhe seu saldo"
+            >
                 <template #actions>
-                    <Button variant="outline" size="sm" as="a" href="/accounts/export" target="_blank">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        as="a"
+                        href="/accounts/export"
+                        target="_blank"
+                    >
                         <Download class="h-4 w-4" />
                         Exportar
                     </Button>
@@ -190,16 +219,18 @@ function onSearchKeydown(e: KeyboardEvent) {
 
             <!-- Search Bar -->
             <div class="relative mb-6">
-                <Search class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search
+                    class="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+                />
                 <Input
                     v-model="search"
                     placeholder="Buscar por banco ou número da conta... (Enter para buscar)"
-                    class="h-10 pl-10 pr-10"
+                    class="h-10 pr-10 pl-10"
                     @keydown="onSearchKeydown"
                 />
                 <button
                     v-if="search"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
+                    class="absolute top-1/2 right-3 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
                     :title="'Limpar busca'"
                     @click="clearSearch"
                 >
@@ -209,11 +240,24 @@ function onSearchKeydown(e: KeyboardEvent) {
 
             <!-- Stats Row -->
             <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-                <div class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md">
+                <div
+                    class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md"
+                >
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Saldo Total</p>
-                            <p class="mt-1 text-2xl font-bold tracking-tight" :class="stats.total_balance >= 0 ? 'text-revenue' : 'text-destructive'">
+                            <p
+                                class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
+                                Saldo Total
+                            </p>
+                            <p
+                                class="mt-1 text-2xl font-bold tracking-tight"
+                                :class="
+                                    stats.total_balance >= 0
+                                        ? 'text-revenue'
+                                        : 'text-destructive'
+                                "
+                            >
                                 {{ formatCompactCurrency(stats.total_balance) }}
                             </p>
                         </div>
@@ -222,58 +266,106 @@ function onSearchKeydown(e: KeyboardEvent) {
                         </div>
                     </div>
                     <p class="mt-1 text-xs text-muted-foreground">
-                        {{ stats.total_count }} {{ stats.total_count === 1 ? 'conta' : 'contas' }}
+                        {{ stats.total_count }}
+                        {{ stats.total_count === 1 ? 'conta' : 'contas' }}
                     </p>
                 </div>
 
-                <div class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md" style="animation-delay: 0.04s">
+                <div
+                    class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md"
+                    style="animation-delay: 0.04s"
+                >
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Saldo Médio</p>
-                            <p class="mt-1 text-2xl font-bold tracking-tight" :class="stats.avg_balance >= 0 ? 'text-primary' : 'text-destructive'">
+                            <p
+                                class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
+                                Saldo Médio
+                            </p>
+                            <p
+                                class="mt-1 text-2xl font-bold tracking-tight"
+                                :class="
+                                    stats.avg_balance >= 0
+                                        ? 'text-primary'
+                                        : 'text-destructive'
+                                "
+                            >
                                 {{ formatCompactCurrency(stats.avg_balance) }}
                             </p>
                         </div>
-                        <div class="rounded-lg bg-investment/10 p-2 text-investment">
+                        <div
+                            class="rounded-lg bg-investment/10 p-2 text-investment"
+                        >
                             <TrendingUp class="h-5 w-5" />
                         </div>
                     </div>
                     <p class="mt-1 text-xs text-muted-foreground">por conta</p>
                 </div>
 
-                <div class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md" style="animation-delay: 0.08s">
+                <div
+                    class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md"
+                    style="animation-delay: 0.08s"
+                >
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Receitas</p>
-                            <p class="mt-1 text-2xl font-bold tracking-tight text-revenue">
-                                {{ formatCompactCurrency(stats.total_revenues) }}
+                            <p
+                                class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
+                                Receitas
+                            </p>
+                            <p
+                                class="mt-1 text-2xl font-bold tracking-tight text-revenue"
+                            >
+                                {{
+                                    formatCompactCurrency(stats.total_revenues)
+                                }}
                             </p>
                         </div>
                         <div class="rounded-lg bg-revenue/10 p-2 text-revenue">
                             <ArrowUpRight class="h-5 w-5" />
                         </div>
                     </div>
-                    <p class="mt-1 text-xs text-muted-foreground">total lançado</p>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                        total lançado
+                    </p>
                 </div>
 
-                <div class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md" style="animation-delay: 0.12s">
+                <div
+                    class="animate-fade-in-up rounded-xl border border-border bg-card p-4 transition-all hover:-translate-y-0.5 hover:border-border/60 hover:shadow-md"
+                    style="animation-delay: 0.12s"
+                >
                     <div class="flex items-start justify-between">
                         <div>
-                            <p class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Despesas</p>
-                            <p class="mt-1 text-2xl font-bold tracking-tight text-destructive">
-                                {{ formatCompactCurrency(stats.total_expenses) }}
+                            <p
+                                class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
+                                Despesas
+                            </p>
+                            <p
+                                class="mt-1 text-2xl font-bold tracking-tight text-destructive"
+                            >
+                                {{
+                                    formatCompactCurrency(stats.total_expenses)
+                                }}
                             </p>
                         </div>
-                        <div class="rounded-lg bg-destructive/10 p-2 text-destructive">
+                        <div
+                            class="rounded-lg bg-destructive/10 p-2 text-destructive"
+                        >
                             <ArrowDownRight class="h-5 w-5" />
                         </div>
                     </div>
-                    <p class="mt-1 text-xs text-muted-foreground">total lançado</p>
+                    <p class="mt-1 text-xs text-muted-foreground">
+                        total lançado
+                    </p>
                 </div>
             </div>
 
             <!-- Account Cards -->
-            <div v-if="accounts.data.length" class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div
+                v-if="accounts.data.length"
+                class="grid grid-cols-1 gap-4 lg:grid-cols-2"
+            >
                 <div
                     v-for="(account, i) in accounts.data"
                     :key="account.id"
@@ -301,16 +393,26 @@ function onSearchKeydown(e: KeyboardEvent) {
                         <div class="min-w-0 flex-1">
                             <div class="flex items-start justify-between gap-2">
                                 <div>
-                                    <h3 class="text-base font-semibold leading-tight text-foreground">
+                                    <h3
+                                        class="text-base leading-tight font-semibold text-foreground"
+                                    >
                                         {{ account.bank?.name || 'Banco' }}
                                     </h3>
-                                    <p class="mt-0.5 text-sm text-muted-foreground">
-                                        {{ account.agency ? `${account.agency} / ` : '' }}{{ account.account }}
+                                    <p
+                                        class="mt-0.5 text-sm text-muted-foreground"
+                                    >
+                                        {{
+                                            account.agency
+                                                ? `${account.agency} / `
+                                                : ''
+                                        }}{{ account.account }}
                                     </p>
                                 </div>
 
                                 <!-- Actions (always visible on mobile, on hover on desktop) -->
-                                <div class="flex shrink-0 gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
+                                <div
+                                    class="flex shrink-0 gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
+                                >
                                     <button
                                         class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-investment/10 hover:text-investment"
                                         title="Editar"
@@ -321,7 +423,7 @@ function onSearchKeydown(e: KeyboardEvent) {
                                     <button
                                         class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                                         title="Excluir"
-                                        @click="deleteAccount(account)"
+                                        @click="accountToDelete = account; showDeleteDialog = true"
                                     >
                                         <Trash2 class="h-4 w-4" />
                                     </button>
@@ -332,42 +434,92 @@ function onSearchKeydown(e: KeyboardEvent) {
                                 <!-- Type Badge -->
                                 <span
                                     class="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[11px] font-semibold"
-                                    :class="accountTypeColors[account.type]?.badge || 'bg-surface/50 text-muted-foreground border-border'"
+                                    :class="
+                                        accountTypeColors[account.type]
+                                            ?.badge ||
+                                        'border-border bg-surface/50 text-muted-foreground'
+                                    "
                                 >
                                     <component
-                                        :is="accountTypeIcons[account.type] || Building2"
+                                        :is="
+                                            accountTypeIcons[account.type] ||
+                                            Building2
+                                        "
                                         class="h-3 w-3"
                                     />
-                                    {{ accountTypeLabels[account.type] || account.type }}
+                                    {{
+                                        accountTypeLabels[account.type] ||
+                                        account.type
+                                    }}
                                 </span>
 
                                 <!-- Revenue/Expense indicator -->
-                                <span v-if="account.revenue_sum > 0 || account.expense_sum > 0" class="flex items-center gap-2 text-[11px] text-muted-foreground">
-                                    <span v-if="account.revenue_sum > 0" class="flex items-center gap-0.5 text-revenue">
+                                <span
+                                    v-if="
+                                        account.revenue_sum > 0 ||
+                                        account.expense_sum > 0
+                                    "
+                                    class="flex items-center gap-2 text-[11px] text-muted-foreground"
+                                >
+                                    <span
+                                        v-if="account.revenue_sum > 0"
+                                        class="flex items-center gap-0.5 text-revenue"
+                                    >
                                         <ArrowUpRight class="h-3 w-3" />
-                                        {{ formatCompactCurrency(account.revenue_sum) }}
+                                        {{
+                                            formatCompactCurrency(
+                                                account.revenue_sum,
+                                            )
+                                        }}
                                     </span>
-                                    <span v-if="account.expense_sum > 0" class="flex items-center gap-0.5 text-destructive">
+                                    <span
+                                        v-if="account.expense_sum > 0"
+                                        class="flex items-center gap-0.5 text-destructive"
+                                    >
                                         <ArrowDownRight class="h-3 w-3" />
-                                        {{ formatCompactCurrency(account.expense_sum) }}
+                                        {{
+                                            formatCompactCurrency(
+                                                account.expense_sum,
+                                            )
+                                        }}
                                     </span>
                                 </span>
                             </div>
 
                             <!-- Balance -->
-                            <div class="mt-4 flex items-center justify-between border-t border-border pt-3">
+                            <div
+                                class="mt-4 flex items-center justify-between border-t border-border pt-3"
+                            >
                                 <div>
-                                    <p class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Saldo Atual</p>
+                                    <p
+                                        class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
+                                    >
+                                        Saldo Atual
+                                    </p>
                                     <p
                                         class="mt-0.5 text-xl font-bold tracking-tight"
-                                        :class="account.current_balance >= 0 ? 'text-revenue' : 'text-destructive'"
+                                        :class="
+                                            account.current_balance >= 0
+                                                ? 'text-revenue'
+                                                : 'text-destructive'
+                                        "
                                     >
-                                        {{ formatCurrency(account.current_balance) }}
+                                        {{
+                                            formatCurrency(
+                                                account.current_balance,
+                                            )
+                                        }}
                                     </p>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Saldo Inicial</p>
-                                    <p class="mt-0.5 text-sm font-medium text-muted-foreground">
+                                    <p
+                                        class="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase"
+                                    >
+                                        Saldo Inicial
+                                    </p>
+                                    <p
+                                        class="mt-0.5 text-sm font-medium text-muted-foreground"
+                                    >
                                         {{ formatCurrency(account.total) }}
                                     </p>
                                 </div>
@@ -376,24 +528,54 @@ function onSearchKeydown(e: KeyboardEvent) {
                     </div>
                 </div>
             </div>
-            <div v-else class="rounded-xl border border-border bg-card py-16 text-center">
-                <Wallet class="mx-auto mb-4 h-12 w-12 text-muted-foreground/30" />
-                <p class="text-base font-semibold text-foreground">Nenhuma conta encontrada</p>
+            <div
+                v-else
+                class="rounded-xl border border-border bg-card py-16 text-center"
+            >
+                <Wallet
+                    class="mx-auto mb-4 h-12 w-12 text-muted-foreground/30"
+                />
+                <p class="text-base font-semibold text-foreground">
+                    Nenhuma conta encontrada
+                </p>
                 <p class="mt-1 text-sm text-muted-foreground">
-                    {{ search ? 'Nenhum resultado para sua busca.' : 'Crie uma conta bancária para começar.' }}
+                    {{
+                        search
+                            ? 'Nenhum resultado para sua busca.'
+                            : 'Crie uma conta bancária para começar.'
+                    }}
                 </p>
                 <Button class="mt-6" @click="goToCreate" v-if="!search">
                     <Plus class="h-4 w-4" />
                     Nova Conta
                 </Button>
-                <Button variant="outline" class="mt-6" @click="clearSearch" v-else>
+                <Button
+                    variant="outline"
+                    class="mt-6"
+                    @click="clearSearch"
+                    v-else
+                >
                     <X class="h-4 w-4" />
                     Limpar Busca
                 </Button>
             </div>
 
             <!-- Pagination -->
-            <PaginationLinks v-if="accounts.meta && accounts.data.length" :meta="accounts.meta" class="mt-6" />
+            <PaginationLinks
+                v-if="accounts.meta && accounts.data.length"
+                :meta="accounts.meta"
+                class="mt-6"
+            />
         </div>
+
+        <ConfirmDialog
+            v-model:open="showDeleteDialog"
+            :title="`Tem certeza que deseja excluir a conta \u201c${accountToDelete?.account}\u201d?`"
+            description="Esta ação não pode ser desfeita. Todos os lançamentos vinculados a esta conta perderão a referência."
+            confirm-label="Sim, excluir"
+            variant="destructive"
+            @confirm="deleteAccount"
+            @cancel="accountToDelete = null"
+        />
     </AppLayout>
 </template>

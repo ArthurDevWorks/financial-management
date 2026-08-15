@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import StatBadge from '@/components/StatBadge.vue';
-import PageHeader from '@/components/PageHeader.vue';
 import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
@@ -57,7 +56,9 @@ const props = defineProps<{
     current_year: number;
 }>();
 
-const selectedMonthYear = ref(`${props.year}-${String(props.month).padStart(2, '0')}`);
+const selectedMonthYear = ref(
+    `${props.year}-${String(props.month).padStart(2, '0')}`,
+);
 
 const goToMonth = () => {
     const [y, m] = selectedMonthYear.value.split('-');
@@ -69,11 +70,16 @@ const goToCard = () => {
 };
 
 const isCurrentInvoice = computed(
-    () => props.month === props.current_month && props.year === props.current_year,
+    () =>
+        props.month === props.current_month &&
+        props.year === props.current_year,
 );
 
 const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+    new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
 
 const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
@@ -115,20 +121,27 @@ const byCategory = computed(() => {
             </Button>
 
             <!-- Header -->
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div
+                class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+            >
                 <div class="flex items-center gap-3">
                     <div
                         class="flex h-12 w-12 items-center justify-center rounded-2xl"
-                        :style="{ backgroundColor: card.color + '22', color: card.color }"
+                        :style="{
+                            backgroundColor: card.color + '22',
+                            color: card.color,
+                        }"
                     >
                         <CreditCard class="h-6 w-6" />
                     </div>
                     <div>
-                        <h1 class="text-xl font-bold text-foreground">{{ card.name }}</h1>
+                        <h1 class="text-xl font-bold text-foreground">
+                            {{ card.name }}
+                        </h1>
                         <p class="text-sm text-muted-foreground">
-                            {{ card.bank?.name ?? 'Sem banco' }} •
-                            Fecha dia {{ card.closing_day }} •
-                            Vence dia {{ card.due_day }}
+                            {{ card.bank?.name ?? 'Sem banco' }} • Fecha dia
+                            {{ card.closing_day }} • Vence dia
+                            {{ card.due_day }}
                         </p>
                     </div>
                 </div>
@@ -155,10 +168,14 @@ const byCategory = computed(() => {
             <!-- Invoice summary -->
             <div class="mt-6 grid gap-4 sm:grid-cols-3">
                 <!-- Total fatura -->
-                <div class="col-span-2 rounded-2xl border border-border bg-card p-6">
+                <div
+                    class="col-span-2 rounded-2xl border border-border bg-card p-6"
+                >
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <p
+                                class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
                                 Total da Fatura
                             </p>
                             <p class="mt-1 text-4xl font-bold text-foreground">
@@ -181,11 +198,23 @@ const byCategory = computed(() => {
 
                     <!-- Barra de progresso -->
                     <div class="mt-4">
-                        <div class="mb-1 flex justify-between text-xs text-muted-foreground">
-                            <span>{{ usagePercent }}% do limite de {{ formatCurrency(card.limit) }}</span>
-                            <span>{{ formatCurrency(card.limit - total) }} disponível</span>
+                        <div
+                            class="mb-1 flex justify-between text-xs text-muted-foreground"
+                        >
+                            <span
+                                >{{ usagePercent }}% do limite de
+                                {{ formatCurrency(card.limit) }}</span
+                            >
+                            <span
+                                >{{
+                                    formatCurrency(card.limit - total)
+                                }}
+                                disponível</span
+                            >
                         </div>
-                        <div class="h-2 w-full overflow-hidden rounded-full bg-border">
+                        <div
+                            class="h-2 w-full overflow-hidden rounded-full bg-border"
+                        >
                             <div
                                 class="h-full rounded-full transition-all duration-700"
                                 :class="usageColor"
@@ -199,19 +228,24 @@ const byCategory = computed(() => {
                         <span>
                             Período:
                             <strong class="text-foreground">
-                                {{ formatDate(period.start) }} a {{ formatDate(period.end) }}
+                                {{ formatDate(period.start) }} a
+                                {{ formatDate(period.end) }}
                             </strong>
                         </span>
                         <span>
                             Vencimento:
-                            <strong class="text-foreground">{{ formatDate(period.due) }}</strong>
+                            <strong class="text-foreground">{{
+                                formatDate(period.due)
+                            }}</strong>
                         </span>
                     </div>
                 </div>
 
                 <!-- Gastos por categoria -->
                 <div class="rounded-2xl border border-border bg-card p-5">
-                    <p class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <p
+                        class="mb-3 text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                    >
                         Por Categoria
                     </p>
                     <div v-if="byCategory.length" class="space-y-3">
@@ -220,7 +254,10 @@ const byCategory = computed(() => {
                             :key="cat.name"
                             class="flex items-center justify-between text-sm"
                         >
-                            <span class="text-foreground truncate max-w-[120px]">{{ cat.name }}</span>
+                            <span
+                                class="max-w-[120px] truncate text-foreground"
+                                >{{ cat.name }}</span
+                            >
                             <span class="font-semibold text-destructive">
                                 {{ formatCurrency(cat.total) }}
                             </span>
@@ -234,7 +271,9 @@ const byCategory = computed(() => {
 
             <!-- Releases list -->
             <div class="mt-6 rounded-2xl border border-border bg-card">
-                <div class="flex items-center gap-2 border-b border-border px-6 py-4">
+                <div
+                    class="flex items-center gap-2 border-b border-border px-6 py-4"
+                >
                     <Receipt class="h-4 w-4 text-muted-foreground" />
                     <h2 class="font-semibold text-foreground">
                         Lançamentos da Fatura
@@ -254,7 +293,8 @@ const byCategory = computed(() => {
                         Nenhum lançamento neste período
                     </p>
                     <p class="mt-1 text-xs text-muted-foreground">
-                        Período: {{ formatDate(period.start) }} a {{ formatDate(period.end) }}
+                        Período: {{ formatDate(period.start) }} a
+                        {{ formatDate(period.end) }}
                     </p>
                 </div>
 
@@ -262,16 +302,24 @@ const byCategory = computed(() => {
                 <table v-else class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-border">
-                            <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <th
+                                class="px-6 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
                                 Descrição
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
                                 Categoria
                             </th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
                                 Data
                             </th>
-                            <th class="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            <th
+                                class="px-6 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                            >
                                 Valor
                             </th>
                         </tr>
@@ -280,22 +328,35 @@ const byCategory = computed(() => {
                         <tr
                             v-for="release in releases"
                             :key="release.id"
-                            class="border-b border-border transition-colors hover:bg-surface/50 last:border-0"
+                            class="border-b border-border transition-colors last:border-0 hover:bg-surface/50"
                         >
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <span class="font-medium text-foreground">{{ release.title }}</span>
+                                    <span class="font-medium text-foreground">{{
+                                        release.title
+                                    }}</span>
                                     <span
                                         v-if="release.installment_number"
                                         class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
                                     >
-                                        {{ release.installment_number }}/{{ release.total_installments }}
+                                        {{ release.installment_number }}/{{
+                                            release.total_installments
+                                        }}
                                     </span>
                                 </div>
                             </td>
                             <td class="px-4 py-4">
-                                <StatBadge :variant="release.type === 'revenue' ? 'revenue' : 'expense'">
-                                    {{ release.category?.name ?? 'Sem Categoria' }}
+                                <StatBadge
+                                    :variant="
+                                        release.type === 'revenue'
+                                            ? 'revenue'
+                                            : 'expense'
+                                    "
+                                >
+                                    {{
+                                        release.category?.name ??
+                                        'Sem Categoria'
+                                    }}
                                 </StatBadge>
                             </td>
                             <td class="px-4 py-4 text-muted-foreground">
@@ -303,7 +364,11 @@ const byCategory = computed(() => {
                             </td>
                             <td
                                 class="px-6 py-4 text-right font-semibold"
-                                :class="release.type === 'revenue' ? 'text-revenue' : 'text-destructive'"
+                                :class="
+                                    release.type === 'revenue'
+                                        ? 'text-revenue'
+                                        : 'text-destructive'
+                                "
                             >
                                 {{ release.type === 'revenue' ? '+' : '-' }}
                                 {{ formatCurrency(release.amount) }}

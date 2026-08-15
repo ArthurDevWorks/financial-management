@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ReleaseStoreRequest extends FormRequest
 {
@@ -13,16 +14,24 @@ class ReleaseStoreRequest extends FormRequest
 
     public function rules(): array
     {
+        $userId = $this->user()?->id;
+
         return [
-            'account_id' => 'required|exists:accounts,id',
+            'account_id' => [
+                'required',
+                Rule::exists('accounts', 'id')->where('user_id', $userId),
+            ],
             'category_id' => 'required|exists:categories,id',
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'amount' => 'required|numeric|min:0.01',
+            'amount' => 'required|numeric|min:0.01|max:999999999.99',
             'type' => 'required|in:revenue,expense',
             'date' => 'required|date',
             'payment_method' => 'nullable|in:cash,credit_card,debit_card,pix',
-            'credit_card_id' => 'nullable|exists:credit_cards,id',
+            'credit_card_id' => [
+                'nullable',
+                Rule::exists('credit_cards', 'id')->where('user_id', $userId),
+            ],
             'is_installment' => 'nullable|boolean',
             'total_installments' => 'nullable|integer|min:2|max:255',
             'is_recurring' => 'nullable|boolean',
@@ -42,20 +51,20 @@ class ReleaseStoreRequest extends FormRequest
                     $validator->errors()->add('credit_card_id', 'Selecione o cartão de crédito utilizado.');
                 }
 
-                if (!empty($data['is_installment'])) {
+                if (! empty($data['is_installment'])) {
                     if (empty($data['total_installments']) || (int) $data['total_installments'] < 2) {
                         $validator->errors()->add('total_installments', 'Informe o número de parcelas (mínimo 2).');
                     } else {
-                        $amount = (float) $data['amount'];
+                        $amountCents = (int) round((float) $data['amount'] * 100);
                         $installments = (int) $data['total_installments'];
-                        if ($amount / $installments < 0.01) {
+                        if ($amountCents < $installments) {
                             $validator->errors()->add('total_installments', "O valor informado não pode ser dividido em {$installments} parcelas de pelo menos R$ 0,01.");
                         }
                     }
                 }
             }
 
-            if (!empty($data['is_recurring'])) {
+            if (! empty($data['is_recurring'])) {
                 if (empty($data['recurrence_frequency'])) {
                     $validator->errors()->add('recurrence_frequency', 'Informe a frequência da recorrência.');
                 }
@@ -64,7 +73,7 @@ class ReleaseStoreRequest extends FormRequest
                 }
             }
 
-            if (!empty($data['is_installment']) && !empty($data['is_recurring'])) {
+            if (! empty($data['is_installment']) && ! empty($data['is_recurring'])) {
                 $validator->errors()->add('is_recurring', 'Um lançamento não pode ser parcelado e recorrente ao mesmo tempo.');
             }
         });

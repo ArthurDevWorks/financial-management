@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { ArrowRightLeft, Download, Plus } from 'lucide-vue-next';
-import { computed } from 'vue';
 
 interface PaginationMeta {
     current_page: number;
@@ -201,7 +200,9 @@ const formatDate = (date: string) => {
                                     v-if="release.installment_number"
                                     class="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
                                 >
-                                    {{ release.installment_number }}/{{ release.total_installments }}
+                                    {{ release.installment_number }}/{{
+                                        release.total_installments
+                                    }}
                                 </span>
                                 <span
                                     v-if="release.recurrence_id"
@@ -234,16 +235,30 @@ const formatDate = (date: string) => {
                                 v-if="release.payment_method"
                                 class="text-xs text-muted-foreground"
                             >
-                                {{ paymentMethodLabels[release.payment_method] ?? release.payment_method }}
+                                {{
+                                    paymentMethodLabels[
+                                        release.payment_method
+                                    ] ?? release.payment_method
+                                }}
                             </span>
-                            <span v-else class="text-xs text-muted-foreground/50">—</span>
+                            <span
+                                v-else
+                                class="text-xs text-muted-foreground/50"
+                                >—</span
+                            >
                         </td>
                         <td class="px-4 py-4 text-center">
                             <span
                                 class="inline-block rounded-full px-2.5 py-0.5 text-[11px] font-medium"
-                                :class="statusColors[release.status] || 'bg-surface text-muted-foreground border border-border'"
+                                :class="
+                                    statusColors[release.status] ||
+                                    'border border-border bg-surface text-muted-foreground'
+                                "
                             >
-                                {{ statusLabels[release.status] ?? release.status }}
+                                {{
+                                    statusLabels[release.status] ??
+                                    release.status
+                                }}
                             </span>
                         </td>
                         <td class="px-4 py-4 text-muted-foreground">

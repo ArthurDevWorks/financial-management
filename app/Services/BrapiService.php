@@ -135,7 +135,7 @@ class BrapiService
             ? $totalDebt - $totalCash
             : null;
 
-        return [
+        $rawData = [
             'ticker' => $s['symbol'] ?? $quote['symbol'] ?? $symbol,
             'name' => $p['name'] ?? $quote['longName'] ?? $quote['shortName'] ?? $symbol,
             'current_price' => $quote['regularMarketPrice'] ?? $f['currentPrice'] ?? null,
@@ -155,6 +155,9 @@ class BrapiService
             'profit_margin' => $this->decimalToPercent($f, 'profitMargins'),
             'ebitda_margin' => $this->decimalToPercent($f, 'ebitdaMargins'),
             'gross_margin' => $this->decimalToPercent($f, 'grossMargins'),
+            'ebitda' => $ebitda,
+            'net_debt' => $netDebt,
+            'gross_debt' => $totalDebt,
             'debt_to_ebitda' => ($totalDebt !== null && $ebitda !== null && $ebitda != 0)
                 ? round($totalDebt / $ebitda, 4) : null,
             'net_debt_to_ebitda' => ($netDebt !== null && $ebitda !== null && $ebitda != 0)
@@ -176,6 +179,18 @@ class BrapiService
             'full_time_employees' => $p['fullTimeEmployees'] ?? null,
             'asset_type' => $this->detectAssetType($symbol),
         ];
+
+        // Normaliza setor e nome
+        $sector = SectorMapper::normalize($rawData['sector'], $rawData['industry']);
+        $normalizedName = NameNormalizer::normalize($symbol, $rawData['name'] ?? null);
+
+        $rawData['sector'] = $sector['sector'] ?? $rawData['sector'];
+        $rawData['subsector'] = $sector['subsector'] ?? $rawData['industry'];
+        if ($normalizedName !== null) {
+            $rawData['name'] = $normalizedName;
+        }
+
+        return $rawData;
     }
 
     private function buildFiiData(string $symbol, array $quote, array $fiiIndicators): array
@@ -195,7 +210,7 @@ class BrapiService
             $dps = $f['dividendYield1m'] * $f['price'];
         }
 
-        return [
+        $rawData = [
             'ticker' => $f['symbol'] ?? $quote['symbol'] ?? $symbol,
             'name' => $f['name'] ?? $quote['longName'] ?? $quote['shortName'] ?? $symbol,
             'current_price' => $f['price'] ?? $quote['regularMarketPrice'] ?? null,
@@ -231,6 +246,23 @@ class BrapiService
             'logourl' => $quote['logourl'] ?? $p['logoUrl'] ?? null,
             'asset_type' => 'fii',
         ];
+
+        // Normaliza segmento FII e nome
+        $fii = FiiSegmentMapper::normalize(
+            $rawData['sector'],
+            $rawData['industry'],
+            'fii'
+        );
+        $normalizedName = NameNormalizer::normalize($symbol, $rawData['name'] ?? null);
+
+        $rawData['sector'] = $fii['sector'] ?? $rawData['sector'];
+        $rawData['subsector'] = $fii['subsector'] ?? $rawData['industry'];
+        $rawData['segment'] = $fii['segment'] ?? $rawData['sector'];
+        if ($normalizedName !== null) {
+            $rawData['name'] = $normalizedName;
+        }
+
+        return $rawData;
     }
 
     private function fetchQuote(string $symbol): ?array

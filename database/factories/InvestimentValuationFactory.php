@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Asset;
 use App\Models\InvestimentValuation;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,6 +17,7 @@ class InvestimentValuationFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => User::factory(),
             'asset_id' => Asset::factory(),
             'method' => InvestimentValuation::METHOD_DCF,
             'assumptions' => [

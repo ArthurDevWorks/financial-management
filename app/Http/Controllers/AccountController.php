@@ -22,8 +22,8 @@ class AccountController extends Controller
         $query = Account::query()
             ->where('user_id', Auth::id())
             ->with(['bank'])
-            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')->where('status', 'paid')], 'amount')
-            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('user_id', Auth::id())->where('type', 'revenue')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('user_id', Auth::id())->where('type', 'expense')->where('status', 'paid')], 'amount')
             ->when($request->search, fn ($q, $search) => $q->where(function ($q) use ($search) {
                 $q->where('account', 'like', "%{$search}%")
                     ->orWhereHas('bank', fn ($q) => $q->where('name', 'like', "%{$search}%"));
@@ -82,6 +82,10 @@ class AccountController extends Controller
      */
     public function edit(Account $account)
     {
+        if ($account->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         return Inertia::render('accounts/Edit', [
             'account' => $account->load('bank'),
             'banks' => Bank::all(),
@@ -94,6 +98,10 @@ class AccountController extends Controller
      */
     public function update(AccountUpdateRequest $request, Account $account)
     {
+        if ($account->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $account->update($request->validated());
 
         return redirect()->route('accounts.index')
@@ -105,8 +113,8 @@ class AccountController extends Controller
         $accounts = Account::query()
             ->where('user_id', Auth::id())
             ->with(['bank'])
-            ->withSum(['releases as revenue_sum' => fn ($q) => $q->where('type', 'revenue')->where('status', 'paid')], 'amount')
-            ->withSum(['releases as expense_sum' => fn ($q) => $q->where('type', 'expense')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($q) => $q->where('user_id', Auth::id())->where('type', 'revenue')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($q) => $q->where('user_id', Auth::id())->where('type', 'expense')->where('status', 'paid')], 'amount')
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -140,6 +148,10 @@ class AccountController extends Controller
      */
     public function destroy(Account $account)
     {
+        if ($account->user_id !== Auth::id()) {
+            abort(403);
+        }
+
         $account->delete();
 
         return redirect()->route('accounts.index')

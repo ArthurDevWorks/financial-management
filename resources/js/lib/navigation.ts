@@ -42,12 +42,22 @@ export const navSections: NavSection[] = [
         title: 'Investimentos',
         items: [
             { label: 'Screening', icon: Search, href: '/screening' },
-            { label: 'Valuations', icon: ChartNoAxesCombined, href: '/valuations' },
+            {
+                label: 'Valuations',
+                icon: ChartNoAxesCombined,
+                href: '/valuations',
+            },
         ],
     },
 ];
 
 export const footerNavItems: NavItem[] = [
     { label: 'Configurações', icon: Settings, href: '/settings' },
-    { label: 'Sair', icon: LogOut, href: '/logout', method: 'post', danger: true },
+    {
+        label: 'Sair',
+        icon: LogOut,
+        href: '/logout',
+        method: 'post',
+        danger: true,
+    },
 ];

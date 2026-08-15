@@ -8,7 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('releases:generate-recurring')->daily();
+Schedule::command('releases:generate-recurring')->daily()->withoutOverlapping();
 
 Schedule::command('assets:sync', ['--hours' => 4])
     ->weekdays()

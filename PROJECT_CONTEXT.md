@@ -430,3 +430,75 @@ O Fidax usa uma identidade dark premium com teal como cor primária e gold como 
 **Source:** Revisão do modelo Gordon (usuário)
 
 **Action item (pendente):** decidir se o `GordonValuationService` PHP deve passar a ser usado (hoje é código morto) e se deve incorporar `risk_premium` no discount rate para alinhar com o frontend.
+
+### 2026-08-15 - Padronização de Toasts em Todas as Áreas
+
+**Contexto:** Toasts estavam parcialmente implementados com inconsistências: `<Toaster>` duplicado em 3 layouts, `useToast().show()` era código morto, `BankController` tinha typo `sucess`, confirm() nativo em vez de ConfirmDialog, Settings usava texto inline "Salvo.", erros client-side silenciados.
+
+**Discovery:** O projeto tinha `vue-sonner` instalado mas com múltiplos problemas de padronização:
+- `<Toaster>` montado em `AppLayout`, `AuthSimpleLayout` e `Welcome` (este dentro de `<Head>`, bug)
+- `useFlashMessages()` duplicado em 2 layouts, ausente no Welcome
+- `router.on('error')` não registrado globalmente
+- `accounts/Index.vue` usava `confirm()` nativo
+- `settings/Profile.vue` e `settings/Password.vue` usavam texto inline "Salvo." em vez de toast
+- `BankController` tinha typo `sucess` (nunca exibido) e `destroy` sem flash
+
+**Solution:** Implementação padronizada de toasts em 8 etapas:
+1. **Provider global único**: `app.ts` monta `[h(App, props), h(Toaster, ...)]` com `useFlashMessages()` no root. Removido de 3 arquivos.
+2. **Composable padronizado**: `useToast()` exporta `success/error/info/warning/show`. Flash tipado em `types/index.d.ts`.
+3. **Handler global de erros**: `router.on('error')` toast genérico para validações em fire-and-forget. `screening/Index.vue` loadMore: catch vazio substituído por toast.
+4. **Backend**: `BankController` typo corrigido (`sucess→success`), ramo erro usa chave `error`, `destroy` com flash. Teste atualizado.
+5. **ConfirmDialog**: `accounts/Index.vue` trocou `confirm()` nativo por `ConfirmDialog` destrutivo.
+6. **Settings**: `Profile.vue` e `Password.vue` usam `on-success` → toast em vez de texto inline.
+7. **Testes**: `BankControllerTest` corrigido, asserção de flash no delete adicionada.
+8. **Docs**: Seção "Toast Pattern" no `PROJECT_CONTEXT.md`.
+
+**Padrão resultante:**
+- Backend: redirect com `->with('success'|'error', 'Mensagem em pt-BR')` — chave `error` para falhas, `success` para sucesso.
+- Frontend: `useToast().success(msg)` para operações client-side, `router.on('error')` global para validações não tratadas inline.
+- Sucesso global via `useFlashMessages()` watcher (montado no root).
+- `ConfirmDialog` para todas as exclusões (sem `confirm()` nativo).
+
+**Source:** Decisão do usuário (padronização de UI/UX)
+
+---
+
+# 9.5 Asset Sector Normalization (2026-08-15)
+
+**Problema:** Setores e nomes de ativos vieram de fontes diferentes (BrAPI/Yahoo Finance em inglês, StatusInvest em português) com inconsistências:
+- BrAPI: `sector` = "Energy", `industry` = "Oil & Gas Integrated"
+- StatusInvest: `sectorname` = "Energia", `subsectorname` = "Petróleo e Gás"
+- Nomes: `Itaúsa SA`, `Itausa Investimentos`, `ITSA4` sem padronização
+- FIIs: `segmentType` = "tijolo", `segmentoAtuacao` = "Logística" (às vezes inconsistente)
+
+**Solução:** 3 normalizadores PHP + command Artisan:
+
+1. **`SectorMapper`** (`app/Services/SectorMapper.php`):
+   - Mapeia ~11 setores EN→PT (Energy→Energia, Financial Services→Financeiro, etc.)
+   - Mapeia ~80 indústrias EN→PT (Oil & Gas Integrated→Petróleo e Gás, Banks→Bancos, etc.)
+   - Normaliza valores do StatusInvest que precisam de ajuste
+
+2. **`NameNormalizer`** (`app/Services/NameNormalizer.php`):
+   - Mapa manual de ~60 empresas B3 (ITSA3/4→Itaúsa, PETR3/4→Petrobras ON/PN, etc.)
+   - Normaliza strings: remove S.A./SA/S/A, normaliza P.N/PN/ON, limpa espaços múltiplos
+
+3. **`FiiSegmentMapper`** (`app/Services/FiiSegmentMapper.php`):
+   - Classifica FIIs: Tijolo/Papel/Híbrido/Fundo de Fundos/Hedge
+   - Sub-segmentos: Logística, Shoppings, Lajes Corporativas, Residencial, etc.
+   - Mapeia StatusInvest→BrAPI (ex: "Logística"→Tijolo)
+
+**Aplicação:** Todos os 4 caminhos de dados no `AssetSyncService` + 2 no `BrapiService` aplicam normalizadores antes de salvar.
+
+**Command:** `php artisan assets:normalize-sectors [--dry-run]` para re-normalizar dados existentes.
+
+**Padrão resultante:**
+- Setores sempre em PT, normalizados entre fontes
+- Nomes de empresas consistentes entre classes de ações (ITSA3/4 = mesmo nome)
+- FIIs sempre classificados como Tijolo/Papel/Híbrido/Fundo de Fundos
+- Sub-setores e sub-segmentos normalizados
+
+**Source:** Decisão do usuário (consistência de dados)
+
+---
+
+# 10. Lessons Learned

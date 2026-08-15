@@ -1,26 +1,38 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
+import AssetDataCard from '@/components/AssetDataCard.vue';
+import CurrencyInput from '@/components/CurrencyInput.vue';
+import MarginGauge from '@/components/MarginGauge.vue';
+import NumberInput from '@/components/NumberInput.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import MarginGauge from '@/components/MarginGauge.vue';
-import AssetDataCard from '@/components/AssetDataCard.vue';
-import NumberInput from '@/components/NumberInput.vue';
-import CurrencyInput from '@/components/CurrencyInput.vue';
-import { cn } from '@/lib/utils';
-import { Line as ChartLine } from 'vue-chartjs';
-import {
-    Chart as ChartJS,
-    CategoryScale, LinearScale, PointElement, LineElement,
-    Title, Tooltip, Legend,
-} from 'chart.js';
-import { ref, computed, watch } from 'vue';
-import { ArrowLeft, Save } from 'lucide-vue-next';
-import { router } from '@inertiajs/vue3';
-import { usePrecoTeto } from '@/composables/usePrecoTeto';
 import { useDcf } from '@/composables/useDcf';
+import { usePrecoTeto } from '@/composables/usePrecoTeto';
+import AppLayout from '@/layouts/AppLayout.vue';
+import { cn } from '@/lib/utils';
+import { router } from '@inertiajs/vue3';
+import {
+    CategoryScale,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip,
+} from 'chart.js';
+import { ArrowLeft, Save } from 'lucide-vue-next';
+import { computed, ref, watch } from 'vue';
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    Title,
+    Tooltip,
+    Legend,
+);
 
 interface Asset {
     id: number;
@@ -59,9 +71,9 @@ const props = defineProps<{
 }>();
 
 const methodToRoute: Record<string, string> = {
-    'preco_teto': 'preco-teto',
-    'dcf': 'dcf',
-    'gordon': 'gordon',
+    preco_teto: 'preco-teto',
+    dcf: 'dcf',
+    gordon: 'gordon',
 };
 
 function resolveInitialTab(): string {
@@ -86,7 +98,10 @@ function toNumber(value: unknown): number | null {
 function formatCurrency(value: unknown): string {
     const num = toNumber(value);
     if (num === null) return '—';
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(num);
 }
 
 function formatPercent(value: unknown): string {
@@ -101,9 +116,13 @@ const dps = ref(gordonData?.dps ?? props.asset.dividends_per_share ?? 0);
 const discountRate = ref(gordonData?.discount_rate ?? 13);
 const riskPremium = ref(gordonData?.risk_premium ?? 4);
 const growthPerpetuity = ref(gordonData?.growth_perpetuity ?? 3.0);
-const currentPrice = ref(gordonData?.current_price ?? props.asset.current_price ?? 0);
+const currentPrice = ref(
+    gordonData?.current_price ?? props.asset.current_price ?? 0,
+);
 
-const gordonEffectiveKe = computed(() => discountRate.value + riskPremium.value);
+const gordonEffectiveKe = computed(
+    () => discountRate.value + riskPremium.value,
+);
 
 const gordonFairPrice = computed(() => {
     const ke = gordonEffectiveKe.value / 100;
@@ -114,7 +133,10 @@ const gordonFairPrice = computed(() => {
 
 const gordonUpside = computed(() => {
     if (!gordonFairPrice.value || !currentPrice.value) return null;
-    return ((gordonFairPrice.value - currentPrice.value) / currentPrice.value) * 100;
+    return (
+        ((gordonFairPrice.value - currentPrice.value) / currentPrice.value) *
+        100
+    );
 });
 
 const gordonReturn = computed(() => {
@@ -126,14 +148,17 @@ const gordonMargin = computed(() => {
     const fp = gordonFairPrice.value;
     const cp = currentPrice.value;
     if (!fp || !cp) return 0;
-    return (1 - cp / fp) * 100;
+    return ((fp - cp) / cp) * 100;
 });
 
-const growthRates = ref<number[]>(gordonData?.growth_rates ?? [8.0, 7.0, 6.0, 5.0, 4.0]);
+const growthRates = ref<number[]>(
+    gordonData?.growth_rates ?? [8.0, 7.0, 6.0, 5.0, 4.0],
+);
 
 const projectedDividends = computed(() => {
     let d = dps.value;
-    const result: { year: number; growth: number; dps: number; pv: number }[] = [];
+    const result: { year: number; growth: number; dps: number; pv: number }[] =
+        [];
     const ke = gordonEffectiveKe.value / 100;
 
     growthRates.value.forEach((g, i) => {
@@ -146,7 +171,8 @@ const projectedDividends = computed(() => {
 
     const terminalGrowth = growthPerpetuity.value / 100;
     const terminalDps = d * (1 + terminalGrowth);
-    const terminalPv = terminalDps / (ke - terminalGrowth) / Math.pow(1 + ke, 5);
+    const terminalPv =
+        terminalDps / (ke - terminalGrowth) / Math.pow(1 + ke, 5);
 
     return { years: result, terminalDps, terminalPv };
 });
@@ -166,11 +192,11 @@ const sensitivityData = computed(() => {
     ];
 
     return {
-        labels: keValues.map(v => v.toFixed(1) + '%'),
+        labels: keValues.map((v) => v.toFixed(1) + '%'),
         datasets: [
             ...gValues.map((g, i) => ({
                 label: `g = ${g.toFixed(1)}%`,
-                data: keValues.map(ke => {
+                data: keValues.map((ke) => {
                     const k = ke / 100;
                     const gr = g / 100;
                     if (k <= gr || !dpsSens.value) return null;
@@ -203,7 +229,12 @@ const sensitivityOptions = {
     plugins: {
         legend: {
             position: 'bottom' as const,
-            labels: { boxWidth: 12, usePointStyle: true, padding: 12, font: { size: 10 } },
+            labels: {
+                boxWidth: 12,
+                usePointStyle: true,
+                padding: 12,
+                font: { size: 10 },
+            },
         },
         tooltip: {
             backgroundColor: 'hsl(228, 22%, 9%)',
@@ -211,9 +242,15 @@ const sensitivityOptions = {
             borderWidth: 1,
             padding: 8,
             callbacks: {
-                label: (ctx: { parsed: { y: number | null }; dataset: { label: string } }) => {
-                    if (ctx.parsed.y === null) return ctx.dataset.label + ': N/A';
-                    return ctx.dataset.label + ': R$ ' + ctx.parsed.y.toFixed(2);
+                label: (ctx: {
+                    parsed: { y: number | null };
+                    dataset: { label: string };
+                }) => {
+                    if (ctx.parsed.y === null)
+                        return ctx.dataset.label + ': N/A';
+                    return (
+                        ctx.dataset.label + ': R$ ' + ctx.parsed.y.toFixed(2)
+                    );
                 },
             },
         },
@@ -221,13 +258,24 @@ const sensitivityOptions = {
     scales: {
         x: {
             grid: { display: false },
-            title: { display: true, text: 'Taxa de Desconto (Ke)', font: { size: 11 } },
+            title: {
+                display: true,
+                text: 'Taxa de Desconto (Ke)',
+                font: { size: 11 },
+            },
             ticks: { font: { size: 10 } },
         },
         y: {
             grid: { color: 'hsla(228, 15%, 14%, 0.3)' },
-            title: { display: true, text: 'Preço Justo (R$)', font: { size: 11 } },
-            ticks: { callback: (v: number) => 'R$' + v.toFixed(0), font: { size: 10 } },
+            title: {
+                display: true,
+                text: 'Preço Justo (R$)',
+                font: { size: 11 },
+            },
+            ticks: {
+                callback: (v: number) => 'R$' + v.toFixed(0),
+                font: { size: 10 },
+            },
         },
     },
 };
@@ -235,11 +283,19 @@ const sensitivityOptions = {
 // ─── Preço Teto ──────────────────────────────────
 const ptData = props.existingValuations?.preco_teto?.assumptions;
 const ptDesiredYield = ref(ptData?.desired_yield ?? 6);
-const ptProjectedPayout = ref(ptData?.projected_payout ?? props.asset.payout ?? 50);
-const ptNetIncome = ref(ptData?.projected_net_income ?? props.asset.net_income ?? 0);
-const ptTotalShares = ref(ptData?.total_shares ?? props.asset.total_shares ?? 0);
+const ptProjectedPayout = ref(
+    ptData?.projected_payout ?? props.asset.payout ?? 50,
+);
+const ptNetIncome = ref(
+    ptData?.projected_net_income ?? props.asset.net_income ?? 0,
+);
+const ptTotalShares = ref(
+    ptData?.total_shares ?? props.asset.total_shares ?? 0,
+);
 const ptGrowthRate = ref(ptData?.projected_growth_rate ?? 5);
-const ptCurrentPrice = ref(ptData?.current_price_per_share ?? props.asset.current_price ?? 0);
+const ptCurrentPrice = ref(
+    ptData?.current_price_per_share ?? props.asset.current_price ?? 0,
+);
 
 const {
     precoTeto: ptPrecoTeto,
@@ -265,8 +321,12 @@ const dcfPayout = ref(dcfData?.payout ?? props.asset.payout ?? 0);
 const dcfDiscountRate = ref(dcfData?.discount_rate ?? 12.5);
 const dcfTerminalGrowth = ref(dcfData?.terminal_growth_rate ?? 3.0);
 const dcfProjectionYears = ref(dcfData?.projection_years ?? 5);
-const dcfTotalShares = ref(dcfData?.total_shares ?? props.asset.total_shares ?? 0);
-const dcfCurrentPrice = ref(dcfData?.current_price_per_share ?? props.asset.current_price ?? 0);
+const dcfTotalShares = ref(
+    dcfData?.total_shares ?? props.asset.total_shares ?? 0,
+);
+const dcfCurrentPrice = ref(
+    dcfData?.current_price_per_share ?? props.asset.current_price ?? 0,
+);
 
 const buildDefaultGrowthRates = (n: number) => {
     return Array.from({ length: n }, () => 5);
@@ -274,7 +334,7 @@ const buildDefaultGrowthRates = (n: number) => {
 
 const dcfGrowthRates = ref<number[]>(
     dcfData?.growth_rates?.slice(0, dcfProjectionYears.value) ??
-    buildDefaultGrowthRates(dcfProjectionYears.value)
+        buildDefaultGrowthRates(dcfProjectionYears.value),
 );
 
 watch(dcfProjectionYears, (newLen, oldLen) => {
@@ -373,13 +433,18 @@ function saveGordon() {
             <!-- Header -->
             <div class="mb-6 flex items-center justify-between">
                 <div>
-                    <a href="/screening" class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
+                    <a
+                        href="/screening"
+                        class="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
                         <ArrowLeft class="h-4 w-4" />
                         Voltar
                     </a>
                     <h1 class="mt-2 text-2xl font-bold tracking-tight">
                         <span class="text-primary">V</span>aluation
-                        <span class="text-lg font-normal text-muted-foreground">— {{ asset.ticker }} {{ asset.name }}</span>
+                        <span class="text-lg font-normal text-muted-foreground"
+                            >— {{ asset.ticker }} {{ asset.name }}</span
+                        >
                     </h1>
                 </div>
             </div>
@@ -389,7 +454,9 @@ function saveGordon() {
 
             <!-- Tab Bar -->
             <div class="mb-6">
-                <div class="inline-flex h-10 items-center justify-center rounded-xl bg-surface p-1 text-muted-foreground">
+                <div
+                    class="inline-flex h-10 items-center justify-center rounded-xl bg-surface p-1 text-muted-foreground"
+                >
                     <button
                         v-for="tab in [
                             { value: 'preco-teto', label: 'Preço Teto' },
@@ -398,25 +465,36 @@ function saveGordon() {
                         ]"
                         :key="tab.value"
                         role="tab"
-                        :class="cn(
-                            'inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium ring-offset-background transition-all',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                            activeTab === tab.value
-                                ? 'bg-card text-foreground shadow-sm'
-                                : 'hover:text-foreground'
-                        )"
+                        :class="
+                            cn(
+                                'inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap ring-offset-background transition-all',
+                                'focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none',
+                                activeTab === tab.value
+                                    ? 'bg-card text-foreground shadow-sm'
+                                    : 'hover:text-foreground',
+                            )
+                        "
                         @click="activeTab = tab.value"
                     >
-                        <span :class="{ 'text-primary': tab.value === activeTab }">{{ tab.label }}</span>
+                        <span
+                            :class="{ 'text-primary': tab.value === activeTab }"
+                            >{{ tab.label }}</span
+                        >
                     </button>
                 </div>
             </div>
 
             <!-- ─── PRECO TETO TAB ─────────────────────────────── -->
-            <div v-if="activeTab === 'preco-teto'" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div class="rounded-xl border border-border bg-card p-5 lg:col-span-1">
+            <div
+                v-if="activeTab === 'preco-teto'"
+                class="grid grid-cols-1 gap-6 lg:grid-cols-3"
+            >
+                <div
+                    class="rounded-xl border border-border bg-card p-5 lg:col-span-1"
+                >
                     <h3 class="mb-4 text-sm font-semibold">
-                        <span class="text-primary">Premissas</span> do Investidor
+                        <span class="text-primary">Premissas</span> do
+                        Investidor
                     </h3>
                     <p class="mb-4 text-xs text-muted-foreground">
                         Defina suas expectativas para projetar o preço teto
@@ -424,29 +502,57 @@ function saveGordon() {
                     <div class="space-y-4">
                         <div>
                             <Label>Dividend Yield Desejado (%)</Label>
-                            <Input v-model.number="ptDesiredYield" type="number" step="0.1" min="0" class="mt-1" />
+                            <Input
+                                v-model.number="ptDesiredYield"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Payout Projetado (%)</Label>
-                            <Input v-model.number="ptProjectedPayout" type="number" step="0.1" min="0" class="mt-1" />
+                            <Input
+                                v-model.number="ptProjectedPayout"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Lucro Líquido (R$)</Label>
-                            <CurrencyInput v-model="ptNetIncome" placeholder="0,00" class="mt-1" />
+                            <CurrencyInput
+                                v-model="ptNetIncome"
+                                placeholder="0,00"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Total de Ações</Label>
-                            <NumberInput v-model.number="ptTotalShares" :precision="0" />
+                            <NumberInput
+                                v-model.number="ptTotalShares"
+                                :precision="0"
+                            />
                         </div>
                         <div>
                             <Label class="flex items-center justify-between">
                                 <span>Crescimento</span>
                             </Label>
-                            <Input v-model.number="ptGrowthRate" type="number" step="0.1" class="mt-1" />
+                            <Input
+                                v-model.number="ptGrowthRate"
+                                type="number"
+                                step="0.1"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Preço Atual (R$)</Label>
-                            <CurrencyInput v-model="ptCurrentPrice" placeholder="0,00" class="mt-1" />
+                            <CurrencyInput
+                                v-model="ptCurrentPrice"
+                                placeholder="0,00"
+                                class="mt-1"
+                            />
                         </div>
                     </div>
                     <div class="mt-6">
@@ -460,78 +566,171 @@ function saveGordon() {
                 <div class="space-y-6 lg:col-span-2">
                     <div class="rounded-xl border border-border bg-card p-5">
                         <h3 class="mb-4 text-sm font-semibold">
-                            <span class="text-primary">Resultados</span> do Preço Teto
+                            <span class="text-primary">Resultados</span> do
+                            Preço Teto
                         </h3>
                         <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Teto</p>
-                                <p class="mt-1 text-2xl font-bold text-primary">{{ formatCurrency(ptPrecoTeto) }}</p>
+                            <div
+                                class="overflow-hidden rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Preço Teto
+                                </p>
+                                <p class="mt-1 text-2xl font-bold text-primary">
+                                    {{ formatCurrency(ptPrecoTeto) }}
+                                </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Yield Projetado</p>
-                                <p class="mt-1 text-xl font-bold text-revenue">{{ formatPercent(ptYield) }}</p>
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Yield Projetado
+                                </p>
+                                <p class="mt-1 text-xl font-bold text-revenue">
+                                    {{ formatPercent(ptYield) }}
+                                </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Margem</p>
-                                <p class="mt-1 text-xl font-bold" :class="(ptMargem ?? 0) >= 0 ? 'text-revenue' : 'text-destructive'">
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Margem
+                                </p>
+                                <p
+                                    class="mt-1 text-xl font-bold"
+                                    :class="
+                                        (ptMargem ?? 0) >= 0
+                                            ? 'text-revenue'
+                                            : 'text-destructive'
+                                    "
+                                >
                                     {{ formatPercent(ptMargem) }}
                                 </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">LPA Projetado</p>
-                                <p class="mt-1 text-lg font-bold">{{ formatCurrency(ptLpa) }}</p>
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    LPA Projetado
+                                </p>
+                                <p class="mt-1 text-lg font-bold">
+                                    {{ formatCurrency(ptLpa) }}
+                                </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">DPA Projetado</p>
-                                <p class="mt-1 text-lg font-bold">{{ formatCurrency(ptDpa) }}</p>
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    DPA Projetado
+                                </p>
+                                <p class="mt-1 text-lg font-bold">
+                                    {{ formatCurrency(ptDpa) }}
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     <div class="rounded-xl border border-border bg-card p-5">
-                        <MarginGauge :value="ptMargem" label="Margem de Segurança" />
+                        <MarginGauge
+                            :value="ptMargem"
+                            label="Margem de Segurança"
+                        />
                     </div>
                 </div>
             </div>
 
             <!-- ─── DCF TAB ────────────────────────────────────────── -->
-            <div v-if="activeTab === 'dcf'" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div class="rounded-xl border border-border bg-card p-5 lg:col-span-1">
+            <div
+                v-if="activeTab === 'dcf'"
+                class="grid grid-cols-1 gap-6 lg:grid-cols-3"
+            >
+                <div
+                    class="rounded-xl border border-border bg-card p-5 lg:col-span-1"
+                >
                     <h3 class="mb-4 text-sm font-semibold">
-                        <span class="text-primary">Premissas</span> do Investidor
+                        <span class="text-primary">Premissas</span> do
+                        Investidor
                     </h3>
                     <div class="space-y-4">
                         <div>
                             <Label>Lucro Líquido (R$)</Label>
-                            <CurrencyInput v-model="dcfFcf" placeholder="0,00" class="mt-1" />
+                            <CurrencyInput
+                                v-model="dcfFcf"
+                                placeholder="0,00"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>ROE (%)</Label>
-                            <Input v-model.number="dcfRoe" type="number" step="0.1" class="mt-1" />
+                            <Input
+                                v-model.number="dcfRoe"
+                                type="number"
+                                step="0.1"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Payout (%)</Label>
-                            <Input v-model.number="dcfPayout" type="number" step="0.1" min="0" class="mt-1" />
+                            <Input
+                                v-model.number="dcfPayout"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Taxa de Desconto (%)</Label>
-                            <Input v-model.number="dcfDiscountRate" type="number" step="0.1" class="mt-1" />
+                            <Input
+                                v-model.number="dcfDiscountRate"
+                                type="number"
+                                step="0.1"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Crescimento Perpetuidade (%)</Label>
-                            <Input v-model.number="dcfTerminalGrowth" type="number" step="0.1" class="mt-1" />
+                            <Input
+                                v-model.number="dcfTerminalGrowth"
+                                type="number"
+                                step="0.1"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Anos de Projeção</Label>
-                            <Input v-model.number="dcfProjectionYears" type="number" step="1" min="1" class="mt-1" />
+                            <Input
+                                v-model.number="dcfProjectionYears"
+                                type="number"
+                                step="1"
+                                min="1"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Total de Ações</Label>
-                            <NumberInput v-model.number="dcfTotalShares" :precision="0" />
+                            <NumberInput
+                                v-model.number="dcfTotalShares"
+                                :precision="0"
+                            />
                         </div>
                         <div>
                             <Label>Preço Atual (R$)</Label>
-                            <CurrencyInput v-model="dcfCurrentPrice" placeholder="0,00" class="mt-1" />
+                            <CurrencyInput
+                                v-model="dcfCurrentPrice"
+                                placeholder="0,00"
+                                class="mt-1"
+                            />
                         </div>
                     </div>
                     <div class="mt-6">
@@ -548,83 +747,192 @@ function saveGordon() {
                             <span class="text-primary">Resultados</span> do DCF
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Justo</p>
-                                <p class="mt-1 text-2xl font-bold text-primary">{{ formatCurrency(dcfFairPrice) }}</p>
+                            <div
+                                class="overflow-hidden rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Preço Justo
+                                </p>
+                                <p class="mt-1 text-2xl font-bold text-primary">
+                                    {{ formatCurrency(dcfFairPrice) }}
+                                </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Upside</p>
-                                <p class="mt-1 text-xl font-bold" :class="(dcfUpside ?? 0) >= 0 ? 'text-revenue' : 'text-destructive'">
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Upside
+                                </p>
+                                <p
+                                    class="mt-1 text-xl font-bold"
+                                    :class="
+                                        (dcfUpside ?? 0) >= 0
+                                            ? 'text-revenue'
+                                            : 'text-destructive'
+                                    "
+                                >
                                     {{ formatPercent(dcfUpside) }}
                                 </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Margem</p>
-                                <p class="mt-1 text-xl font-bold" :class="(dcfMarginOfSafety ?? 0) >= 0 ? 'text-revenue' : 'text-destructive'">
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Margem
+                                </p>
+                                <p
+                                    class="mt-1 text-xl font-bold"
+                                    :class="
+                                        (dcfMarginOfSafety ?? 0) >= 0
+                                            ? 'text-revenue'
+                                            : 'text-destructive'
+                                    "
+                                >
                                     {{ formatPercent(dcfMarginOfSafety) }}
                                 </p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-4 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Enterprise Value</p>
-                                <p class="mt-1 text-xl font-bold">{{ formatCurrency(dcfEnterpriseValue) }}</p>
-                            </div>
-                            <div class="rounded-lg border border-border bg-surface p-4 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Valor Terminal</p>
-                                <p class="mt-1 text-xl font-bold text-primary">{{ formatCurrency(dcfTerminalValue) }}</p>
+                            <div
+                                class="overflow-hidden rounded-lg border border-border bg-surface p-4 text-center sm:col-span-2"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Market Cap
+                                </p>
+                                <p class="mt-1 text-xl font-bold">
+                                    {{ formatCurrency(dcfEnterpriseValue) }}
+                                </p>
                             </div>
                         </div>
                     </div>
 
                     <div class="rounded-xl border border-border bg-card p-5">
-                        <MarginGauge :value="dcfMarginOfSafety" label="Margem de Segurança" />
+                        <MarginGauge
+                            :value="dcfMarginOfSafety"
+                            label="Margem de Segurança"
+                        />
                     </div>
 
                     <div class="rounded-xl border border-border bg-card p-5">
                         <h3 class="mb-4 text-sm font-semibold">
-                            Projeção <span class="text-primary">Lucro Líquido</span>
+                            Projeção
+                            <span class="text-primary">Lucro Líquido</span>
                         </h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
-                                    <tr class="border-b-2 border-border text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <tr
+                                        class="border-b-2 border-border text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                    >
                                         <th class="pb-3 pl-3 text-left">Ano</th>
-                                        <th class="pb-3 flex ml-3 text-start">Lucro Líquido</th>
-                                        <th class="pb-3 text-right">Crescimento</th>
-                                        <th class="pb-3 pr-3 text-right">VPL</th>
+                                        <th class="ml-3 flex pb-3 text-start">
+                                            Lucro Líquido
+                                        </th>
+                                        <th class="pb-3 text-right">
+                                            Crescimento
+                                        </th>
+                                        <th class="pr-3 pb-3 text-right">
+                                            VPL
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="border-b border-border/50 bg-primary/5">
-                                        <td class="py-2.5 pl-3 font-semibold text-foreground">{{ new Date().getFullYear() }}</td>
+                                    <tr
+                                        class="border-b border-border/50 bg-primary/5"
+                                    >
+                                        <td
+                                            class="py-2.5 pl-3 font-semibold text-foreground"
+                                        >
+                                            {{ new Date().getFullYear() }}
+                                        </td>
                                         <td class="py-2.5">
-                                            <div class="flex justify-begin">
-                                                <CurrencyInput v-model="dcfFcf" placeholder="0,00" class="w-45 h-8 text-xs" />
+                                            <div class="justify-begin flex">
+                                                <CurrencyInput
+                                                    v-model="dcfFcf"
+                                                    placeholder="0,00"
+                                                    class="h-8 w-45 text-xs"
+                                                />
                                             </div>
                                         </td>
-                                        <td class="py-2.5 text-center text-xs font-medium text-muted-foreground">Base</td>
-                                        <td class="py-2.5 pr-3 text-right text-muted-foreground">—</td>
+                                        <td
+                                            class="py-2.5 text-center text-xs font-medium text-muted-foreground"
+                                        >
+                                            Base
+                                        </td>
+                                        <td
+                                            class="py-2.5 pr-3 text-right text-muted-foreground"
+                                        >
+                                            —
+                                        </td>
                                     </tr>
-                                    <tr v-for="(proj, i) in dcfProjectedFcfs" :key="proj.year" class="border-b border-border/30 hover:bg-surface/50 transition-colors">
-                                        <td class="py-2.5 pl-3 text-muted-foreground">{{ proj.year }}</td>
-                                        <td class="py-2.5 flex ml-3 font-medium text-foreground">{{ formatCurrency(proj.fcf) }}</td>
+                                    <tr
+                                        v-for="(proj, i) in dcfProjectedFcfs"
+                                        :key="proj.year"
+                                        class="border-b border-border/30 transition-colors hover:bg-surface/50"
+                                    >
+                                        <td
+                                            class="py-2.5 pl-3 text-muted-foreground"
+                                        >
+                                            {{ proj.year }}
+                                        </td>
+                                        <td
+                                            class="ml-3 flex py-2.5 font-medium text-foreground"
+                                        >
+                                            {{ formatCurrency(proj.fcf) }}
+                                        </td>
                                         <td class="py-2.5">
-                                            <div class="flex items-center justify-end gap-1">
+                                            <div
+                                                class="flex items-center justify-end gap-1"
+                                            >
                                                 <Input
-                                                    v-model.number="dcfGrowthRates[i]"
+                                                    v-model.number="
+                                                        dcfGrowthRates[i]
+                                                    "
                                                     type="number"
                                                     step="0.1"
                                                     class="h-8 w-20 text-center text-xs font-medium"
                                                 />
-                                                <span class="text-xs text-muted-foreground">%</span>
+                                                <span
+                                                    class="text-xs text-muted-foreground"
+                                                    >%</span
+                                                >
                                             </div>
                                         </td>
-                                        <td class="py-2.5 pr-3 text-right font-medium text-primary">{{ formatCurrency(proj.pv) }}</td>
+                                        <td
+                                            class="py-2.5 pr-3 text-right font-medium text-primary"
+                                        >
+                                            {{ formatCurrency(proj.pv) }}
+                                        </td>
                                     </tr>
-                                    <tr class="border-t-2 border-primary/30 bg-primary/5">
-                                        <td class="py-3 pl-3 font-semibold text-primary">Pérpetuo</td>
-                                        <td class="py-3 text-right font-semibold text-primary">{{ formatCurrency(dcfTerminalValue) }}</td>
-                                        <td class="py-3 text-center text-xs text-muted-foreground"></td>
-                                        <td class="py-3 pr-3 text-right font-semibold text-primary">{{ formatCurrency(dcfPvTerminal) }}</td>
+                                    <tr
+                                        class="border-t-2 border-primary/30 bg-primary/5"
+                                    >
+                                        <td
+                                            class="py-3 pl-3 font-semibold text-primary"
+                                        >
+                                            Pérpetuo
+                                        </td>
+                                        <td
+                                            class="py-3 text-right font-semibold text-primary"
+                                        >
+                                            {{
+                                                formatCurrency(dcfTerminalValue)
+                                            }}
+                                        </td>
+                                        <td
+                                            class="py-3 text-center text-xs text-muted-foreground"
+                                        ></td>
+                                        <td
+                                            class="py-3 pr-3 text-right font-semibold text-primary"
+                                        >
+                                            {{ formatCurrency(dcfPvTerminal) }}
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -634,32 +942,66 @@ function saveGordon() {
             </div>
 
             <!-- ─── GORDON TAB ─────────────────────────────────────── -->
-            <div v-if="activeTab === 'gordon'" class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                <div class="rounded-xl border border-border bg-card p-5 lg:col-span-1">
+            <div
+                v-if="activeTab === 'gordon'"
+                class="grid grid-cols-1 gap-6 lg:grid-cols-3"
+            >
+                <div
+                    class="rounded-xl border border-border bg-card p-5 lg:col-span-1"
+                >
                     <h3 class="mb-4 text-sm font-semibold">
-                        <span class="text-primary">Premissas</span> do Investidor
+                        <span class="text-primary">Premissas</span> do
+                        Investidor
                     </h3>
                     <div class="space-y-4">
                         <div>
                             <Label>Dividendo Anual Esperado (R$)</Label>
-                            <CurrencyInput v-model="dps" placeholder="0,00" class="mt-1" />
+                            <CurrencyInput
+                                v-model="dps"
+                                placeholder="0,00"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Taxa de Desconto — Tesouro IPCA (%)</Label>
-                            <Input v-model.number="discountRate" type="number" step="0.1" min="0" class="mt-1" />
+                            <Input
+                                v-model.number="discountRate"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Prêmio de Risco (%)</Label>
-                            <Input v-model.number="riskPremium" type="number" step="0.1" min="0" class="mt-1" />
-                            <p class="mt-1 text-xs text-muted-foreground">Exigência adicional sobre o Tesouro IPCA</p>
+                            <Input
+                                v-model.number="riskPremium"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
+                            <p class="mt-1 text-xs text-muted-foreground">
+                                Exigência adicional sobre o Tesouro IPCA
+                            </p>
                         </div>
                         <div>
                             <Label>Crescimento (%)</Label>
-                            <Input v-model.number="growthPerpetuity" type="number" step="0.1" min="0" class="mt-1" />
+                            <Input
+                                v-model.number="growthPerpetuity"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label>Preço Atual (R$)</Label>
-                            <CurrencyInput v-model="currentPrice" placeholder="0,00" class="mt-1" />
+                            <CurrencyInput
+                                v-model="currentPrice"
+                                placeholder="0,00"
+                                class="mt-1"
+                            />
                         </div>
                     </div>
                     <div class="mt-6">
@@ -673,26 +1015,65 @@ function saveGordon() {
                 <div class="space-y-6 lg:col-span-2">
                     <div class="rounded-xl border border-border bg-card p-5">
                         <h3 class="mb-4 text-sm font-semibold">
-                            <span class="text-primary">Resultados</span> do Gordon
+                            <span class="text-primary">Resultados</span> do
+                            Gordon
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2 overflow-hidden">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Preço Teto</p>
-                                <p class="mt-1 text-2xl font-bold text-primary">{{ formatCurrency(gordonFairPrice) }}</p>
+                            <div
+                                class="overflow-hidden rounded-lg border border-primary/30 bg-card p-4 text-center sm:col-span-2"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Preço Teto
+                                </p>
+                                <p class="mt-1 text-2xl font-bold text-primary">
+                                    {{ formatCurrency(gordonFairPrice) }}
+                                </p>
                                 <div v-if="gordonUpside !== null" class="mt-1">
-                                    <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold" :class="gordonUpside >= 0 ? 'text-revenue' : 'text-destructive'">
-                                        {{ gordonUpside >= 0 ? '+' : '' }}{{ gordonUpside.toFixed(1) }}% vs. preço atual
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-0.5 text-xs font-semibold"
+                                        :class="
+                                            gordonUpside >= 0
+                                                ? 'text-revenue'
+                                                : 'text-destructive'
+                                        "
+                                    >
+                                        {{ gordonUpside >= 0 ? '+' : ''
+                                        }}{{ gordonUpside.toFixed(1) }}% vs.
+                                        preço atual
                                     </span>
                                 </div>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Retorno Esperado</p>
-                                <p class="mt-1 text-xl font-bold text-revenue">{{ formatPercent(gordonReturn) }}</p>
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Retorno Esperado
+                                </p>
+                                <p class="mt-1 text-xl font-bold text-revenue">
+                                    {{ formatPercent(gordonReturn) }}
+                                </p>
                                 <p class="text-xs text-muted-foreground"></p>
                             </div>
-                            <div class="rounded-lg border border-border bg-surface p-3 text-center">
-                                <p class="text-xs font-semibold tracking-wider text-muted-foreground uppercase">Margem</p>
-                                <p class="mt-1 text-xl font-bold" :class="(gordonMargin ?? 0) >= 0 ? 'text-revenue' : 'text-destructive'">
+                            <div
+                                class="rounded-lg border border-border bg-surface p-3 text-center"
+                            >
+                                <p
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
+                                >
+                                    Margem
+                                </p>
+                                <p
+                                    class="mt-1 text-xl font-bold"
+                                    :class="
+                                        (gordonMargin ?? 0) >= 0
+                                            ? 'text-revenue'
+                                            : 'text-destructive'
+                                    "
+                                >
                                     {{ formatPercent(gordonMargin) }}
                                 </p>
                             </div>

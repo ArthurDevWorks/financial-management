@@ -22,9 +22,9 @@ class CreditCard extends Model
     ];
 
     protected $casts = [
-        'limit'       => 'float',
+        'limit' => 'float',
         'closing_day' => 'integer',
-        'due_day'     => 'integer',
+        'due_day' => 'integer',
     ];
 
     // ── Relações ──────────────────────────────────────────────────────────────
@@ -63,10 +63,16 @@ class CreditCard extends Model
 
         $startDate = (clone $closingDate)->subMonth()->addDay(); // dia seguinte ao fechamento anterior
 
+        // Se o dia de vencimento for anterior/igual ao fechamento, vence no mês seguinte
+        $dueDate = Carbon::create($year, $month, $this->due_day);
+        if ($this->due_day <= $closingDay) {
+            $dueDate->addMonth();
+        }
+
         return [
             'start' => $startDate->toDateString(),
-            'end'   => $closingDate->toDateString(),
-            'due'   => Carbon::create($year, $month, $this->due_day)->toDateString(),
+            'end' => $closingDate->toDateString(),
+            'due' => $dueDate->toDateString(),
         ];
     }
 
@@ -79,6 +85,9 @@ class CreditCard extends Model
 
         return $this->releases()
             ->with(['category'])
+            ->where('user_id', $this->user_id)
+            ->where('status', '!=', 'canceled')
+            ->where('payment_method', 'credit_card')
             ->whereBetween('date', [$period['start'], $period['end']])
             ->orderBy('date', 'asc')
             ->get();
@@ -91,10 +100,17 @@ class CreditCard extends Model
     {
         $period = $this->invoicePeriod($month, $year);
 
-        return (float) $this->releases()
-            ->where('type', 'expense')
+        $releases = $this->releases()
+            ->where('user_id', $this->user_id)
+            ->where('status', '!=', 'canceled')
+            ->where('payment_method', 'credit_card')
             ->whereBetween('date', [$period['start'], $period['end']])
-            ->sum('amount');
+            ->get();
+
+        $expenses = $releases->where('type', 'expense')->sum('amount');
+        $revenues = $releases->where('type', 'revenue')->sum('amount');
+
+        return (float) max(0, $expenses - $revenues);
     }
 
     /**
@@ -111,6 +127,7 @@ class CreditCard extends Model
 
         // Caso contrário já fechou esse mês, a fatura aberta é do próximo mês
         $next = $today->copy()->addMonth();
+
         return $this->invoiceTotal($next->month, $next->year);
     }
 
@@ -126,6 +143,7 @@ class CreditCard extends Model
         }
 
         $next = $today->copy()->addMonth();
+
         return ['month' => $next->month, 'year' => $next->year];
     }
 }

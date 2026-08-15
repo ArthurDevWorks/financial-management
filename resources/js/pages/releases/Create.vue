@@ -60,7 +60,9 @@ const isCreditCard = computed(() => form.payment_method === 'credit_card');
 
 const isRecurringEnabled = computed(() => form.is_recurring);
 
-const showInstallmentOptions = computed(() => isCreditCard.value && form.is_installment);
+const showInstallmentOptions = computed(
+    () => isCreditCard.value && form.is_installment,
+);
 
 const submit = () => {
     form.post('/releases');
@@ -249,7 +251,9 @@ watch(
                             >
                                 <option value="">Selecione</option>
                                 <option
-                                    v-for="(label, value) in props.paymentMethods"
+                                    v-for="(
+                                        label, value
+                                    ) in props.paymentMethods"
                                     :key="value"
                                     :value="value"
                                 >
@@ -278,7 +282,9 @@ watch(
                             v-model="form.credit_card_id"
                             class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
                         >
-                            <option value="" disabled>Selecione o cartão</option>
+                            <option value="" disabled>
+                                Selecione o cartão
+                            </option>
                             <option
                                 v-for="card in props.creditCards"
                                 :key="card.id"
@@ -303,7 +309,9 @@ watch(
                                 <div
                                     class="rounded-lg border border-border bg-surface p-3 text-center text-sm transition peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary hover:bg-secondary"
                                 >
-                                    <span class="block font-medium">À Vista</span>
+                                    <span class="block font-medium"
+                                        >À Vista</span
+                                    >
                                 </div>
                             </label>
                             <label class="flex-1 cursor-pointer">
@@ -316,7 +324,9 @@ watch(
                                 <div
                                     class="rounded-lg border border-border bg-surface p-3 text-center text-sm transition peer-checked:border-primary peer-checked:bg-primary/10 peer-checked:text-primary hover:bg-secondary"
                                 >
-                                    <span class="block font-medium">Parcelado</span>
+                                    <span class="block font-medium"
+                                        >Parcelado</span
+                                    >
                                 </div>
                             </label>
                         </div>
@@ -332,7 +342,8 @@ watch(
                             class="mt-1"
                         />
                         <p class="mt-1 text-xs text-muted-foreground">
-                            Serão criadas {{ form.total_installments }} parcelas mensais automaticamente.
+                            Serão criadas {{ form.total_installments }} parcelas
+                            mensais automaticamente.
                         </p>
                         <InputError :message="form.errors.total_installments" />
                     </div>
@@ -349,7 +360,10 @@ watch(
                         </Label>
                     </div>
 
-                    <div v-if="isRecurringEnabled" class="mt-4 grid grid-cols-2 gap-6">
+                    <div
+                        v-if="isRecurringEnabled"
+                        class="mt-4 grid grid-cols-2 gap-6"
+                    >
                         <div>
                             <Label required>Frequência</Label>
                             <select
@@ -358,14 +372,18 @@ watch(
                             >
                                 <option value="">Selecione</option>
                                 <option
-                                    v-for="(label, value) in props.recurrenceFrequencies"
+                                    v-for="(
+                                        label, value
+                                    ) in props.recurrenceFrequencies"
                                     :key="value"
                                     :value="value"
                                 >
                                     {{ label }}
                                 </option>
                             </select>
-                            <InputError :message="form.errors.recurrence_frequency" />
+                            <InputError
+                                :message="form.errors.recurrence_frequency"
+                            />
                         </div>
                         <div>
                             <Label required>Data Final</Label>
@@ -373,7 +391,9 @@ watch(
                                 v-model="form.recurrence_end_date"
                                 type="date"
                             />
-                            <InputError :message="form.errors.recurrence_end_date" />
+                            <InputError
+                                :message="form.errors.recurrence_end_date"
+                            />
                         </div>
                     </div>
                 </div>

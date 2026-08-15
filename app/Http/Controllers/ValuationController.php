@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\InvestimentValuationRequest;
 use App\Models\Asset;
 use App\Models\InvestimentValuation;
-use App\Services\DcfValuationService;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class ValuationController extends Controller
@@ -13,12 +13,13 @@ class ValuationController extends Controller
     public function index()
     {
         $assets = Asset::query()
-            ->whereHas('valuations')
-            ->with(['valuations' => fn ($q) => $q->orderByDesc('calculated_at')])
+            ->whereHas('valuations', fn ($q) => $q->where('user_id', Auth::id()))
+            ->with(['valuations' => fn ($q) => $q->where('user_id', Auth::id())->orderByDesc('calculated_at')])
             ->orderByDesc(
                 InvestimentValuation::query()
                     ->select('calculated_at')
                     ->whereColumn('asset_id', 'assets.id')
+                    ->where('user_id', Auth::id())
                     ->orderByDesc('calculated_at')
                     ->limit(1)
             )
@@ -26,15 +27,15 @@ class ValuationController extends Controller
 
         return Inertia::render('valuations/Index', [
             'valuations' => $assets->through(fn (Asset $asset): array => [
-                'id'            => $asset->id,
-                'ticker'        => $asset->ticker,
-                'name'          => $asset->name,
-                'logo_url'      => $asset->logo_url,
+                'id' => $asset->id,
+                'ticker' => $asset->ticker,
+                'name' => $asset->name,
+                'logo_url' => $asset->logo_url,
                 'current_price' => $asset->current_price,
-                'asset_type'    => $asset->asset_type,
+                'asset_type' => $asset->asset_type,
                 'valuation_count' => $asset->valuations->count(),
                 'latest_calculated_at' => $asset->valuations->first()?->calculated_at,
-                'valuations'    => $asset->valuations->map(fn (InvestimentValuation $v): array => [
+                'valuations' => $asset->valuations->map(fn (InvestimentValuation $v): array => [
                     'id' => $v->id,
                     'method' => $v->method,
                     'method_label' => $v->methodLabel(),
@@ -110,6 +111,8 @@ class ValuationController extends Controller
 
     public function show(InvestimentValuation $valuation)
     {
+        abort_unless($valuation->user_id === Auth::id(), 403);
+
         $valuation->load('asset');
 
         return Inertia::render('valuations/Show', [
@@ -144,12 +147,13 @@ class ValuationController extends Controller
         ]);
     }
 
-    public function store(InvestimentValuationRequest $request, DcfValuationService $valuationService)
+    public function store(InvestimentValuationRequest $request)
     {
         $validated = $request->validated();
         $assetId = (int) $validated['asset_id'];
 
-        $existing = InvestimentValuation::where('asset_id', $assetId)
+        $existing = InvestimentValuation::where('user_id', Auth::id())
+            ->where('asset_id', $assetId)
             ->where('method', InvestimentValuation::METHOD_DCF)
             ->first();
 
@@ -160,6 +164,7 @@ class ValuationController extends Controller
             ]);
         } else {
             InvestimentValuation::create([
+                'user_id' => Auth::id(),
                 'asset_id' => $assetId,
                 'method' => InvestimentValuation::METHOD_DCF,
                 'assumptions' => $validated,
@@ -167,7 +172,7 @@ class ValuationController extends Controller
             ]);
         }
 
-        return redirect()->route('valuations.index')
+        return redirect()->back()
             ->with('success', 'Valuation salva com sucesso');
     }
 
@@ -176,6 +181,7 @@ class ValuationController extends Controller
         InvestimentValuation $valuation,
     ) {
         abort_unless($valuation->method === InvestimentValuation::METHOD_DCF, 404);
+        abort_unless($valuation->user_id === Auth::id(), 403);
 
         $validated = $request->validated();
 
@@ -184,7 +190,7 @@ class ValuationController extends Controller
             'calculated_at' => now(),
         ]);
 
-        return redirect()->route('valuations.show', $valuation)
+        return redirect()->back()
             ->with('success', 'Valuation atualizada com sucesso');
     }
 }

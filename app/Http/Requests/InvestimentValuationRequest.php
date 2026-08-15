@@ -98,14 +98,17 @@ class InvestimentValuationRequest extends FormRequest
 
     private function resolveTerminalGrowthRate(array $growthRates): string
     {
+        $typedTerminalRate = $this->normalizeNumericInput($this->input('terminal_growth_rate'));
+
+        if ($typedTerminalRate !== '') {
+            return $typedTerminalRate;
+        }
+
+        // Fallback apenas quando o usuário não informa o campo
         $lastGrowthRate = collect($growthRates)
             ->reverse()
             ->first(static fn (string $value): bool => $value !== '');
 
-        if ($lastGrowthRate !== null) {
-            return $lastGrowthRate;
-        }
-
-        return $this->normalizeNumericInput($this->input('terminal_growth_rate'));
+        return $lastGrowthRate ?? '';
     }
 }

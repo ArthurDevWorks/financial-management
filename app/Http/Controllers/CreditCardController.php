@@ -6,7 +6,6 @@ use App\Http\Requests\CreditCardStoreRequest;
 use App\Http\Requests\CreditCardUpdateRequest;
 use App\Models\Bank;
 use App\Models\CreditCard;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -22,17 +21,17 @@ class CreditCardController extends Controller
                 $period = $card->invoicePeriod($mv['month'], $mv['year']);
 
                 return [
-                    'id'                  => $card->id,
-                    'name'                => $card->name,
-                    'color'               => $card->color,
-                    'limit'               => $card->limit,
-                    'closing_day'         => $card->closing_day,
-                    'due_day'             => $card->due_day,
-                    'bank'                => $card->bank ? ['name' => $card->bank->name] : null,
-                    'current_invoice'     => [
-                        'total'  => $card->invoiceTotal($mv['month'], $mv['year']),
-                        'month'  => $mv['month'],
-                        'year'   => $mv['year'],
+                    'id' => $card->id,
+                    'name' => $card->name,
+                    'color' => $card->color,
+                    'limit' => $card->limit,
+                    'closing_day' => $card->closing_day,
+                    'due_day' => $card->due_day,
+                    'bank' => $card->bank ? ['name' => $card->bank->name] : null,
+                    'current_invoice' => [
+                        'total' => $card->invoiceTotal($mv['month'], $mv['year']),
+                        'month' => $mv['month'],
+                        'year' => $mv['year'],
                         'period' => $period,
                     ],
                 ];
@@ -70,7 +69,7 @@ class CreditCardController extends Controller
         }
 
         return Inertia::render('credit-cards/Edit', [
-            'card'  => $creditCard->load('bank'),
+            'card' => $creditCard->load('bank'),
             'banks' => Bank::orderBy('name')->get(['id', 'name']),
         ]);
     }

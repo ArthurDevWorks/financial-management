@@ -15,9 +15,19 @@ class DashboardController extends Controller
     {
         $user_id = Auth::id();
 
-        $period = $request->query('period', 'month');
-        $month = $request->query('month', Carbon::now()->month);
-        $year = $request->query('year', Carbon::now()->year);
+        $period = in_array($request->query('period', 'month'), ['month', 'year', 'custom'], true)
+            ? $request->query('period', 'month')
+            : 'month';
+        $month = (int) $request->query('month', Carbon::now()->month);
+        $year = (int) $request->query('year', Carbon::now()->year);
+
+        if ($month < 1 || $month > 12) {
+            $month = Carbon::now()->month;
+        }
+        if ($year < 2000 || $year > 2100) {
+            $year = Carbon::now()->year;
+        }
+
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
 
@@ -71,8 +81,8 @@ class DashboardController extends Controller
 
         $accounts = Account::query()
             ->with('bank')
-            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('type', 'revenue')->where('status', 'paid')], 'amount')
-            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('type', 'expense')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as revenue_sum' => fn ($query) => $query->where('user_id', $user_id)->where('type', 'revenue')->where('status', 'paid')], 'amount')
+            ->withSum(['releases as expense_sum' => fn ($query) => $query->where('user_id', $user_id)->where('type', 'expense')->where('status', 'paid')], 'amount')
             ->where('user_id', $user_id)
             ->get();
 
@@ -93,6 +103,8 @@ class DashboardController extends Controller
 
         $totalBalance = collect($accountsEvolution)->sum('balance');
 
+        $monthlyData = $this->buildMonthlyData($user_id, $period, $month, $year, $startDate, $endDate);
+
         return Inertia::render('Dashboard', [
             'period' => $period,
             'month' => (int) $month,
@@ -109,8 +121,59 @@ class DashboardController extends Controller
             'revenuesByCategory' => $revenuesByCategory,
             'expensesByCategory' => $expensesByCategory,
             'recentTransactions' => $recentTransactions,
-            'monthlyData' => [],
+            'monthlyData' => $monthlyData,
             'accountsEvolution' => $accountsEvolution,
         ]);
+    }
+
+    private function buildMonthlyData(
+        int $user_id,
+        string $period,
+        int $month,
+        int $year,
+        ?string $startDate,
+        ?string $endDate,
+    ): array {
+        $months = collect();
+
+        if ($period === 'year') {
+            for ($m = 1; $m <= 12; $m++) {
+                $months->push(Carbon::create($year, $m, 1));
+            }
+        } elseif ($period === 'custom' && $startDate && $endDate) {
+            $cursor = Carbon::parse($startDate)->startOfMonth();
+            $last = Carbon::parse($endDate)->startOfMonth();
+            while ($cursor->lte($last)) {
+                $months->push($cursor->copy());
+                $cursor->addMonth();
+            }
+        } else {
+            $cursor = Carbon::create($year, $month, 1)->subMonths(5)->startOfMonth();
+            for ($i = 0; $i < 6; $i++) {
+                $months->push($cursor->copy());
+                $cursor->addMonth();
+            }
+        }
+
+        return $months->map(function (Carbon $start) use ($user_id) {
+            $end = $start->copy()->endOfMonth();
+            $data = Release::query()
+                ->where('user_id', $user_id)
+                ->where('status', 'paid')
+                ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
+                ->selectRaw("COALESCE(SUM(CASE WHEN type = 'revenue' THEN amount ELSE 0 END), 0) as revenue")
+                ->selectRaw("COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as expense")
+                ->first();
+
+            $revenue = (float) ($data->revenue ?? 0);
+            $expense = (float) ($data->expense ?? 0);
+
+            return [
+                'month' => $start->format('M/Y'),
+                'revenue' => $revenue,
+                'expense' => $expense,
+                'net' => $revenue - $expense,
+            ];
+        })->all();
     }
 }

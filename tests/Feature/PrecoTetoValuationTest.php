@@ -34,13 +34,14 @@ it('salva a simulação de preço teto projetivo com premissas', function () {
     expect($valuation->assumptions['total_shares'])->toBe('640321918');
     expect($valuation->assumptions['current_price_per_share'])->toBe('49.51');
 
-    $response->assertRedirect(route('valuations.index'));
+    $response->assertRedirect();
+    $response->assertSessionHas('success', 'Valuation de Preço Teto salva com sucesso');
 });
 
 it('atualiza uma simulação existente de preço teto projetivo', function () {
     $user = User::factory()->create();
     $asset = Asset::factory()->stock()->create();
-    $valuation = InvestimentValuation::factory()->create([
+    $valuation = InvestimentValuation::factory()->for($user)->create([
         'asset_id' => $asset->id,
         'method' => InvestimentValuation::METHOD_PRECO_TETO,
     ]);
@@ -63,20 +64,21 @@ it('atualiza uma simulação existente de preço teto projetivo', function () {
     expect($valuation->assumptions['desired_yield'])->toBe('6');
     expect($valuation->assumptions['current_price_per_share'])->toBe('49.51');
 
-    $response->assertRedirect(route('valuations.show', $valuation));
+    $response->assertRedirect();
+    $response->assertSessionHas('success', 'Valuation de Preço Teto atualizada com sucesso');
 });
 
 it('lista valuations agrupadas por ativo na rota index', function () {
     $user = User::factory()->create();
     $asset = Asset::factory()->stock()->create(['name' => 'PSSA3']);
 
-    InvestimentValuation::factory()->create([
+    InvestimentValuation::factory()->for($user)->create([
         'asset_id' => $asset->id,
         'method' => InvestimentValuation::METHOD_DCF,
         'calculated_at' => now()->subDay(),
     ]);
 
-    InvestimentValuation::factory()->create([
+    InvestimentValuation::factory()->for($user)->create([
         'asset_id' => $asset->id,
         'method' => InvestimentValuation::METHOD_PRECO_TETO,
         'calculated_at' => now(),

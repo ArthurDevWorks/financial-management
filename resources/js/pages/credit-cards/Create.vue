@@ -78,7 +78,11 @@ const goBack = () => {
                             class="h-9 w-full rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
                         >
                             <option value="">Nenhum</option>
-                            <option v-for="bank in banks" :key="bank.id" :value="bank.id">
+                            <option
+                                v-for="bank in banks"
+                                :key="bank.id"
+                                :value="bank.id"
+                            >
                                 {{ bank.name }}
                             </option>
                         </select>
@@ -90,7 +94,10 @@ const goBack = () => {
                 <div>
                     <Label required>Limite do Cartão</Label>
                     <div class="relative">
-                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                        <span
+                            class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground"
+                            >R$</span
+                        >
                         <Input
                             v-model="form.limit"
                             type="number"
@@ -147,10 +154,14 @@ const goBack = () => {
                             :style="{ backgroundColor: color }"
                             :class="[
                                 form.color === color
-                                    ? 'ring-2 ring-offset-2 ring-offset-card scale-110'
+                                    ? 'scale-110 ring-2 ring-offset-2 ring-offset-card'
                                     : '',
                             ]"
-                            :style-ring="form.color === color ? `ring-color: ${color}` : ''"
+                            :style-ring="
+                                form.color === color
+                                    ? `ring-color: ${color}`
+                                    : ''
+                            "
                             @click="form.color = color"
                             :title="color"
                         />
