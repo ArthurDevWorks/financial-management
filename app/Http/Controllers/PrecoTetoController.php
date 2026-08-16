@@ -3,114 +3,133 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PrecoTetoValuationRequest;
-use App\Models\Investiment;
+use App\Models\Asset;
 use App\Models\InvestimentValuation;
-use App\Services\BrapiService;
-use App\Services\PrecoTetoProjetivoValuationService;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PrecoTetoController extends Controller
 {
-    public function index(BrapiService $brapi)
+    public function index()
     {
-        $investimentId = request()->query('investiment_id');
+        $assetId = request()->query('asset_id');
         $valuationId = request()->query('valuation_id');
 
-        /** @var InvestimentValuation|null $valuation */
         $valuation = $valuationId
             ? InvestimentValuation::query()
-                ->with(['investiment'])
+                ->with('asset')
+                ->where('user_id', Auth::id())
                 ->where('method', InvestimentValuation::METHOD_PRECO_TETO)
                 ->findOrFail((int) $valuationId)
             : null;
 
-        $investiment = $valuation?->investiment
-            ?? ($investimentId
-                ? Investiment::find((int) $investimentId, ['id', 'name', 'value', 'current_balance', 'logo_url', 'type'])
-                : null);
+        $asset = $valuation?->asset
+            ?? ($assetId ? Asset::find((int) $assetId) : null);
 
-        if ($investiment && ! $investiment->type?->isFixedIncome()) {
-            $quotes = $brapi->fetchQuotes([$investiment->name]);
-            $quote = $quotes->get(strtoupper($investiment->name));
-
-            if ($quote) {
-                $investiment->current_balance = $quote['price'];
-                $investiment->logo_url = $quote['logourl'];
-            }
-        }
-
-        $investiments = Investiment::query()
-            ->orderBy('name')
-            ->get(['id', 'name', 'value', 'current_balance', 'logo_url', 'type']);
+        $assets = Asset::query()
+            ->orderBy('ticker')
+            ->get(['id', 'ticker', 'name', 'asset_type', 'current_price', 'logo_url', 'net_income', 'total_shares', 'roe', 'payout']);
 
         return Inertia::render('preco-teto/Index', [
-            'investiment' => $investiment ? [
-                'id' => $investiment->id,
-                'name' => $investiment->name,
-                'value' => $investiment->value,
-                'current_balance' => $investiment->current_balance,
-                'logo_url' => $investiment->logo_url,
+            'asset' => $asset ? [
+                'id' => $asset->id,
+                'ticker' => $asset->ticker,
+                'name' => $asset->name,
+                'current_price' => $asset->current_price,
+                'net_income' => $asset->net_income,
+                'total_shares' => $asset->total_shares,
+                'roe' => $asset->roe,
+                'payout' => $asset->payout,
+                'logo_url' => $asset->logo_url,
+                'asset_type' => $asset->asset_type,
             ] : null,
-            'investiments' => $investiments->map(fn (Investiment $i): array => [
-                'id' => $i->id,
-                'name' => $i->name,
-                'value' => $i->value,
-                'current_balance' => $i->current_balance,
-                'logo_url' => $i->logo_url,
+            'assets' => $assets->map(fn (Asset $a): array => [
+                'id' => $a->id,
+                'ticker' => $a->ticker,
+                'name' => $a->name,
+                'current_price' => $a->current_price,
+                'logo_url' => $a->logo_url,
             ]),
-            'valuation' => $valuation ? $this->valuationPayload($valuation) : null,
+            'valuation' => $valuation ? [
+                'id' => $valuation->id,
+                'assumptions' => $valuation->assumptions,
+                'calculated_at' => $valuation->calculated_at,
+            ] : null,
+            'defaultAssumptions' => $asset ? $this->buildPrecoTetoDefaults($asset, $valuation) : null,
         ]);
     }
 
-    public function store(
-        PrecoTetoValuationRequest $request,
-        PrecoTetoProjetivoValuationService $valuationService,
-    ) {
+    public function store(PrecoTetoValuationRequest $request)
+    {
         $validated = $request->validated();
-        $calculatedValuation = $valuationService->calculate($validated);
+        $assetId = (int) $validated['asset_id'];
 
-        $valuation = Investiment::findOrFail((int) $validated['investiment_id'])
-            ->valuations()
-            ->create([
-                'method' => InvestimentValuation::METHOD_PRECO_TETO,
-                'assumptions' => $calculatedValuation['assumptions'],
-                'projected_cash_flows' => $calculatedValuation['projected_cash_flows'],
-                'summary' => $calculatedValuation['summary'],
+        $existing = InvestimentValuation::where('user_id', Auth::id())
+            ->where('asset_id', $assetId)
+            ->where('method', InvestimentValuation::METHOD_PRECO_TETO)
+            ->first();
+
+        if ($existing) {
+            $existing->update([
+                'assumptions' => $validated,
                 'calculated_at' => now(),
             ]);
+        } else {
+            InvestimentValuation::create([
+                'user_id' => Auth::id(),
+                'asset_id' => $assetId,
+                'method' => InvestimentValuation::METHOD_PRECO_TETO,
+                'assumptions' => $validated,
+                'calculated_at' => now(),
+            ]);
+        }
 
-        return redirect()->route('valuations.show', $valuation)
+        return redirect()->back()
             ->with('success', 'Valuation de Preço Teto salva com sucesso');
     }
 
-    public function update(
-        PrecoTetoValuationRequest $request,
-        InvestimentValuation $valuation,
-        PrecoTetoProjetivoValuationService $valuationService,
-    ) {
+    public function update(PrecoTetoValuationRequest $request, InvestimentValuation $valuation)
+    {
         abort_unless($valuation->method === InvestimentValuation::METHOD_PRECO_TETO, 404);
+        abort_unless($valuation->user_id === Auth::id(), 403);
 
-        $calculatedValuation = $valuationService->calculate($request->validated());
+        $validated = $request->validated();
 
         $valuation->update([
-            'assumptions' => $calculatedValuation['assumptions'],
-            'projected_cash_flows' => $calculatedValuation['projected_cash_flows'],
-            'summary' => $calculatedValuation['summary'],
+            'assumptions' => $validated,
             'calculated_at' => now(),
         ]);
 
-        return redirect()->route('valuations.show', $valuation)
+        return redirect()->back()
             ->with('success', 'Valuation de Preço Teto atualizada com sucesso');
     }
 
-    private function valuationPayload(InvestimentValuation $valuation): array
+    private function buildPrecoTetoDefaults(Asset $asset, ?InvestimentValuation $valuation): array
     {
+        if ($valuation) {
+            $a = $valuation->assumptions;
+
+            return [
+                'desired_yield' => (string) ($a['desired_yield'] ?? '8'),
+                'projected_payout' => (string) ($a['projected_payout'] ?? '50'),
+                'projected_net_income' => (string) ($a['projected_net_income'] ?? $asset->net_income ?? ''),
+                'total_shares' => (string) ($a['total_shares'] ?? $asset->total_shares ?? ''),
+                'projected_growth_rate' => (string) ($a['projected_growth_rate'] ?? '5'),
+                'current_price_per_share' => (string) ($a['current_price_per_share'] ?? $asset->current_price ?? ''),
+                'roe' => (string) ($a['roe'] ?? $asset->roe ?? '0'),
+                'payout' => (string) ($a['payout'] ?? $asset->payout ?? '0'),
+            ];
+        }
+
         return [
-            'id' => $valuation->id,
-            'method' => $valuation->method,
-            'assumptions' => $valuation->assumptions,
-            'summary' => $valuation->summary,
-            'calculated_at' => $valuation->calculated_at,
+            'desired_yield' => '8',
+            'projected_payout' => '50',
+            'projected_net_income' => (string) ($asset->net_income ?? ''),
+            'total_shares' => (string) ($asset->total_shares ?? ''),
+            'projected_growth_rate' => '5',
+            'current_price_per_share' => (string) ($asset->current_price ?? ''),
+            'roe' => (string) ($asset->roe ?? '0'),
+            'payout' => (string) ($asset->payout ?? '0'),
         ];
     }
 }

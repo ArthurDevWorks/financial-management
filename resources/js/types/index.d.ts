@@ -17,6 +17,13 @@ export interface NavItem {
     isActive?: boolean;
 }
 
+export interface Flash {
+    success?: string;
+    error?: string;
+    info?: string;
+    warning?: string;
+}
+
 export type AppPageProps<
     T extends Record<string, unknown> = Record<string, unknown>,
 > = T & {
@@ -24,6 +31,7 @@ export type AppPageProps<
     quote: { message: string; author: string };
     auth: Auth;
     sidebarOpen: boolean;
+    flash: Flash;
 };
 
 export interface User {

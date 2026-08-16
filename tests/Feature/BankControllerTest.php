@@ -38,7 +38,7 @@ it('cadastra banco com upload de logo', function () {
     ]);
 
     $response->assertRedirect(route('banks.index'));
-    $response->assertSessionHas('sucess', 'Banco cadastrado com sucesso');
+    $response->assertSessionHas('success', 'Banco cadastrado com sucesso');
 
     $bank = Bank::query()->latest('id')->first();
 
@@ -88,6 +88,7 @@ it('remove o banco e apaga o arquivo do logo', function () {
     $response = $this->delete(route('banks.destroy', $bank));
 
     $response->assertRedirect(route('banks.index'));
+    $response->assertSessionHas('success', 'Banco removido com sucesso');
     Storage::disk('public')->assertMissing('banks/logo-remover.png');
     $this->assertSoftDeleted('banks', ['id' => $bank->id]);
 });

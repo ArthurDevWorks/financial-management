@@ -32,9 +32,8 @@ class InvestimentValuationRequest extends FormRequest
 
     public function rules(): array
     {
-        $projectionYears = max(1, (int) $this->input('projection_years', 5));
-
         return [
+            'asset_id' => 'required|integer|exists:assets,id',
             'current_fcf' => 'required|numeric|min:0',
             'total_shares' => 'required|numeric|gt:0',
             'current_price_per_share' => 'nullable|numeric|gt:0',
@@ -43,7 +42,7 @@ class InvestimentValuationRequest extends FormRequest
             'discount_rate' => 'required|numeric|min:0.01|max:100',
             'terminal_growth_rate' => 'required|numeric|min:0|lt:discount_rate',
             'projection_years' => 'required|integer|min:3|max:15',
-            'growth_rates' => 'required|array|size:'.$projectionYears,
+            'growth_rates' => 'required|array|size:'.max(1, (int) $this->input('projection_years', 5)),
             'growth_rates.*' => 'required|numeric|min:0|max:100',
         ];
     }
@@ -99,14 +98,17 @@ class InvestimentValuationRequest extends FormRequest
 
     private function resolveTerminalGrowthRate(array $growthRates): string
     {
+        $typedTerminalRate = $this->normalizeNumericInput($this->input('terminal_growth_rate'));
+
+        if ($typedTerminalRate !== '') {
+            return $typedTerminalRate;
+        }
+
+        // Fallback apenas quando o usuário não informa o campo
         $lastGrowthRate = collect($growthRates)
             ->reverse()
             ->first(static fn (string $value): bool => $value !== '');
 
-        if ($lastGrowthRate !== null) {
-            return $lastGrowthRate;
-        }
-
-        return $this->normalizeNumericInput($this->input('terminal_growth_rate'));
+        return $lastGrowthRate ?? '';
     }
 }

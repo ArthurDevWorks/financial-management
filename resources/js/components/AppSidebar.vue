@@ -1,18 +1,7 @@
 <script setup lang="ts">
 import AppLogo from '@/components/AppLogo.vue';
 import SidebarItem from '@/components/SidebarItem.vue';
-
-import {
-    ArrowRightLeft,
-    ChartNoAxesCombined,
-    Landmark,
-    LayoutDashboard,
-    LogOut,
-    PiggyBank,
-    Settings,
-    Tags,
-    Wallet,
-} from 'lucide-vue-next';
+import { footerNavItems, navSections } from '@/lib/navigation';
 </script>
 
 <template>
@@ -24,42 +13,28 @@ import {
             <AppLogo />
         </div>
 
-        <!-- MENU -->
+        <!-- MENU POR MÓDULOS -->
         <nav class="flex-1 overflow-y-auto px-3 py-5">
-            <p
-                class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+            <div
+                v-for="section in navSections"
+                :key="section.title"
+                class="mb-6 last:mb-0"
             >
-                Financeiro
-            </p>
+                <p
+                    class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+                >
+                    {{ section.title }}
+                </p>
 
-            <div class="space-y-0.5">
-                <SidebarItem
-                    label="Dashboard"
-                    :icon="LayoutDashboard"
-                    href="/dashboard"
-                />
-                <SidebarItem label="Bancos" :icon="Landmark" href="/banks" />
-                <SidebarItem label="Contas" :icon="Wallet" href="/accounts" />
-                <SidebarItem
-                    label="Lançamentos"
-                    :icon="ArrowRightLeft"
-                    href="/releases"
-                />
-                <SidebarItem
-                    label="Categorias"
-                    :icon="Tags"
-                    href="/categories"
-                />
-                <SidebarItem
-                    label="Investimentos"
-                    :icon="PiggyBank"
-                    href="/investiments"
-                />
-                <SidebarItem
-                    label="Valuations"
-                    :icon="ChartNoAxesCombined"
-                    href="/valuations"
-                />
+                <div class="space-y-0.5">
+                    <SidebarItem
+                        v-for="item in section.items"
+                        :key="item.href"
+                        :label="item.label"
+                        :icon="item.icon"
+                        :href="item.href"
+                    />
+                </div>
             </div>
         </nav>
 
@@ -67,16 +42,13 @@ import {
         <div class="border-t border-sidebar-border px-3 py-3">
             <div class="space-y-0.5">
                 <SidebarItem
-                    label="Configurações"
-                    :icon="Settings"
-                    href="/settings"
-                />
-                <SidebarItem
-                    label="Sair"
-                    :icon="LogOut"
-                    href="/logout"
-                    method="post"
-                    danger
+                    v-for="item in footerNavItems"
+                    :key="item.href"
+                    :label="item.label"
+                    :icon="item.icon"
+                    :href="item.href"
+                    :method="item.method"
+                    :danger="item.danger"
                 />
             </div>
         </div>

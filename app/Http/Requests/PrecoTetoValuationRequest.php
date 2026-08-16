@@ -20,19 +20,23 @@ class PrecoTetoValuationRequest extends FormRequest
             'total_shares' => $this->normalizeIntegerInput($this->input('total_shares')),
             'projected_growth_rate' => $this->normalizeNumericInput($this->input('projected_growth_rate')),
             'current_price_per_share' => $this->normalizeNumericInput($this->input('current_price_per_share')),
+            'roe' => $this->normalizeNumericInput($this->input('roe')),
+            'payout' => $this->normalizeNumericInput($this->input('payout')),
         ]);
     }
 
     public function rules(): array
     {
         return [
-            'investiment_id' => 'required|exists:investiments,id',
+            'asset_id' => 'required|integer|exists:assets,id',
             'desired_yield' => 'required|numeric|min:0.01|max:100',
             'projected_payout' => 'required|numeric|min:0.01|max:100',
             'projected_net_income' => 'required|numeric|gt:0',
             'total_shares' => 'required|integer|gt:0',
             'projected_growth_rate' => 'required|numeric|gt:-100|max:1000',
             'current_price_per_share' => 'required|numeric|gt:0',
+            'roe' => 'nullable|numeric|min:0|max:100',
+            'payout' => 'nullable|numeric|min:0|max:100',
         ];
     }
 

@@ -88,3 +88,40 @@ it('aceita filtro customizado por intervalo de datas', function () {
         ->has('recentTransactions', 1)
     );
 });
+
+it('não considera lançamentos pendentes nos totais do dashboard', function () {
+    $user = User::factory()->create();
+    $bank = Bank::factory()->create();
+    $account = Account::factory()->for($user)->for($bank)->create(['total' => 1000]);
+    $revenueCategory = Category::factory()->create(['type' => CategoryType::REVENUE->value]);
+    $expenseCategory = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
+
+    Release::factory()->for($user)->for($account)->for($revenueCategory, 'category')->revenue()->create([
+        'title' => 'Paga',
+        'amount' => 500,
+        'date' => now()->toDateString(),
+        'status' => 'paid',
+    ]);
+    Release::factory()->for($user)->for($account)->for($expenseCategory, 'category')->expense()->create([
+        'title' => 'Pendente',
+        'amount' => 150,
+        'date' => now()->toDateString(),
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get(route('dashboard', [
+        'period' => 'month',
+        'month' => now()->month,
+        'year' => now()->year,
+    ]));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('Dashboard')
+        ->where('summary.totalRevenue', 500)
+        ->where('summary.totalExpense', 0)
+        ->where('summary.netBalance', 500)
+    );
+});

@@ -13,7 +13,6 @@ import {
     TrendingUp,
     Zap,
 } from 'lucide-vue-next';
-import { Toaster } from 'vue-sonner';
 
 withDefaults(
     defineProps<{
@@ -27,14 +26,6 @@ withDefaults(
 
 <template>
     <Head title="Fidax - Gestão Financeira Inteligente">
-        <Toaster
-            richColors
-            closeButton
-            position="top-right"
-            :toast-options="{
-                class: '!font-sans',
-            }"
-        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link

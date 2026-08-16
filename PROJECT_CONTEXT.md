@@ -83,104 +83,85 @@ A plataforma deve permitir:
 
 # ROADMAP DE RELEASES
 
-## Release 1 - Base Financeira + Ações com Cotação
+## Release 1 — Gestão Financeira ✅ (v1.0.0)
 
 ### Status
 Entregue em produção.
 
 ### Objetivo
-Entregar o núcleo próximo da conclusão: gestão financeira pessoal com cadastro de ações e atualização automática da cotação para suportar valuation.
+Núcleo de gestão financeira pessoal com cadastro de ativos e cotação automática.
 
-### Entregas
-- Gestão financeira pessoal.
-- Cadastro e edição de ativos.
-- Cadastro de ações com ticker.
-- Consulta automática de cotação via API.
-- Uso da cotação atual em valuation e preço teto.
-- Listagem de investimentos com logo e valor mais recente.
+### Entregues
+- Dashboard financeiro com gráficos e indicadores
+- CRUD de bancos, contas, categorias, lançamentos
+- CRUD de investimentos com cotação via brapi.dev
+- Valuation DCF (Fluxo de Caixa Descontado)
+- Valuation Preço Teto Projetivo
+- Autenticação completa (Fortify, 2FA, email verification)
+- Design system Banco Premium
 
-### Resultado esperado
-- Redução de entrada manual.
-- Primeira experiência de dado de mercado dentro do Fidax.
-- Base consistente para análise inicial de investimentos.
+---
 
-## Release 1.1 - Pós-produção, Operação e Localização
+## Release 2 — Módulo Screening 🚧
 
 ### Objetivo
-Estabilizar o produto em produção e fechar pendências operacionais essenciais.
+Permitir busca e descoberta de ativos com filtros fundamentalistas, cache de indicadores no banco local, comparação de ativos e favoritos.
 
 ### Entregas
-- Envio real de e-mail de redefinição de senha.
-- Mensagens de validação e requests em pt-BR.
-- Domínio de produção.
-- Certificado SSL e HTTPS obrigatório.
-- Checklist de deploy e operação.
-- Hardening da Release 1 em produção.
+- Cache de indicadores fundamentalistas (asset_indicators)
+- Cache de indicadores de FIIs (fii_indicators)
+- Templates de filtros salvos (screening_filters)
+- Favoritar ativos (asset_favorites)
+- Estender BrapiService (statistics, financial-data, profile, dividends)
+- AssetIndicatorService (sincronização de indicadores)
+- ScreeningService (lógica de filtros)
+- ScrapingService (dados complementares)
+- Página principal de screening (filtros + resultados)
+- Página detalhada do ativo (indicadores, gráficos, dividendos)
+- Comparação side-by-side de ativos
+- Jobs de sincronização (SyncAssetIndicatorsJob)
+- Artisan command screening:sync
 
-## Release 2 - Planejamento Financeiro e Lançamentos Avançados
+---
+
+## Release 3 — Valuation Avançado 🚧
 
 ### Objetivo
-Evoluir o gerenciamento financeiro para planejamento, previsibilidade e automação.
+Expandir os modelos de valuation com Gordon para FIIs e automatizar carregamento de premissas.
 
 ### Entregas
-- Status de lançamentos: previsto, pago e cancelado.
-- Forma de pagamento nos lançamentos.
-- Parcelamento com geração automática das parcelas futuras.
-- Recorrência com frequência configurável.
-- Despesas fixas mensais ou recorrentes.
-- Planejamento financeiro mensal e anual.
-- Comparativo de planejado versus realizado no dashboard.
+- GordonValuationService (modelo de Gordon com perpetuidade fixa em 3%)
+- Auto-preenchimento de premissas com dados do cache
+- Página unificada (indicadores do ativo + valuation na mesma tela)
+- Atualização automática de cotação, ROE, número de papéis
+- Melhorias no frontend de DCF e Preço Teto
 
-## Release 3 - Consolidador de Carteira
+---
+
+## Release 4 — Automação e Infraestrutura
 
 ### Objetivo
-Transformar o Fidax em um consolidador de posições e rentabilidade.
+Automatizar sincronização de dados e expandir fontes com scraping.
 
 ### Entregas
-- Visão consolidada da carteira.
-- Distribuição por classe de ativo.
-- Rentabilidade acumulada e por período.
-- Evolução de patrimônio.
-- Dividendos e proventos.
+- SyncAssetIndicatorsJob agendado
+- Schedule diário de atualização
+- Scraping estruturado de fontes complementares
+- Sistema de e-mails (notificações, recovery)
 
-## Release 4 - Screener e Oportunidades
+---
+
+## Release 5 — Financeiro Avançado
 
 ### Objetivo
-Permitir triagem de ativos com base em filtros fundamentalistas e dados retornados pela API.
+Expandir controle financeiro com cartões, faturas, planejamento e metas.
 
 ### Entregas
-- Filtros por P/VP, DY, P/L, margem, liquidez, setor e preço.
-- Combinação de múltiplos critérios.
-- Shortlist de ativos.
-- Comparação entre candidatos.
-- Salvamento de filtros favoritos.
-
-### Exemplo de uso
-- Encontrar ações com `P/VP < x`.
-- Encontrar ações com `DY > 7%`.
-- Combinar filtros para reduzir o universo e achar ativos aderentes à tese.
-
-## Release 5 - Central de Documentos e Research
-
-### Objetivo
-Centralizar relatórios, fatos relevantes, PDFs e documentos de ativos e FIIs.
-
-### Entregas
-- Upload e organização de documentos.
-- Associação a ativos e FIIs.
-- Busca por ativo, tipo e período.
-- Histórico documental para apoiar análise.
-
-## Release 6 - Inteligência e Apoio à Decisão
-
-### Objetivo
-Adicionar camadas inteligentes sobre os dados já consolidados.
-
-### Entregas
-- Insights sobre comportamento financeiro.
-- Alertas automáticos.
-- Recomendações de acompanhamento.
-- Padrões de carteira e comportamento.
+- Cartões de crédito e faturas
+- Lançamentos recorrentes e parcelados
+- Planejamento financeiro mensal e anual
+- Metas e objetivos financeiros
+- Orçamento por categoria
 
 # STACK TECNOLÓGICA
 
@@ -304,14 +285,39 @@ All CRUD create/edit pages follow this structure:
 
 # 8. Project-Specific Rules
 
-## Design System Tokens
+## Design System — Fidax (Jul/2026)
+
+> ⚠️ **Fase de Exploração:** Os protótipos em `prototypes/` são explorações de design. As melhorias visuais (spacing, micro-interações, glassmorphism, gráficos) ainda **não** foram aplicadas ao código Vue/Tailwind do projeto. Quando forem convertidas, devem ser aplicadas globalmente, não isoladamente.
+
+### Identidade Visual
+
+O Fidax usa uma identidade dark premium com teal como cor primária e gold como acento. A paleta é consistente entre light/dark modes.
+
+**Paleta (dark mode):**
+- **Primária:** Teal `hsl(168,75%,42%)` — cor principal, usada em botões, links, ativos
+- **Destaque (accent):** Gold/amber `hsl(42,80%,52%)` — usado com moderação para favoritos e badges
+- **Revenue:** Verde `hsl(142,70%,50%)` — valores positivos
+- **Destructive:** Vermelho `hsl(0,75%,55%)` — valores negativos
+- **Investment:** Azul `hsl(220,80%,55%)` — badges de FIIs/informação
+- **Background:** `hsl(228,28%,5%)` — quase preto azulado
+- **Card:** `hsl(228,22%,9%)` — superfície de cartões
+- **Surface:** `hsl(228,20%,12%)` — inputs, selects
+- **Sidebar:** `hsl(228,25%,6%)` — navy escuro
+
+**Tipografia:**
+- **UI/Corpo:** `Instrument Sans` (pesos 400, 500, 600, 700) — via fonts.bunny.net
+- **Dados financeiros:** `Instrument Sans` (weight 600) — sem fonte monoespaçada dedicada
+
+**Logo:** Marca composta por 3 retângulos geométricos arredondados em teal + wordmark "Fidax" em bold. Sem serifa, sem ouro.
+
+### Design System Tokens (vigentes — legado Banco Premium)
 - **Background:** `bg-background` (screen bg)
 - **Card:** `bg-card` (--card: hsl(228 22% 9%))
 - **Surface:** `bg-surface` (--surface: hsl(228 20% 12%))
 - **Secondary:** `bg-secondary` (--secondary: hsl(228 18% 14%))
 - **Text:** `text-foreground` (white), `text-muted-foreground` (muted)
 - **Border:** `border-border` (--border: hsl(228 15% 14%))
-- **Primary:** `text-primary` / `bg-primary` (teal hsl(168 75% 42%))
+- **Primary:** `text-primary` / `bg-primary` (teal hsl(168 75% 42%)) ⚠️ migrar para gold
 - **Destructive:** `text-destructive` / `bg-destructive/10`
 - **Revenue:** `text-revenue` / `bg-revenue/10`
 - **Investment:** `text-investment` / `bg-investment/10`
@@ -400,3 +406,99 @@ All CRUD create/edit pages follow this structure:
 **Discovery:** As próximas prioridades não são finalizar a Release 1, mas documentar a entrega, estabilizar operação real e abrir milestones/issues para evolução do produto.
 **Solution:** O roadmap passa a tratar Release 1 como entregue, adiciona Release 1.1 para operação/localização/infraestrutura e define Release 2 como planejamento financeiro e lançamentos avançados.
 **Source:** User clarification (backlog and milestones request)
+
+### 2026-08-04 - Definição Unificada de Margem de Segurança nos Valuations
+
+**Contexto:** Durante a revisão de QA do merge `dev → main`, o cálculo de margem de segurança estava inconsistente entre os métodos de valuation: Preço Teto usava base na cotação atual, enquanto DCF, Gordon e o index de Valuations (`ValuationController::computeSummary`) usavam base no valor justo (fórmula de Graham). O teste unitário de Preço Teto apontava a divergência.
+
+**Discovery:** A "margem de segurança" pode ser calculada sobre duas bases, com significados diferentes:
+- **Graham** `(valor justo − preço) / valor justo` — mede tolerância a erro na estimativa, limitada a 100%. Responde "quanto meu valor justo pode estar errado antes de eu perder dinheiro".
+- **Base no preço** `(valor justo − preço) / preço` — mede o desconto relativo ao que se paga hoje; matematicamente idêntica ao upside (ilimitada).
+
+**Solution:** Decisão do usuário: unificar TODOS os métodos (Preço Teto, DCF, Gordon, index de Valuations e composables `usePrecoTeto`/`useDcf`) na definição **base no preço** (= upside). Arquivos ajustados: `PrecoTetoProjetivoValuationService`, `DcfValuationService`, `GordonValuationService`, `ValuationController`, `useDcf.ts`, `gordon/Index.vue`; teste de Preço Teto atualizado (teto 5,0 / preço 2,5 → `margin_of_safety = 100.0`). Consequência aceita: "Margem de Segurança" e "Upside" exibem o mesmo valor em todas as telas.
+
+**Source:** Decisão do usuário (revisão de QA do merge `dev → main`)
+
+### 2026-08-04 - Gordon: dps é trailing (D0), fair price deve crescer um período
+
+**Contexto:** Revisão do modelo Gordon com premissas reais (dps=9,57, discount_rate=10,54, risk_premium=1, growth=2, preço=100,82): o app retornava preço teto 100,31 enquanto a base de referência dava 102,36 (margem 1,53%).
+
+**Discovery:** A fórmula do app era `P = D0 / (ke − g)`, tratando o DPS digitado como dividendo do próximo ano (D1). Porém o usuário informa o DPS como **soma dos últimos 12 meses = trailing (D0)**. O Gordon clássico exige `P = D1 / (ke − g)` com `D1 = D0 × (1 + g)`. Verificação numérica: `9,57 × 1,02 / (0,1154 − 0,02) = 102,32` ≈ 102,36 da referência (diferença de centavos é arredondamento). A fórmula antiga subavaliava em ~2% (fator `1+g`). Também foi encontrado que `GordonValuationService` (PHP) era código morto e ignorava `risk_premium`.
+
+**Solution:** Crescer o dividendo em todos os pontos de cálculo, trocando `dps/(ke−g)` por `dps×(1+g)/(ke−g)`: `resources/js/pages/gordon/Index.vue`, `resources/js/pages/screening/Valuation.vue`, `app/Http/Controllers/ValuationController.php` (`computeSummary`) e `app/Services/GordonValuationService.php`. Convenção adotada: **campo dps = dividendo trailing 12m (D0)**; o fair price sempre projeta D1. Validação: 64 testes + build OK.
+
+**Source:** Revisão do modelo Gordon (usuário)
+
+**Action item (pendente):** decidir se o `GordonValuationService` PHP deve passar a ser usado (hoje é código morto) e se deve incorporar `risk_premium` no discount rate para alinhar com o frontend.
+
+### 2026-08-15 - Padronização de Toasts em Todas as Áreas
+
+**Contexto:** Toasts estavam parcialmente implementados com inconsistências: `<Toaster>` duplicado em 3 layouts, `useToast().show()` era código morto, `BankController` tinha typo `sucess`, confirm() nativo em vez de ConfirmDialog, Settings usava texto inline "Salvo.", erros client-side silenciados.
+
+**Discovery:** O projeto tinha `vue-sonner` instalado mas com múltiplos problemas de padronização:
+- `<Toaster>` montado em `AppLayout`, `AuthSimpleLayout` e `Welcome` (este dentro de `<Head>`, bug)
+- `useFlashMessages()` duplicado em 2 layouts, ausente no Welcome
+- `router.on('error')` não registrado globalmente
+- `accounts/Index.vue` usava `confirm()` nativo
+- `settings/Profile.vue` e `settings/Password.vue` usavam texto inline "Salvo." em vez de toast
+- `BankController` tinha typo `sucess` (nunca exibido) e `destroy` sem flash
+
+**Solution:** Implementação padronizada de toasts em 8 etapas:
+1. **Provider global único**: `app.ts` monta `[h(App, props), h(Toaster, ...)]` com `useFlashMessages()` no root. Removido de 3 arquivos.
+2. **Composable padronizado**: `useToast()` exporta `success/error/info/warning/show`. Flash tipado em `types/index.d.ts`.
+3. **Handler global de erros**: `router.on('error')` toast genérico para validações em fire-and-forget. `screening/Index.vue` loadMore: catch vazio substituído por toast.
+4. **Backend**: `BankController` typo corrigido (`sucess→success`), ramo erro usa chave `error`, `destroy` com flash. Teste atualizado.
+5. **ConfirmDialog**: `accounts/Index.vue` trocou `confirm()` nativo por `ConfirmDialog` destrutivo.
+6. **Settings**: `Profile.vue` e `Password.vue` usam `on-success` → toast em vez de texto inline.
+7. **Testes**: `BankControllerTest` corrigido, asserção de flash no delete adicionada.
+8. **Docs**: Seção "Toast Pattern" no `PROJECT_CONTEXT.md`.
+
+**Padrão resultante:**
+- Backend: redirect com `->with('success'|'error', 'Mensagem em pt-BR')` — chave `error` para falhas, `success` para sucesso.
+- Frontend: `useToast().success(msg)` para operações client-side, `router.on('error')` global para validações não tratadas inline.
+- Sucesso global via `useFlashMessages()` watcher (montado no root).
+- `ConfirmDialog` para todas as exclusões (sem `confirm()` nativo).
+
+**Source:** Decisão do usuário (padronização de UI/UX)
+
+---
+
+# 9.5 Asset Sector Normalization (2026-08-15)
+
+**Problema:** Setores e nomes de ativos vieram de fontes diferentes (BrAPI/Yahoo Finance em inglês, StatusInvest em português) com inconsistências:
+- BrAPI: `sector` = "Energy", `industry` = "Oil & Gas Integrated"
+- StatusInvest: `sectorname` = "Energia", `subsectorname` = "Petróleo e Gás"
+- Nomes: `Itaúsa SA`, `Itausa Investimentos`, `ITSA4` sem padronização
+- FIIs: `segmentType` = "tijolo", `segmentoAtuacao` = "Logística" (às vezes inconsistente)
+
+**Solução:** 3 normalizadores PHP + command Artisan:
+
+1. **`SectorMapper`** (`app/Services/SectorMapper.php`):
+   - Mapeia ~11 setores EN→PT (Energy→Energia, Financial Services→Financeiro, etc.)
+   - Mapeia ~80 indústrias EN→PT (Oil & Gas Integrated→Petróleo e Gás, Banks→Bancos, etc.)
+   - Normaliza valores do StatusInvest que precisam de ajuste
+
+2. **`NameNormalizer`** (`app/Services/NameNormalizer.php`):
+   - Mapa manual de ~60 empresas B3 (ITSA3/4→Itaúsa, PETR3/4→Petrobras ON/PN, etc.)
+   - Normaliza strings: remove S.A./SA/S/A, normaliza P.N/PN/ON, limpa espaços múltiplos
+
+3. **`FiiSegmentMapper`** (`app/Services/FiiSegmentMapper.php`):
+   - Classifica FIIs: Tijolo/Papel/Híbrido/Fundo de Fundos/Hedge
+   - Sub-segmentos: Logística, Shoppings, Lajes Corporativas, Residencial, etc.
+   - Mapeia StatusInvest→BrAPI (ex: "Logística"→Tijolo)
+
+**Aplicação:** Todos os 4 caminhos de dados no `AssetSyncService` + 2 no `BrapiService` aplicam normalizadores antes de salvar.
+
+**Command:** `php artisan assets:normalize-sectors [--dry-run]` para re-normalizar dados existentes.
+
+**Padrão resultante:**
+- Setores sempre em PT, normalizados entre fontes
+- Nomes de empresas consistentes entre classes de ações (ITSA3/4 = mesmo nome)
+- FIIs sempre classificados como Tijolo/Papel/Híbrido/Fundo de Fundos
+- Sub-setores e sub-segmentos normalizados
+
+**Source:** Decisão do usuário (consistência de dados)
+
+---
+
+# 10. Lessons Learned

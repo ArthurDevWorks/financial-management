@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CurrencyInput from '@/components/CurrencyInput.vue';
 import InputError from '@/components/InputError.vue';
+import NumberInput from '@/components/NumberInput.vue';
 import PageHeader from '@/components/PageHeader.vue';
 import SummaryCard from '@/components/SummaryCard.vue';
 import { Button } from '@/components/ui/button';
@@ -12,19 +13,23 @@ import {
     ArrowLeft,
     Banknote,
     Calculator,
-    Info,
     PiggyBank,
     ShieldCheck,
     TrendingUp,
 } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 
-interface Investment {
+interface Asset {
     id: number;
+    ticker: string;
     name: string;
-    value: number | string | null;
-    current_balance?: number | string | null;
+    current_price?: number | string | null;
+    net_income?: number | string | null;
+    total_shares?: number | string | null;
+    roe?: number | string | null;
+    payout?: number | string | null;
     logo_url?: string | null;
+    asset_type?: string;
 }
 
 interface PrecoTetoAssumptions {
@@ -34,6 +39,8 @@ interface PrecoTetoAssumptions {
     total_shares?: number | string;
     projected_growth_rate?: number | string;
     current_price_per_share?: number | string;
+    roe?: number | string;
+    payout?: number | string;
 }
 
 interface PrecoTetoValuation {
@@ -45,45 +52,63 @@ interface PrecoTetoValuation {
 }
 
 const props = defineProps<{
-    investiment: Investment | null;
-    investiments: Investment[];
+    asset: Asset | null;
+    assets: Asset[];
     valuation: PrecoTetoValuation | null;
+    defaultAssumptions?: PrecoTetoAssumptions | null;
 }>();
 
-const selectedId = ref(props.investiment?.id?.toString() ?? '');
+const selectedId = ref(props.asset?.id?.toString() ?? '');
 
-const toInputValue = (value: Investment['value'] | undefined) => {
+const toInputValue = (value: Asset['current_price'] | undefined) => {
     return value === null || value === undefined ? '' : value.toString();
-};
-
-const formatShareQuantity = (value: string) => {
-    return value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
 const toFormValue = (value: string | number | null | undefined) => {
     return value === null || value === undefined ? '' : value.toString();
 };
 
-const assumptions = props.valuation?.assumptions ?? {};
+const assumptions =
+    props.valuation?.assumptions ?? props.defaultAssumptions ?? {};
 
 const form = useForm({
-    investiment_id: props.investiment?.id?.toString() ?? '',
+    asset_id: props.asset?.id?.toString() ?? '',
     desired_yield: toFormValue(assumptions.desired_yield),
     projected_payout: toFormValue(assumptions.projected_payout),
     projected_net_income: toFormValue(assumptions.projected_net_income),
-    total_shares: formatShareQuantity(toFormValue(assumptions.total_shares)),
+    total_shares: toFormValue(assumptions.total_shares),
     projected_growth_rate:
         toFormValue(assumptions.projected_growth_rate) || '0',
     current_price_per_share:
         toFormValue(assumptions.current_price_per_share) ||
-        toInputValue(
-            props.investiment?.current_balance ?? props.investiment?.value,
-        ),
+        toInputValue(props.asset?.current_price),
+    roe: toFormValue(assumptions.roe) ||
+        toFormValue(props.asset?.roe) ||
+        '0',
+    payout: toFormValue(assumptions.payout) ||
+        toFormValue(props.asset?.payout) ||
+        '0',
 });
+
+const defaultGrowthRate = computed(() => {
+    const roe = parseNumber(form.roe);
+    const payout = parseNumber(form.payout);
+    return Math.round((1 - payout / 100) * roe * 100) / 100;
+});
+
+const hasSavedGrowthRate = !!assumptions.projected_growth_rate;
+
+watch(
+    [() => form.roe, () => form.payout],
+    () => {
+        form.projected_growth_rate = defaultGrowthRate.value.toString();
+    },
+    { immediate: !hasSavedGrowthRate },
+);
 
 watch(selectedId, (id) => {
     if (id) {
-        router.visit(`/preco-teto?investiment_id=${id}`, {
+        router.visit(`/preco-teto?asset_id=${id}`, {
             preserveState: true,
             replace: true,
         });
@@ -93,19 +118,12 @@ watch(selectedId, (id) => {
 });
 
 watch(
-    () =>
-        [
-            props.investiment?.id,
-            props.investiment?.current_balance,
-            props.investiment?.value,
-        ] as const,
-    ([id, currentBalance, value]) => {
-        form.investiment_id = id?.toString() ?? '';
+    () => [props.asset?.id, props.asset?.current_price] as const,
+    ([id, currentPrice]) => {
+        form.asset_id = id?.toString() ?? '';
 
         if (!props.valuation) {
-            form.current_price_per_share = toInputValue(
-                currentBalance ?? value,
-            );
+            form.current_price_per_share = toInputValue(currentPrice);
         }
     },
 );
@@ -136,16 +154,11 @@ const parseNumber = (value: string | number) => {
     return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const parseShareQuantity = (value: string) => {
-    const parsed = parseInt(value.replace(/\D/g, ''), 10);
+const parseShareQuantity = (value: string | number) => {
+    const str = typeof value === 'number' ? value.toString() : value;
+    const parsed = parseInt(str.replace(/\D/g, ''), 10);
 
     return Number.isFinite(parsed) ? parsed : 0;
-};
-
-const onQuantidadeAcoesInput = (event: Event) => {
-    const input = event.target as HTMLInputElement;
-
-    form.total_shares = formatShareQuantity(input.value);
 };
 
 const percentToDecimal = (value: string | number) => parseNumber(value) / 100;
@@ -195,7 +208,7 @@ const margemSeguranca = computed(() => {
 
     if (preco <= 0 || precoTeto.value <= 0) return 0;
 
-    return ((precoTeto.value - preco) / precoTeto.value) * 100;
+    return ((precoTeto.value - preco) / preco) * 100;
 });
 
 const margemGaugePercent = computed(() => {
@@ -235,14 +248,17 @@ const margemStatus = computed(() => {
     };
 });
 
-const temInputs = computed(
+const podeCalcularPrecoTeto = computed(
     () =>
         percentToDecimal(form.desired_yield) > 0 &&
         percentToDecimal(form.projected_payout) > 0 &&
         parseNumber(form.projected_net_income) > 0 &&
         lucroProjetado.value > 0 &&
-        parseShareQuantity(form.total_shares) > 0 &&
-        parseNumber(form.current_price_per_share) > 0,
+        parseShareQuantity(form.total_shares) > 0,
+);
+
+const temPrecoAtual = computed(
+    () => parseNumber(form.current_price_per_share) > 0,
 );
 
 const formatCurrency = (value: number) => {
@@ -303,7 +319,7 @@ const submit = () => {
                         >
                             <option value="">Selecione um ativo...</option>
                             <option
-                                v-for="item in investiments"
+                                v-for="item in assets"
                                 :key="item.id"
                                 :value="item.id"
                             >
@@ -336,14 +352,6 @@ const submit = () => {
                                         <Label
                                             >Dividend Yield Desejado (%)</Label
                                         >
-                                        <span
-                                            class="group relative"
-                                            title="Retorno desejado em dividendos por ano"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
                                     </div>
                                     <Input
                                         v-model="form.desired_yield"
@@ -360,14 +368,6 @@ const submit = () => {
                                 <div>
                                     <div class="flex items-center gap-1.5">
                                         <Label>Payout Projetado (%)</Label>
-                                        <span
-                                            class="group relative"
-                                            title="Percentual projetado do lucro distribuído como dividendos"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
                                     </div>
                                     <Input
                                         v-model="form.projected_payout"
@@ -383,17 +383,7 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label
-                                            >Lucro Líquido Projetado — R$</Label
-                                        >
-                                        <span
-                                            class="group relative"
-                                            title="Lucro líquido informado será ajustado pela taxa de crescimento projetada"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
+                                        <Label>Lucro Líquido (R$)</Label>
                                     </div>
                                     <CurrencyInput
                                         v-model="form.projected_net_income"
@@ -405,43 +395,52 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label>Quantidade de Ações</Label>
-                                        <span
-                                            class="group relative"
-                                            title="Quantidade total de ações considerada na projeção"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
+                                        <Label>Total de Ações</Label>
                                     </div>
-                                    <input
+                                    <NumberInput
                                         v-model="form.total_shares"
-                                        type="text"
-                                        inputmode="numeric"
-                                        autocomplete="off"
-                                        placeholder="Ex: 640.321.918"
-                                        class="mt-1.5 flex h-9 w-full min-w-0 rounded-md border border-input bg-surface px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                                        @input="onQuantidadeAcoesInput"
-                                    />
-                                    <InputError
-                                        :message="form.errors.total_shares"
+                                        :precision="0"
+                                        :error="form.errors.total_shares"
+                                        placeholder="Ex: 13.822.910.028"
                                     />
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label
-                                            >Taxa de Crescimento Projetada
-                                            (%)</Label
-                                        >
-                                        <span
-                                            class="group relative"
-                                            title="Taxa aplicada ao lucro líquido antes do cálculo do LPA"
-                                        >
-                                            <Info
-                                                class="h-3.5 w-3.5 text-muted-foreground"
-                                            />
-                                        </span>
+                                        <Label>ROE (%)</Label>
+                                    </div>
+                                    <Input
+                                        v-model="form.roe"
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="100"
+                                        placeholder="Ex: 20"
+                                        class="mt-1.5"
+                                    />
+                                    <InputError :message="form.errors.roe" />
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <Label>Payout (%)</Label>
+                                    </div>
+                                    <Input
+                                        v-model="form.payout"
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="100"
+                                        placeholder="Ex: 50"
+                                        class="mt-1.5"
+                                    />
+                                    <InputError
+                                        :message="form.errors.payout"
+                                    />
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <Label>
+                                            <span>Crescimento</span>
+                                        </Label>
                                     </div>
                                     <Input
                                         v-model="form.projected_growth_rate"
@@ -450,6 +449,16 @@ const submit = () => {
                                         placeholder="Ex: 5"
                                         class="mt-1.5"
                                     />
+                                    <p
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        Taxa de Crescimento Esperada:
+                                        <span
+                                            class="font-medium text-foreground"
+                                            >{{ defaultGrowthRate }}%</span
+                                        >
+                                        (ROE × (1 − Payout%))
+                                    </p>
                                     <InputError
                                         :message="
                                             form.errors.projected_growth_rate
@@ -457,7 +466,7 @@ const submit = () => {
                                     />
                                 </div>
                                 <div>
-                                    <Label>Preço Atual da Ação — R$</Label>
+                                    <Label>Preço Atual (R$)</Label>
                                     <CurrencyInput
                                         v-model="form.current_price_per_share"
                                         :error="
@@ -472,7 +481,7 @@ const submit = () => {
 
                     <!-- Gauge -->
                     <div
-                        v-if="temInputs"
+                        v-if="podeCalcularPrecoTeto && temPrecoAtual"
                         class="mt-6 rounded-xl border border-border bg-card p-6"
                     >
                         <div class="mb-2 flex items-center justify-between">
@@ -525,7 +534,11 @@ const submit = () => {
                 <div class="space-y-4">
                     <SummaryCard
                         label="Preço Teto"
-                        :value="temInputs ? formatCurrency(precoTeto) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto
+                                ? formatCurrency(precoTeto)
+                                : '—'
+                        "
                         variant="investment"
                         :icon="Calculator"
                     />
@@ -533,12 +546,14 @@ const submit = () => {
                     <SummaryCard
                         label="Margem de Segurança"
                         :value="
-                            temInputs ? formatPercent(margemSeguranca) : '—'
+                            podeCalcularPrecoTeto && temPrecoAtual
+                                ? formatPercent(margemSeguranca)
+                                : '—'
                         "
                         :variant="margemSeguranca >= 0 ? 'revenue' : 'expense'"
                         :icon="ShieldCheck"
                         :trend="
-                            temInputs
+                            podeCalcularPrecoTeto && temPrecoAtual
                                 ? parseFloat(margemSeguranca.toFixed(2))
                                 : undefined
                         "
@@ -546,25 +561,37 @@ const submit = () => {
 
                     <SummaryCard
                         label="LPA Projetado"
-                        :value="temInputs ? formatCurrency(lpaProjetado) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto
+                                ? formatCurrency(lpaProjetado)
+                                : '—'
+                        "
                         variant="default"
                         :icon="Banknote"
                     />
 
                     <SummaryCard
                         label="DPA Projetado"
-                        :value="temInputs ? formatCurrency(dpaProjetado) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto
+                                ? formatCurrency(dpaProjetado)
+                                : '—'
+                        "
                         variant="default"
                         :icon="PiggyBank"
                     />
 
                     <SummaryCard
                         label="Yield Projetado"
-                        :value="temInputs ? formatPercent(yieldProjetado) : '—'"
+                        :value="
+                            podeCalcularPrecoTeto && temPrecoAtual
+                                ? formatPercent(yieldProjetado)
+                                : '—'
+                        "
                         variant="profit"
                         :icon="TrendingUp"
                         :trend="
-                            temInputs
+                            podeCalcularPrecoTeto && temPrecoAtual
                                 ? parseFloat(yieldProjetado.toFixed(2))
                                 : undefined
                         "
@@ -575,8 +602,8 @@ const submit = () => {
                         class="w-full"
                         :disabled="
                             form.processing ||
-                            !temInputs ||
-                            !form.investiment_id
+                            !podeCalcularPrecoTeto ||
+                            !form.asset_id
                         "
                     >
                         {{
@@ -591,11 +618,11 @@ const submit = () => {
             </form>
 
             <div
-                v-if="!investiments.length"
+                v-if="!assets.length"
                 class="mt-6 rounded-xl border border-border bg-card p-6 text-center"
             >
                 <p class="text-sm text-muted-foreground">
-                    Nenhum ativo cadastrado. Crie um investimento primeiro para
+                    Nenhum ativo cadastrado. Adicione um ativo primeiro para
                     usar esta ferramenta.
                 </p>
             </div>

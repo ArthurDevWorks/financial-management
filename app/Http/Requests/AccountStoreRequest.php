@@ -28,7 +28,7 @@ class AccountStoreRequest extends FormRequest
             'type' => ['required', Rule::enum(AccountType::class)],
             'agency' => 'required|string|max:20',
             'account' => 'required|string|max:20',
-            'total' => 'required|numeric|min:0',
+            'total' => 'required|numeric|min:0|max:999999999.99',
         ];
     }
 

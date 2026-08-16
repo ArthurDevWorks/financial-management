@@ -63,11 +63,11 @@ class BankController extends Controller
 
         if (! $save) {
             return redirect()->route('banks.index')
-                ->with('sucess', 'Erro ao cadastrar banco');
+                ->with('error', 'Erro ao cadastrar banco');
         }
 
         return redirect()->route('banks.index')
-            ->with('sucess', 'Banco cadastrado com sucesso');
+            ->with('success', 'Banco cadastrado com sucesso');
     }
 
     /**
@@ -105,7 +105,7 @@ class BankController extends Controller
 
         if (! $update) {
             return redirect()->route('banks.index')
-                ->with('success', 'Erro ao atualizar banco');
+                ->with('error', 'Erro ao atualizar banco');
         }
 
         return redirect()->route('banks.index')
@@ -152,6 +152,7 @@ class BankController extends Controller
 
         $bank->delete();
 
-        return redirect()->route('banks.index');
+        return redirect()->route('banks.index')
+            ->with('success', 'Banco removido com sucesso');
     }
 }
