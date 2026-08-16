@@ -26,6 +26,8 @@ interface Asset {
     current_price?: number | string | null;
     net_income?: number | string | null;
     total_shares?: number | string | null;
+    roe?: number | string | null;
+    payout?: number | string | null;
     logo_url?: string | null;
     asset_type?: string;
 }
@@ -37,6 +39,8 @@ interface PrecoTetoAssumptions {
     total_shares?: number | string;
     projected_growth_rate?: number | string;
     current_price_per_share?: number | string;
+    roe?: number | string;
+    payout?: number | string;
 }
 
 interface PrecoTetoValuation {
@@ -78,7 +82,29 @@ const form = useForm({
     current_price_per_share:
         toFormValue(assumptions.current_price_per_share) ||
         toInputValue(props.asset?.current_price),
+    roe: toFormValue(assumptions.roe) ||
+        toFormValue(props.asset?.roe) ||
+        '0',
+    payout: toFormValue(assumptions.payout) ||
+        toFormValue(props.asset?.payout) ||
+        '0',
 });
+
+const defaultGrowthRate = computed(() => {
+    const roe = parseNumber(form.roe);
+    const payout = parseNumber(form.payout);
+    return Math.round((1 - payout / 100) * roe * 100) / 100;
+});
+
+const hasSavedGrowthRate = !!assumptions.projected_growth_rate;
+
+watch(
+    [() => form.roe, () => form.payout],
+    () => {
+        form.projected_growth_rate = defaultGrowthRate.value.toString();
+    },
+    { immediate: !hasSavedGrowthRate },
+);
 
 watch(selectedId, (id) => {
     if (id) {
@@ -380,7 +406,41 @@ const submit = () => {
                                 </div>
                                 <div>
                                     <div class="flex items-center gap-1.5">
-                                        <Label>Crescimento</Label>
+                                        <Label>ROE (%)</Label>
+                                    </div>
+                                    <Input
+                                        v-model="form.roe"
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="100"
+                                        placeholder="Ex: 20"
+                                        class="mt-1.5"
+                                    />
+                                    <InputError :message="form.errors.roe" />
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <Label>Payout (%)</Label>
+                                    </div>
+                                    <Input
+                                        v-model="form.payout"
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        max="100"
+                                        placeholder="Ex: 50"
+                                        class="mt-1.5"
+                                    />
+                                    <InputError
+                                        :message="form.errors.payout"
+                                    />
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-1.5">
+                                        <Label>
+                                            <span>Crescimento</span>
+                                        </Label>
                                     </div>
                                     <Input
                                         v-model="form.projected_growth_rate"
@@ -389,6 +449,16 @@ const submit = () => {
                                         placeholder="Ex: 5"
                                         class="mt-1.5"
                                     />
+                                    <p
+                                        class="mt-1 text-xs text-muted-foreground"
+                                    >
+                                        Taxa de Crescimento Esperada:
+                                        <span
+                                            class="font-medium text-foreground"
+                                            >{{ defaultGrowthRate }}%</span
+                                        >
+                                        (ROE × (1 − Payout%))
+                                    </p>
                                     <InputError
                                         :message="
                                             form.errors.projected_growth_rate

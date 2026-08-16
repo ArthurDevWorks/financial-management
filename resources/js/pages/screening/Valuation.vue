@@ -292,9 +292,27 @@ const ptNetIncome = ref(
 const ptTotalShares = ref(
     ptData?.total_shares ?? props.asset.total_shares ?? 0,
 );
+const ptRoe = ref(ptData?.roe ?? props.asset.roe ?? 0);
+const ptPayout = ref(ptData?.payout ?? props.asset.payout ?? 0);
 const ptGrowthRate = ref(ptData?.projected_growth_rate ?? 5);
 const ptCurrentPrice = ref(
     ptData?.current_price_per_share ?? props.asset.current_price ?? 0,
+);
+
+const ptDefaultGrowthRate = computed(() => {
+    const roe = Number(ptRoe.value) || 0;
+    const payout = Number(ptPayout.value) || 0;
+    return Math.round((1 - payout / 100) * roe * 100) / 100;
+});
+
+const hasSavedPtGrowthRate = !!ptData?.projected_growth_rate;
+
+watch(
+    [ptRoe, ptPayout],
+    () => {
+        ptGrowthRate.value = ptDefaultGrowthRate.value;
+    },
+    { immediate: !hasSavedPtGrowthRate },
 );
 
 const {
@@ -328,8 +346,16 @@ const dcfCurrentPrice = ref(
     dcfData?.current_price_per_share ?? props.asset.current_price ?? 0,
 );
 
+const dcfDefaultGrowthRate = computed(() => {
+    const roe = Number(dcfRoe.value) || 0;
+    const payout = Number(dcfPayout.value) || 0;
+    return Math.round((1 - payout / 100) * roe * 100) / 100;
+});
+
+const hasSavedDcfGrowthRates = !!dcfData?.growth_rates?.length;
+
 const buildDefaultGrowthRates = (n: number) => {
-    return Array.from({ length: n }, () => 5);
+    return Array.from({ length: n }, () => dcfDefaultGrowthRate.value);
 };
 
 const dcfGrowthRates = ref<number[]>(
@@ -340,12 +366,22 @@ const dcfGrowthRates = ref<number[]>(
 watch(dcfProjectionYears, (newLen, oldLen) => {
     if (newLen > oldLen) {
         while (dcfGrowthRates.value.length < newLen) {
-            dcfGrowthRates.value.push(5);
+            dcfGrowthRates.value.push(dcfDefaultGrowthRate.value);
         }
     } else {
         dcfGrowthRates.value = dcfGrowthRates.value.slice(0, newLen);
     }
 });
+
+watch(
+    [dcfRoe, dcfPayout],
+    () => {
+        dcfGrowthRates.value = dcfGrowthRates.value.map(
+            () => dcfDefaultGrowthRate.value,
+        );
+    },
+    { immediate: !hasSavedDcfGrowthRates },
+);
 
 const {
     fairPrice: dcfFairPrice,
@@ -377,6 +413,8 @@ function savePrecoTeto() {
         total_shares: ptTotalShares.value,
         projected_growth_rate: ptGrowthRate.value,
         current_price_per_share: ptCurrentPrice.value,
+        roe: ptRoe.value,
+        payout: ptPayout.value,
     };
     const existing = props.existingValuations?.preco_teto;
     if (existing) {
@@ -536,6 +574,26 @@ function saveGordon() {
                             />
                         </div>
                         <div>
+                            <Label>ROE (%)</Label>
+                            <Input
+                                v-model.number="ptRoe"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
+                        </div>
+                        <div>
+                            <Label>Payout (%)</Label>
+                            <Input
+                                v-model.number="ptPayout"
+                                type="number"
+                                step="0.1"
+                                min="0"
+                                class="mt-1"
+                            />
+                        </div>
+                        <div>
                             <Label class="flex items-center justify-between">
                                 <span>Crescimento</span>
                             </Label>
@@ -545,6 +603,16 @@ function saveGordon() {
                                 step="0.1"
                                 class="mt-1"
                             />
+                            <p
+                                class="mt-1 text-xs text-muted-foreground"
+                            >
+                                Taxa de Crescimento Esperada:
+                                <span
+                                    class="font-medium text-foreground"
+                                    >{{ ptDefaultGrowthRate }}%</span
+                                >
+                                (ROE × (1 − Payout%))
+                            </p>
                         </div>
                         <div>
                             <Label>Preço Atual (R$)</Label>
@@ -820,10 +888,34 @@ function saveGordon() {
                     </div>
 
                     <div class="rounded-xl border border-border bg-card p-5">
-                        <h3 class="mb-4 text-sm font-semibold">
+                        <h3 class="mb-1 text-sm font-semibold">
                             Projeção
                             <span class="text-primary">Lucro Líquido</span>
                         </h3>
+                        <div
+                            class="mb-4 mt-3 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3"
+                        >
+                            <div
+                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10"
+                            >
+                                <span
+                                    class="text-sm font-bold text-primary"
+                                >%</span>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                                >
+                                    Taxa de Crescimento Esperada
+                                </p>
+                                <p class="text-lg font-bold text-primary">
+                                    {{ dcfDefaultGrowthRate }}%
+                                    <span
+                                        class="text-xs font-normal text-muted-foreground"
+                                    >{{ `ROE (${dcfRoe}%) × (1 − Payout (${dcfPayout}%))` }}</span>
+                                </p>
+                            </div>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
@@ -835,7 +927,12 @@ function saveGordon() {
                                             Lucro Líquido
                                         </th>
                                         <th class="pb-3 text-right">
-                                            Crescimento
+                                            <div>Crescimento</div>
+                                            <div
+                                                class="normal-case tracking-normal text-muted-foreground/70"
+                                            >
+                                                Taxa Esperada
+                                            </div>
                                         </th>
                                         <th class="pr-3 pb-3 text-right">
                                             VPL

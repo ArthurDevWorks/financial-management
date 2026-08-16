@@ -28,7 +28,7 @@ class PrecoTetoController extends Controller
 
         $assets = Asset::query()
             ->orderBy('ticker')
-            ->get(['id', 'ticker', 'name', 'asset_type', 'current_price', 'logo_url', 'net_income', 'total_shares']);
+            ->get(['id', 'ticker', 'name', 'asset_type', 'current_price', 'logo_url', 'net_income', 'total_shares', 'roe', 'payout']);
 
         return Inertia::render('preco-teto/Index', [
             'asset' => $asset ? [
@@ -38,6 +38,8 @@ class PrecoTetoController extends Controller
                 'current_price' => $asset->current_price,
                 'net_income' => $asset->net_income,
                 'total_shares' => $asset->total_shares,
+                'roe' => $asset->roe,
+                'payout' => $asset->payout,
                 'logo_url' => $asset->logo_url,
                 'asset_type' => $asset->asset_type,
             ] : null,
@@ -114,6 +116,8 @@ class PrecoTetoController extends Controller
                 'total_shares' => (string) ($a['total_shares'] ?? $asset->total_shares ?? ''),
                 'projected_growth_rate' => (string) ($a['projected_growth_rate'] ?? '5'),
                 'current_price_per_share' => (string) ($a['current_price_per_share'] ?? $asset->current_price ?? ''),
+                'roe' => (string) ($a['roe'] ?? $asset->roe ?? '0'),
+                'payout' => (string) ($a['payout'] ?? $asset->payout ?? '0'),
             ];
         }
 
@@ -124,6 +128,8 @@ class PrecoTetoController extends Controller
             'total_shares' => (string) ($asset->total_shares ?? ''),
             'projected_growth_rate' => '5',
             'current_price_per_share' => (string) ($asset->current_price ?? ''),
+            'roe' => (string) ($asset->roe ?? '0'),
+            'payout' => (string) ($asset->payout ?? '0'),
         ];
     }
 }

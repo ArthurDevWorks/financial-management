@@ -77,7 +77,7 @@ const form = useForm<{
     total_shares: defaults.total_shares ?? props.asset?.total_shares ?? '',
     current_price_per_share:
         defaults.current_price_per_share ?? props.asset?.current_price ?? '',
-    growth_rates: defaults.growth_rates ?? [8.0, 7.0, 6.0, 5.0, 4.0],
+    growth_rates: defaults.growth_rates ?? Array(5).fill(0),
 });
 
 const isEditing = computed(() => !!props.valuation);
@@ -92,7 +92,7 @@ watch(
     (newLen, oldLen) => {
         if (newLen > oldLen) {
             while (form.growth_rates.length < newLen) {
-                form.growth_rates.push(5);
+                form.growth_rates.push(defaultGrowthRate.value);
             }
         } else {
             form.growth_rates = form.growth_rates.slice(0, newLen);
@@ -108,6 +108,22 @@ const terminalGrowthRate = computed(
     () => Number(form.terminal_growth_rate) || 0,
 );
 const currentPrice = computed(() => Number(form.current_price_per_share) || 0);
+
+const defaultGrowthRate = computed(() => {
+    const roe = Number(form.roe) || 0;
+    const payout = Number(form.payout) || 0;
+    return Math.round((1 - payout / 100) * roe * 100) / 100;
+});
+
+const hasSavedGrowthRates = !!defaults.growth_rates?.length;
+
+watch(
+    [() => form.roe, () => form.payout],
+    () => {
+        form.growth_rates = form.growth_rates.map(() => defaultGrowthRate.value);
+    },
+    { immediate: !hasSavedGrowthRates },
+);
 
 const { fairPrice, upside, marginOfSafety, projectedFcfs } = useDcf({
     freeCashFlow: fcfBase,
@@ -344,9 +360,30 @@ const currentYear = new Date().getFullYear();
                 <div class="space-y-6 xl:col-span-2">
                     <!-- Projeção de FCF -->
                     <SectionCard title="Projeção de Fluxo de Caixa">
-                        <p class="mb-3 text-xs text-muted-foreground">
-                            Taxas de crescimento por ano e FCF projetado
-                        </p>
+                        <div
+                            class="mb-4 flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 px-4 py-3"
+                        >
+                            <div
+                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10"
+                            >
+                                <span
+                                    class="text-sm font-bold text-primary"
+                                >%</span>
+                            </div>
+                            <div>
+                                <p
+                                    class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                                >
+                                    Taxa de Crescimento Esperada
+                                </p>
+                                <p class="text-lg font-bold text-primary">
+                                    {{ defaultGrowthRate }}%
+                                    <span
+                                        class="text-xs font-normal text-muted-foreground"
+                                    >{{ `ROE (${form.roe}%) × (1 − Payout (${form.payout}%))` }}</span>
+                                </p>
+                            </div>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="w-full text-sm">
                                 <thead>
@@ -359,7 +396,12 @@ const currentYear = new Date().getFullYear();
                                         <th
                                             class="px-4 py-2 text-left text-xs font-medium tracking-wider text-muted-foreground uppercase"
                                         >
-                                            Crescimento (%)
+                                            <div>Crescimento (%)</div>
+                                            <div
+                                                class="normal-case tracking-normal text-muted-foreground/70"
+                                            >
+                                                Taxa Esperada
+                                            </div>
                                         </th>
                                         <th
                                             class="px-4 py-2 text-right text-xs font-medium tracking-wider text-muted-foreground uppercase"
