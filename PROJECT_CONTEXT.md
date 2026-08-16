@@ -13,7 +13,7 @@ O projeto começa como um gerenciador financeiro pessoal e evolui para uma plata
 - Kinvo
 - Trademap
 
-O produto já teve a Release 1 colocada em produção com gerenciamento financeiro e cálculo de valuations. O foco atual é documentar a entrega, estabilizar operação pós-produção e preparar a Release 2 de planejamento financeiro e lançamentos avançados.
+O produto já teve a Release 1 colocada em produção com gerenciamento financeiro e cálculo de valuations. As Releases 2 (Screening) e 3 (Valuation Avançado) foram concluídas. O foco atual é estabilizar operação, expandir automação (Release 4) e financeiro avançado (Release 5).
 
 ---
 
@@ -102,66 +102,91 @@ Núcleo de gestão financeira pessoal com cadastro de ativos e cotação automá
 
 ---
 
-## Release 2 — Módulo Screening 🚧
+## Release 2 — Módulo Screening ✅ (v2.0.0)
+
+### Status
+Concluída.
 
 ### Objetivo
-Permitir busca e descoberta de ativos com filtros fundamentalistas, cache de indicadores no banco local, comparação de ativos e favoritos.
+Buscar e descobrir ativos com filtros fundamentalistas, cache de dados e comparação.
 
-### Entregas
-- Cache de indicadores fundamentalistas (asset_indicators)
-- Cache de indicadores de FIIs (fii_indicators)
+### Entregues
+- Cache de indicadores fundamentalistas (asset_indicators, fii_indicators)
+- Tabela consolidada de ativos com 40+ campos
+- Filtros por DY, P/L, ROE, P/VP, liquidez, setor, endividamento
 - Templates de filtros salvos (screening_filters)
 - Favoritar ativos (asset_favorites)
-- Estender BrapiService (statistics, financial-data, profile, dividends)
-- AssetIndicatorService (sincronização de indicadores)
-- ScreeningService (lógica de filtros)
-- ScrapingService (dados complementares)
-- Página principal de screening (filtros + resultados)
-- Página detalhada do ativo (indicadores, gráficos, dividendos)
-- Comparação side-by-side de ativos
-- Jobs de sincronização (SyncAssetIndicatorsJob)
-- Artisan command screening:sync
+- Página principal de screening com scroll infinito
+- Página detalhada do ativo com gráficos
+- Comparação side-by-side de até 5 ativos
+- Scraping complementar (StatusInvest, Fundamentus, Investidor10)
+- Normalização de setores e nomes
+- BrapiService expandido e AssetSyncService
 
 ---
 
-## Release 3 — Valuation Avançado 🚧
+## Release 3 — Valuation Avançado ✅ (v2.1.0)
+
+### Status
+Concluída.
 
 ### Objetivo
-Expandir os modelos de valuation com Gordon para FIIs e automatizar carregamento de premissas.
+Expandir modelos de valuation com Gordon para FIIs e automatizar premissas.
 
-### Entregas
-- GordonValuationService (modelo de Gordon com perpetuidade fixa em 3%)
+### Entregues
+- Modelo de Gordon para FIIs (fórmula P = D0*(1+g)/(ke-g))
 - Auto-preenchimento de premissas com dados do cache
-- Página unificada (indicadores do ativo + valuation na mesma tela)
-- Atualização automática de cotação, ROE, número de papéis
-- Melhorias no frontend de DCF e Preço Teto
+- Página unificada com todos os 3 métodos de valuation
+- Campo ROE/Payout editáveis no Preço Teto
+- Taxa de crescimento esperada calculada
+- Margem de segurança unificada em todos os métodos
+- Composables useDcf.ts e usePrecoTeto.ts
+- MarginGauge component
 
 ---
 
-## Release 4 — Automação e Infraestrutura
+## Release 4 — Automação e Infraestrutura 🚧
+
+### Status
+Parcialmente concluída.
 
 ### Objetivo
 Automatizar sincronização de dados e expandir fontes com scraping.
 
-### Entregas
-- SyncAssetIndicatorsJob agendado
-- Schedule diário de atualização
-- Scraping estruturado de fontes complementares
+### Entregues
+- Artisan commands: assets:sync, releases:generate-recurring, assets:normalize-sectors
+- Schedule configurado: assets:sync 3x/dias úteis, releases:generate-recurring diário
+- Scraping de fontes complementares
+- Jobs de sincronização (SyncAssetIndicatorsJob)
+
+### Pendente
 - Sistema de e-mails (notificações, recovery)
+- Fila de jobs para processamento assíncrono
 
 ---
 
-## Release 5 — Financeiro Avançado
+## Release 5 — Financeiro Avançado 🚧
+
+### Status
+Parcialmente concluída.
 
 ### Objetivo
 Expandir controle financeiro com cartões, faturas, planejamento e metas.
 
-### Entregas
-- Cartões de crédito e faturas
-- Lançamentos recorrentes e parcelados
-- Planejamento financeiro mensal e anual
+### Entregues
+- Cartões de crédito com CRUD completo
+- Faturas mensais com navegação de 15 meses
+- Lançamentos recorrentes (5 frequências)
+- Lançamentos parcelados com distribuição automática
+- Métodos de pagamento (dinheiro, cartão crédito, cartão débito, pix)
+- Status de lançamentos (previsto, pago, cancelado)
+- Dashboard aprimorado com filtering por período
+
+### Pendente
+- Planejamento financeiro mensal/anual
 - Metas e objetivos financeiros
 - Orçamento por categoria
+- Registrar pagamento total ou parcial de fatura
 
 # STACK TECNOLÓGICA
 

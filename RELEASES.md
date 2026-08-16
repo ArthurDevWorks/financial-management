@@ -3,10 +3,10 @@
 | Release | Versão | Status | Data |
 |---|---|---|---|
 | Gestão Financeira | v1.0.0 | ✅ Lançada | 2026-07-07 |
-| Módulo Screening | v2.0.0 | 🚧 Em desenvolvimento | Prevista |
-| Valuation Avançado | v2.1.0 | 🚧 Em planejamento | Prevista |
-| Automação e Infraestrutura | v3.0.0 | 📋 Planejada | Prevista |
-| Financeiro Avançado | v3.1.0 | 📋 Planejada | Prevista |
+| Módulo Screening | v2.0.0 | ✅ Concluída | 2026-08-15 |
+| Valuation Avançado | v2.1.0 | ✅ Concluída | 2026-08-15 |
+| Automação e Infraestrutura | v3.0.0 | 🚧 Parcial | Prevista |
+| Financeiro Avançado | v3.1.0 | 🚧 Parcial | Prevista |
 
 ---
 
@@ -35,47 +35,68 @@
 
 ---
 
-## v2.0.0 — Módulo Screening (Em desenvolvimento)
+## v2.0.0 — Módulo Screening (Concluída)
 
-**Status:** Issues criadas, implementação em andamento
+**Data:** 2026-08-15
 
-### Escopo
-- Cache de indicadores fundamentalistas no banco local
-- Tela de screening com filtros combináveis
-- Página detalhada de cada ativo com indicadores e gráficos
-- Comparação side-by-side de ativos
-- Favoritar ativos
-- Templates de filtros salvos
-- Integração com brapi.dev (statistics, financial-data, profile)
-- Scraping complementar
-
----
-
-## v2.1.0 — Valuation Avançado (Em planejamento)
-
-### Escopo
-- Modelo de Gordon para FIIs (perpetuidade fixa em 3%)
-- Auto-preenchimento de premissas com dados em cache
-- Página unificada com indicadores + valuation
-- Atualização automática de cotação e dados de mercado
+### O que foi entregue
+- Cache de indicadores fundamentalistas (asset_indicators, fii_indicators)
+- Tabela consolidada de ativos com 40+ campos
+- Tela de screening com 10+ filtros combináveis
+- Página detalhada de cada ativo com gráficos de preço e dividendos
+- Comparação side-by-side de até 5 ativos (radar + bar chart)
+- Favoritar ativos (AssetFavorite)
+- Templates de filtros salvos (ScreeningFilter)
+- Scraping complementar (StatusInvest, Fundamentus, Investidor10)
+- Normalização de setores e nomes (SectorMapper, NameNormalizer, FiiSegmentMapper)
+- BrapiService expandido (quotes, completeQuote, historical, FII indicators)
+- AssetSyncService (sincronização multi-fonte, 807 linhas)
 
 ---
 
-## v3.0.0 — Automação e Infraestrutura (Planejada)
+## v2.1.0 — Valuation Avançado (Concluída)
 
-### Escopo
-- Jobs de sincronização de indicadores
-- Comandos Artisan para manutenção
-- Schedule automático
-- Scraping estruturado
-- Sistema de e-mails
+**Data:** 2026-08-15
+
+### O que foi entregue
+- Modelo de Gordon para FIIs (fórmula P = D0*(1+g)/(ke-g))
+- Auto-preenchimento de premissas com dados do cache
+- Página unificada com todos os 3 métodos de valuation
+- Campo ROE/Payout editáveis no Preço Teto
+- Taxa de crescimento esperada calculada (ROE × (1 - Payout%))
+- Margem de segurança unificada em todos os métodos
+- Composables useDcf.ts e usePrecoTeto.ts
+- MarginGauge component para visualização
 
 ---
 
-## v3.1.0 — Financeiro Avançado (Planejada)
+## v3.0.0 — Automação e Infraestrutura (Parcial)
 
-### Escopo
-- Cartões de crédito e gerenciamento de faturas
-- Lançamentos recorrentes e parcelados
-- Planejamento financeiro mensal e anual
+### O que foi entregue
+- Artisan commands: assets:sync, releases:generate-recurring, assets:normalize-sectors
+- Schedule configurado: assets:sync 3x/dias úteis, releases:generate-recurring diário
+- Scraping de fontes complementares (StatusInvest, Fundamentus, Investidor10)
+- Jobs de sincronização (SyncAssetIndicatorsJob)
+
+### Pendente
+- Sistema de e-mails (notificações, recovery)
+- Fila de jobs para processamento assíncrono
+
+---
+
+## v3.1.0 — Financeiro Avançado (Parcial)
+
+### O que foi entregue
+- Cartões de crédito com CRUD completo
+- Faturas mensais com navegação de 15 meses
+- Lançamentos recorrentes (5 frequências)
+- Lançamentos parcelados com distribuição automática
+- Métodos de pagamento (dinheiro, cartão crédito, cartão débito, pix)
+- Status de lançamentos (previsto, pago, cancelado)
+- Dashboard aprimorado com filtering por período
+
+### Pendente
+- Planejamento financeiro mensal/anual
 - Metas e objetivos financeiros
+- Orçamento por categoria
+- Registrar pagamento total ou parcial de fatura
