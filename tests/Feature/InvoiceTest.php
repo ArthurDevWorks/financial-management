@@ -22,15 +22,19 @@ it('exclui lançamentos cancelados do total e do período da fatura', function (
 
     $category = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
 
+    // closing_day = 10, então o lançamento precisa cair entre dia 11 do mês
+    // anterior e dia 10 do mês atual para pertencer à fatura.
+    $releaseDate = Carbon\Carbon::now()->day(5)->toDateString();
+
     Release::factory()->for($user)->for($card)->for($category, 'category')->expense()->create([
         'amount' => 100,
-        'date' => now()->toDateString(),
+        'date' => $releaseDate,
         'status' => 'paid',
         'payment_method' => 'credit_card',
     ]);
     Release::factory()->for($user)->for($card)->for($category, 'category')->expense()->create([
         'amount' => 50,
-        'date' => now()->toDateString(),
+        'date' => $releaseDate,
         'status' => 'canceled',
         'payment_method' => 'credit_card',
     ]);
@@ -60,15 +64,19 @@ it('subtrai reembolsos do total da fatura', function () {
     $expenseCategory = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
     $revenueCategory = Category::factory()->create(['type' => CategoryType::REVENUE->value]);
 
+    // closing_day = 10, então o lançamento precisa cair entre dia 11 do mês
+    // anterior e dia 10 do mês atual para pertencer à fatura.
+    $releaseDate = Carbon\Carbon::now()->day(5)->toDateString();
+
     Release::factory()->for($user)->for($card)->for($expenseCategory, 'category')->expense()->create([
         'amount' => 100,
-        'date' => now()->toDateString(),
+        'date' => $releaseDate,
         'status' => 'paid',
         'payment_method' => 'credit_card',
     ]);
     Release::factory()->for($user)->for($card)->for($revenueCategory, 'category')->revenue()->create([
         'amount' => 30,
-        'date' => now()->toDateString(),
+        'date' => $releaseDate,
         'status' => 'paid',
         'payment_method' => 'credit_card',
     ]);
@@ -92,9 +100,11 @@ it('não considera lançamento em dinheiro na fatura do cartão', function () {
 
     $category = Category::factory()->create(['type' => CategoryType::EXPENSE->value]);
 
+    $releaseDate = Carbon\Carbon::now()->day(5)->toDateString();
+
     Release::factory()->for($user)->for($card)->for($category, 'category')->expense()->create([
         'amount' => 100,
-        'date' => now()->toDateString(),
+        'date' => $releaseDate,
         'status' => 'paid',
         'payment_method' => 'cash',
     ]);

@@ -41,12 +41,6 @@ const formatCurrency = (value: number | null | undefined) => {
     }).format(value);
 };
 
-const formatPercent = (value: number | null | undefined) => {
-    if (value === null || value === undefined || Number.isNaN(value))
-        return 'N/A';
-    return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
-};
-
 const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('pt-BR');
 };

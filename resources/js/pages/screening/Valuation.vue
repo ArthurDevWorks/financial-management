@@ -70,12 +70,6 @@ const props = defineProps<{
     valuationId?: string;
 }>();
 
-const methodToRoute: Record<string, string> = {
-    preco_teto: 'preco-teto',
-    dcf: 'dcf',
-    gordon: 'gordon',
-};
-
 function resolveInitialTab(): string {
     if (props.valuationId && props.existingValuations) {
         for (const [method, data] of Object.entries(props.existingValuations)) {
@@ -155,131 +149,6 @@ const growthRates = ref<number[]>(
     gordonData?.growth_rates ?? [8.0, 7.0, 6.0, 5.0, 4.0],
 );
 
-const projectedDividends = computed(() => {
-    let d = dps.value;
-    const result: { year: number; growth: number; dps: number; pv: number }[] =
-        [];
-    const ke = gordonEffectiveKe.value / 100;
-
-    growthRates.value.forEach((g, i) => {
-        const gr = g / 100;
-        const nextDps = d * (1 + gr);
-        const pv = nextDps / Math.pow(1 + ke, i + 1);
-        result.push({ year: i + 1, growth: g, dps: nextDps, pv });
-        d = nextDps;
-    });
-
-    const terminalGrowth = growthPerpetuity.value / 100;
-    const terminalDps = d * (1 + terminalGrowth);
-    const terminalPv =
-        terminalDps / (ke - terminalGrowth) / Math.pow(1 + ke, 5);
-
-    return { years: result, terminalDps, terminalPv };
-});
-
-const dpsSens = computed(() => dps.value || 0);
-
-const sensitivityData = computed(() => {
-    const baseKe = gordonEffectiveKe.value;
-    const keValues = Array.from({ length: 11 }, (_, i) => baseKe - 5 + i * 0.5);
-    const gValues = [2.0, 2.5, 3.0, 3.5, 4.0];
-    const colors = [
-        'hsla(168, 75%, 42%, 0.85)',
-        'hsla(168, 75%, 42%, 0.6)',
-        'hsla(42, 80%, 52%, 0.85)',
-        'hsla(42, 80%, 52%, 0.6)',
-        'hsla(220, 80%, 55%, 0.85)',
-    ];
-
-    return {
-        labels: keValues.map((v) => v.toFixed(1) + '%'),
-        datasets: [
-            ...gValues.map((g, i) => ({
-                label: `g = ${g.toFixed(1)}%`,
-                data: keValues.map((ke) => {
-                    const k = ke / 100;
-                    const gr = g / 100;
-                    if (k <= gr || !dpsSens.value) return null;
-                    return dpsSens.value / (k - gr);
-                }),
-                borderColor: colors[i],
-                backgroundColor: colors[i].replace('0.85', '0.05'),
-                fill: false,
-                tension: 0.3,
-                pointRadius: 2,
-                borderWidth: 2,
-            })),
-            {
-                label: 'Preço atual',
-                data: keValues.map(() => currentPrice.value),
-                borderColor: 'hsla(0, 75%, 55%, 0.5)',
-                borderDash: [6, 4] as number[],
-                fill: false,
-                pointRadius: 0,
-                borderWidth: 1.5,
-            },
-        ],
-    };
-});
-
-const sensitivityOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: { mode: 'index' as const, intersect: false },
-    plugins: {
-        legend: {
-            position: 'bottom' as const,
-            labels: {
-                boxWidth: 12,
-                usePointStyle: true,
-                padding: 12,
-                font: { size: 10 },
-            },
-        },
-        tooltip: {
-            backgroundColor: 'hsl(228, 22%, 9%)',
-            borderColor: 'hsl(228, 15%, 14%)',
-            borderWidth: 1,
-            padding: 8,
-            callbacks: {
-                label: (ctx: {
-                    parsed: { y: number | null };
-                    dataset: { label: string };
-                }) => {
-                    if (ctx.parsed.y === null)
-                        return ctx.dataset.label + ': N/A';
-                    return (
-                        ctx.dataset.label + ': R$ ' + ctx.parsed.y.toFixed(2)
-                    );
-                },
-            },
-        },
-    },
-    scales: {
-        x: {
-            grid: { display: false },
-            title: {
-                display: true,
-                text: 'Taxa de Desconto (Ke)',
-                font: { size: 11 },
-            },
-            ticks: { font: { size: 10 } },
-        },
-        y: {
-            grid: { color: 'hsla(228, 15%, 14%, 0.3)' },
-            title: {
-                display: true,
-                text: 'Preço Justo (R$)',
-                font: { size: 11 },
-            },
-            ticks: {
-                callback: (v: number) => 'R$' + v.toFixed(0),
-                font: { size: 10 },
-            },
-        },
-    },
-};
-
 // ─── Preço Teto ──────────────────────────────────
 const ptData = props.existingValuations?.preco_teto?.assumptions;
 const ptDesiredYield = ref(ptData?.desired_yield ?? 6);
@@ -321,7 +190,6 @@ const {
     dpaProjetado: ptDpa,
     yieldProjetado: ptYield,
     margemSeguranca: ptMargem,
-    podeCalcular: ptPodeCalcular,
 } = usePrecoTeto({
     desiredYield: ptDesiredYield,
     projectedPayout: ptProjectedPayout,
@@ -391,7 +259,6 @@ const {
     terminalValue: dcfTerminalValue,
     pvTerminal: dcfPvTerminal,
     projectedFcfs: dcfProjectedFcfs,
-    podeCalcular: dcfPodeCalcular,
 } = useDcf({
     freeCashFlow: dcfFcf,
     growthRates: dcfGrowthRates,

@@ -221,28 +221,6 @@ function toggleCompare(ticker: string) {
         selectedForCompare.value.push(ticker);
 }
 
-function goToCompare() {
-    if (selectedForCompare.value.length < 2) return;
-    router.get('/screening/compare', {
-        tickers: selectedForCompare.value.join(','),
-    });
-}
-
-function toggleFavorite(ticker: string, assetType: string) {
-    router.post(
-        '/screening/favorite',
-        {
-            ticker,
-            asset_type: assetType,
-        },
-        { preserveState: true, preserveScroll: true },
-    );
-}
-
-function isFavorite(ticker: string): boolean {
-    return props.favorites.includes(ticker);
-}
-
 function applySavedFilter(filter: {
     id: number;
     criteria: Record<string, unknown>;
@@ -254,12 +232,6 @@ function applySavedFilter(filter: {
         }
     });
     applyFilters();
-}
-
-function formatNumber(value: unknown, decimals = 2): string {
-    const num = toNumber(value);
-    if (num === null) return '—';
-    return num.toFixed(decimals);
 }
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -571,7 +543,7 @@ function onSearchInput() {
                         </thead>
                         <tbody>
                             <tr
-                                v-for="(asset, i) in allAssets"
+                                v-for="asset in allAssets"
                                 :key="asset.id"
                                 class="border-b border-border transition-colors hover:bg-primary/5"
                             >

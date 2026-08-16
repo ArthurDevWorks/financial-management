@@ -38,10 +38,6 @@ function parseBr(val: string | number): number {
     return parseFloat(cleaned) || 0;
 }
 
-function toBrNumber(num: number): string {
-    return formatter.format(num);
-}
-
 watch(
     () => props.modelValue,
     (val) => {

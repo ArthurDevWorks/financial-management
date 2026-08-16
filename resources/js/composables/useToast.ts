@@ -1,5 +1,5 @@
 import { usePage } from '@inertiajs/vue3';
-import type { AppPageProps, Flash } from '@/types';
+import type { AppPageProps } from '@/types';
 import { watch } from 'vue';
 import { toast as sonnerToast } from 'vue-sonner';
 
