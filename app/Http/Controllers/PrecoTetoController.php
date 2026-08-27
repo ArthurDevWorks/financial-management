@@ -111,7 +111,6 @@ class PrecoTetoController extends Controller
 
             return [
                 'desired_yield' => (string) ($a['desired_yield'] ?? '8'),
-                'projected_payout' => (string) ($a['projected_payout'] ?? '50'),
                 'projected_net_income' => (string) ($a['projected_net_income'] ?? $asset->net_income ?? ''),
                 'total_shares' => (string) ($a['total_shares'] ?? $asset->total_shares ?? ''),
                 'projected_growth_rate' => (string) ($a['projected_growth_rate'] ?? '5'),
@@ -123,7 +122,6 @@ class PrecoTetoController extends Controller
 
         return [
             'desired_yield' => '8',
-            'projected_payout' => '50',
             'projected_net_income' => (string) ($asset->net_income ?? ''),
             'total_shares' => (string) ($asset->total_shares ?? ''),
             'projected_growth_rate' => '5',

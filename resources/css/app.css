@@ -85,6 +85,10 @@
 @layer utilities {
     html {
         scrollbar-width: thin;
+        scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+    }
+
+    .dark html {
         scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
     }
 
@@ -111,7 +115,7 @@
     --secondary: hsl(210 15% 94%);
     --secondary-foreground: hsl(228 30% 20%);
     --muted: hsl(210 15% 92%);
-    --muted-foreground: hsl(228 10% 50%);
+    --muted-foreground: hsl(228 12% 40%);
     --accent: hsl(42 75% 45%);
     --accent-foreground: hsl(0 0% 100%);
     --destructive: hsl(0 70% 50%);
@@ -261,6 +265,10 @@
     }
 
     ::placeholder {
+        color: hsl(220 10% 45%);
+    }
+
+    .dark ::placeholder {
         color: hsl(220 10% 55%);
     }
 
@@ -274,6 +282,10 @@
     }
 
     select:required:invalid {
+        color: hsl(220 10% 45%);
+    }
+
+    .dark select:required:invalid {
         color: hsl(220 10% 55%);
     }
 
@@ -290,10 +302,17 @@
         background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.08);
+        background: rgba(0, 0, 0, 0.15);
         border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.25);
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
         background: rgba(255, 255, 255, 0.16);
     }
 }

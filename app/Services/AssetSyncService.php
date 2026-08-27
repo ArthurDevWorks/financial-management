@@ -47,6 +47,23 @@ class AssetSyncService
             $processed += $result['processed'];
             $updated += $result['updated'];
             $errors += $result['errors'];
+        } else {
+            Log::warning('No tickers from StatusInvest sources. Falling back to Brapi-only sync for all stale assets.');
+            $staleTickers = Asset::where('asset_type', '!=', 'fii')
+                ->where(function ($q) use ($maxHoursSinceUpdate) {
+                    $q->whereNull('fetched_at')
+                        ->orWhere('fetched_at', '<', now()->subHours($maxHoursSinceUpdate));
+                })
+                ->pluck('ticker')
+                ->map(fn ($t) => strtoupper(trim($t)))
+                ->all();
+
+            if (! empty($staleTickers)) {
+                $result = $this->enrichFromBrapi($staleTickers, $onProgress);
+                $processed += $result['processed'];
+                $updated += $result['updated'];
+                $errors += $result['errors'];
+            }
         }
 
         if ($type === 'all') {
@@ -184,6 +201,8 @@ class AssetSyncService
         $tickers = $this->statusInvest->fetchAllStocks();
 
         if (empty($tickers)) {
+            Log::warning('StatusInvest returned 0 stocks. API may be blocking requests (HTTP 403).');
+
             return ['processed' => 0, 'updated' => 0, 'errors' => 0, 'syncedTickers' => []];
         }
 
@@ -232,6 +251,8 @@ class AssetSyncService
         $tickers = $this->statusInvest->fetchAllFii();
 
         if (empty($tickers)) {
+            Log::warning('StatusInvest returned 0 FIIs. API may be blocking requests (HTTP 403).');
+
             return ['processed' => 0, 'updated' => 0, 'errors' => 0, 'syncedTickers' => []];
         }
 

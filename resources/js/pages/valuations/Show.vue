@@ -95,8 +95,8 @@ const assumptionItems = computed(() => {
                 value: `${a.value.desired_yield ?? 'N/A'}%`,
             },
             {
-                label: 'Payout projetado',
-                value: `${a.value.projected_payout ?? 'N/A'}%`,
+                label: 'Payout',
+                value: `${a.value.payout ?? 'N/A'}%`,
             },
             {
                 label: 'Lucro líquido projetado',
