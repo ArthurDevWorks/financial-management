@@ -190,7 +190,7 @@ function formatPercent(value: number | null | undefined) {
                             <Label>Selecione o Ativo</Label>
                             <select
                                 v-model="form.asset_id"
-                                class="mt-1 h-[42px] w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                                class="mt-1 h-[42px] w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                                 :disabled="isEditing"
                             >
                                 <option value="">Selecione...</option>

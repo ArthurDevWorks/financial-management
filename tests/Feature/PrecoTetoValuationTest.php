@@ -16,7 +16,7 @@ it('salva a simulação de preço teto projetivo com premissas', function () {
     $response = $this->post(route('preco-teto.store'), [
         'asset_id' => $asset->id,
         'desired_yield' => '6',
-        'projected_payout' => '55',
+        'payout' => '55',
         'projected_net_income' => 'R$ 3.450.000.000,00',
         'total_shares' => '640.321.918',
         'projected_growth_rate' => '0,00',
@@ -30,7 +30,7 @@ it('salva a simulação de preço teto projetivo com premissas', function () {
 
     expect($valuation)->not()->toBeNull();
     expect($valuation->assumptions['desired_yield'])->toBe('6');
-    expect($valuation->assumptions['projected_payout'])->toBe('55');
+    expect($valuation->assumptions['payout'])->toBe('55');
     expect($valuation->assumptions['total_shares'])->toBe('640321918');
     expect($valuation->assumptions['current_price_per_share'])->toBe('49.51');
 
@@ -51,7 +51,7 @@ it('atualiza uma simulação existente de preço teto projetivo', function () {
     $response = $this->put(route('preco-teto.update', $valuation), [
         'asset_id' => $asset->id,
         'desired_yield' => '6',
-        'projected_payout' => '55',
+        'payout' => '55',
         'projected_net_income' => '3450000000',
         'total_shares' => '640.321.918',
         'projected_growth_rate' => '0',

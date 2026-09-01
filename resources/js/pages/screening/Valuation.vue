@@ -152,9 +152,6 @@ const growthRates = ref<number[]>(
 // ─── Preço Teto ──────────────────────────────────
 const ptData = props.existingValuations?.preco_teto?.assumptions;
 const ptDesiredYield = ref(ptData?.desired_yield ?? 6);
-const ptProjectedPayout = ref(
-    ptData?.projected_payout ?? props.asset.payout ?? 50,
-);
 const ptNetIncome = ref(
     ptData?.projected_net_income ?? props.asset.net_income ?? 0,
 );
@@ -162,7 +159,7 @@ const ptTotalShares = ref(
     ptData?.total_shares ?? props.asset.total_shares ?? 0,
 );
 const ptRoe = ref(ptData?.roe ?? props.asset.roe ?? 0);
-const ptPayout = ref(ptData?.payout ?? props.asset.payout ?? 0);
+const ptPayout = ref(ptData?.payout ?? props.asset.payout ?? 50);
 const ptGrowthRate = ref(ptData?.projected_growth_rate ?? 5);
 const ptCurrentPrice = ref(
     ptData?.current_price_per_share ?? props.asset.current_price ?? 0,
@@ -192,7 +189,7 @@ const {
     margemSeguranca: ptMargem,
 } = usePrecoTeto({
     desiredYield: ptDesiredYield,
-    projectedPayout: ptProjectedPayout,
+    projectedPayout: ptPayout,
     projectedNetIncome: ptNetIncome,
     totalShares: ptTotalShares,
     projectedGrowthRate: ptGrowthRate,
@@ -275,7 +272,6 @@ function savePrecoTeto() {
     const data = {
         asset_id: props.asset.id,
         desired_yield: ptDesiredYield.value,
-        projected_payout: ptProjectedPayout.value,
         projected_net_income: ptNetIncome.value,
         total_shares: ptTotalShares.value,
         projected_growth_rate: ptGrowthRate.value,
@@ -409,16 +405,6 @@ function saveGordon() {
                             <Label>Dividend Yield Desejado (%)</Label>
                             <Input
                                 v-model.number="ptDesiredYield"
-                                type="number"
-                                step="0.1"
-                                min="0"
-                                class="mt-1"
-                            />
-                        </div>
-                        <div>
-                            <Label>Payout Projetado (%)</Label>
-                            <Input
-                                v-model.number="ptProjectedPayout"
                                 type="number"
                                 step="0.1"
                                 min="0"

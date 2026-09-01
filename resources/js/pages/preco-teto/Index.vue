@@ -34,7 +34,6 @@ interface Asset {
 
 interface PrecoTetoAssumptions {
     desired_yield?: number | string;
-    projected_payout?: number | string;
     projected_net_income?: number | string;
     total_shares?: number | string;
     projected_growth_rate?: number | string;
@@ -74,7 +73,6 @@ const assumptions =
 const form = useForm({
     asset_id: props.asset?.id?.toString() ?? '',
     desired_yield: toFormValue(assumptions.desired_yield),
-    projected_payout: toFormValue(assumptions.projected_payout),
     projected_net_income: toFormValue(assumptions.projected_net_income),
     total_shares: toFormValue(assumptions.total_shares),
     projected_growth_rate:
@@ -180,7 +178,7 @@ const lpaProjetado = computed(() => {
 });
 
 const dpaProjetado = computed(() => {
-    const payout = percentToDecimal(form.projected_payout);
+    const payout = percentToDecimal(form.payout);
 
     if (payout <= 0 || lpaProjetado.value <= 0) return 0;
 
@@ -251,7 +249,7 @@ const margemStatus = computed(() => {
 const podeCalcularPrecoTeto = computed(
     () =>
         percentToDecimal(form.desired_yield) > 0 &&
-        percentToDecimal(form.projected_payout) > 0 &&
+        percentToDecimal(form.payout) > 0 &&
         parseNumber(form.projected_net_income) > 0 &&
         lucroProjetado.value > 0 &&
         parseShareQuantity(form.total_shares) > 0,
@@ -363,22 +361,6 @@ const submit = () => {
                                     />
                                     <InputError
                                         :message="form.errors.desired_yield"
-                                    />
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-1.5">
-                                        <Label>Payout Projetado (%)</Label>
-                                    </div>
-                                    <Input
-                                        v-model="form.projected_payout"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        placeholder="Ex: 50"
-                                        class="mt-1.5"
-                                    />
-                                    <InputError
-                                        :message="form.errors.projected_payout"
                                     />
                                 </div>
                                 <div>

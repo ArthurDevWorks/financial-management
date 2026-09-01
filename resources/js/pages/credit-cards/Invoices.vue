@@ -152,7 +152,7 @@ const byCategory = computed(() => {
                     <select
                         v-model="selectedMonthYear"
                         @change="goToMonth"
-                        class="h-9 rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        class="h-9 rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                     >
                         <option
                             v-for="m in months"
