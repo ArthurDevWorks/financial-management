@@ -9,7 +9,9 @@ import { footerNavItems, navSections } from '@/lib/navigation';
         class="flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar"
     >
         <!-- LOGO -->
-        <div class="border-b border-sidebar-border px-5 py-5">
+        <div
+            class="border-b border-sidebar-border px-5 py-5 text-sidebar-foreground"
+        >
             <AppLogo />
         </div>
 

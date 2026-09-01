@@ -120,7 +120,9 @@ const hasSavedGrowthRates = !!defaults.growth_rates?.length;
 watch(
     [() => form.roe, () => form.payout],
     () => {
-        form.growth_rates = form.growth_rates.map(() => defaultGrowthRate.value);
+        form.growth_rates = form.growth_rates.map(
+            () => defaultGrowthRate.value,
+        );
     },
     { immediate: !hasSavedGrowthRates },
 );
@@ -210,7 +212,7 @@ const currentYear = new Date().getFullYear();
                             <Label>Selecione o Ativo</Label>
                             <select
                                 v-model="form.asset_id"
-                                class="mt-1 h-[42px] w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                                class="mt-1 h-[42px] w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                                 :disabled="isEditing"
                             >
                                 <option value="">Selecione...</option>
@@ -366,13 +368,13 @@ const currentYear = new Date().getFullYear();
                             <div
                                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10"
                             >
-                                <span
-                                    class="text-sm font-bold text-primary"
-                                >%</span>
+                                <span class="text-sm font-bold text-primary"
+                                    >%</span
+                                >
                             </div>
                             <div>
                                 <p
-                                    class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                                    class="text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                                 >
                                     Taxa de Crescimento Esperada
                                 </p>
@@ -380,7 +382,10 @@ const currentYear = new Date().getFullYear();
                                     {{ defaultGrowthRate }}%
                                     <span
                                         class="text-xs font-normal text-muted-foreground"
-                                    >{{ `ROE (${form.roe}%) × (1 − Payout (${form.payout}%))` }}</span>
+                                        >{{
+                                            `ROE (${form.roe}%) × (1 − Payout (${form.payout}%))`
+                                        }}</span
+                                    >
                                 </p>
                             </div>
                         </div>
@@ -398,7 +403,7 @@ const currentYear = new Date().getFullYear();
                                         >
                                             <div>Crescimento (%)</div>
                                             <div
-                                                class="normal-case tracking-normal text-muted-foreground/70"
+                                                class="tracking-normal text-muted-foreground/70 normal-case"
                                             >
                                                 Taxa Esperada
                                             </div>

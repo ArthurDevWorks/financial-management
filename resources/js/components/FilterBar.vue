@@ -58,7 +58,7 @@ const months = [
                             ($event.target as HTMLSelectElement).value,
                         )
                     "
-                    class="h-9 rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                    class="h-9 rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                 >
                     <option value="month">Mês</option>
                     <option value="year">Ano</option>
@@ -81,7 +81,7 @@ const months = [
                                 ),
                             )
                         "
-                        class="h-9 rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        class="h-9 rounded-md border border-border bg-surface py-1 pr-10 pl-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                     >
                         <option
                             v-for="(m, i) in months"
@@ -107,7 +107,7 @@ const months = [
                             )
                         "
                         type="number"
-                        class="h-9 w-[100px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        class="h-9 w-[100px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                     />
                 </div>
             </template>
@@ -128,7 +128,7 @@ const months = [
                             )
                         "
                         type="number"
-                        class="h-9 w-[100px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        class="h-9 w-[100px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                     />
                 </div>
             </template>
@@ -147,7 +147,7 @@ const months = [
                             )
                         "
                         type="date"
-                        class="h-9 w-[160px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        class="h-9 w-[160px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                     />
                 </div>
                 <div class="flex flex-col gap-1">
@@ -163,7 +163,7 @@ const months = [
                             )
                         "
                         type="date"
-                        class="h-9 w-[160px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                        class="h-9 w-[160px] rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                     />
                 </div>
             </template>
