@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import PageHeader from '@/components/PageHeader.vue';
-import { useToast } from '@/composables/useToast';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/composables/useToast';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { Loader2, Search, SlidersHorizontal, Star, X } from 'lucide-vue-next';
@@ -315,7 +315,7 @@ function onSearchInput() {
                         >
                         <select
                             v-model="localFilters.asset_type"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         >
                             <option
@@ -334,7 +334,7 @@ function onSearchInput() {
                         >
                         <select
                             v-model="localFilters.sector"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         >
                             <option value="">Todos</option>
@@ -354,7 +354,7 @@ function onSearchInput() {
                                 type="number"
                                 step="0.1"
                                 placeholder="0"
-                                class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                                class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                                 @change="applyFilters"
                             />
                             <span class="text-xs text-muted-foreground">%</span>
@@ -370,7 +370,7 @@ function onSearchInput() {
                             type="number"
                             step="0.1"
                             placeholder="0"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         />
                     </div>
@@ -385,7 +385,7 @@ function onSearchInput() {
                                 type="number"
                                 step="0.1"
                                 placeholder="0"
-                                class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                                class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                                 @change="applyFilters"
                             />
                             <span class="text-xs text-muted-foreground">%</span>
@@ -401,7 +401,7 @@ function onSearchInput() {
                             type="number"
                             step="0.1"
                             placeholder="0"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         />
                     </div>
@@ -415,7 +415,7 @@ function onSearchInput() {
                             type="number"
                             step="0.1"
                             placeholder="0"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         />
                     </div>
@@ -429,7 +429,7 @@ function onSearchInput() {
                             type="number"
                             step="0.1"
                             placeholder="0"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         />
                     </div>
@@ -443,7 +443,7 @@ function onSearchInput() {
                             type="number"
                             step="0.1"
                             placeholder="0"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         />
                     </div>
@@ -456,7 +456,7 @@ function onSearchInput() {
                             v-model="localFilters.liq_min"
                             type="number"
                             placeholder="0"
-                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:dark] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20"
+                            class="h-9 w-full rounded-md border border-border bg-surface px-3 text-sm text-foreground [color-scheme:light] transition-all outline-none focus:border-ring focus:ring-[3px] focus:ring-primary/20 dark:[color-scheme:dark]"
                             @change="applyFilters"
                         />
                     </div>
@@ -623,9 +623,12 @@ function onSearchInput() {
                                     class="hidden px-4 py-3 text-right font-mono text-sm lg:table-cell"
                                     :class="
                                         toNumber(asset.profit_margin) !== null
-                                            ? toNumber(asset.profit_margin)! >= 15
-                                                ? 'text-revenue font-semibold'
-                                                : toNumber(asset.profit_margin)! >= 0
+                                            ? toNumber(asset.profit_margin)! >=
+                                              15
+                                                ? 'font-semibold text-revenue'
+                                                : toNumber(
+                                                        asset.profit_margin,
+                                                    )! >= 0
                                                   ? 'text-foreground'
                                                   : 'text-destructive'
                                             : 'text-muted-foreground'

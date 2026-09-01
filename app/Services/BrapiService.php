@@ -100,6 +100,7 @@ class BrapiService
                 return $this->buildStockData($symbol, $quote);
             } catch (\Throwable $e) {
                 Log::error('brapi.dev complete quote error: '.$e->getMessage());
+
                 return null;
             }
         });
@@ -269,15 +270,24 @@ class BrapiService
     {
         try {
             $response = $this->http->get('/v2/stocks/quote', ['symbols' => $symbol]);
-            if ($response->failed()) return null;
+            if ($response->status() === 403) {
+                return null;
+            }
+            if ($response->failed()) {
+                return null;
+            }
             $results = $response->json('results');
-            if (empty($results)) return null;
+            if (empty($results)) {
+                return null;
+            }
             $item = $results[0];
             $d = $item['data'] ?? [];
             $d['symbol'] = $item['symbol'] ?? $symbol;
+
             return $d;
         } catch (\Throwable $e) {
             Log::warning("brapi quote error {$symbol}: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -289,11 +299,18 @@ class BrapiService
                 'symbols' => $symbol,
                 'mode' => 'current',
             ]);
-            if ($response->failed()) return null;
+            if ($response->status() === 403) {
+                return null;
+            }
+            if ($response->failed()) {
+                return null;
+            }
             $results = $response->json('results');
+
             return $results[0]['data'] ?? null;
         } catch (\Throwable $e) {
             Log::warning("brapi stats error {$symbol}: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -305,11 +322,18 @@ class BrapiService
                 'symbols' => $symbol,
                 'mode' => 'current',
             ]);
-            if ($response->failed()) return null;
+            if ($response->status() === 403) {
+                return null;
+            }
+            if ($response->failed()) {
+                return null;
+            }
             $results = $response->json('results');
+
             return $results[0]['data'] ?? null;
         } catch (\Throwable $e) {
             Log::warning("brapi financial data error {$symbol}: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -318,11 +342,18 @@ class BrapiService
     {
         try {
             $response = $this->http->get('/v2/stocks/profile', ['symbols' => $symbol]);
-            if ($response->failed()) return null;
+            if ($response->status() === 403) {
+                return null;
+            }
+            if ($response->failed()) {
+                return null;
+            }
             $results = $response->json('results');
+
             return $results[0]['data'] ?? null;
         } catch (\Throwable $e) {
             Log::warning("brapi profile error {$symbol}: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -335,11 +366,18 @@ class BrapiService
         return Cache::remember($cacheKey, 360, function () use ($symbol) {
             try {
                 $response = $this->http->get('/v2/fii/indicators', ['symbols' => $symbol]);
-                if ($response->failed()) return null;
+                if ($response->status() === 403) {
+                    return null;
+                }
+                if ($response->failed()) {
+                    return null;
+                }
                 $fiis = $response->json('fiis');
+
                 return $fiis[0] ?? null;
             } catch (\Throwable $e) {
                 Log::warning("brapi fii indicators error {$symbol}: {$e->getMessage()}");
+
                 return null;
             }
         });
@@ -361,6 +399,7 @@ class BrapiService
         if (preg_match('/^[3-8]$/', $suffix)) {
             return 'stock';
         }
+
         return 'invalid';
     }
 
@@ -376,12 +415,14 @@ class BrapiService
                     Log::warning('brapi.dev available API error', [
                         'status' => $response->status(),
                     ]);
+
                     return [];
                 }
 
                 return $response->json('stocks') ?? [];
             } catch (\Throwable $e) {
                 Log::error('brapi.dev available error: '.$e->getMessage());
+
                 return [];
             }
         });
@@ -406,6 +447,7 @@ class BrapiService
                         'symbol' => $symbol,
                         'status' => $response->status(),
                     ]);
+
                     return collect();
                 }
 
@@ -431,6 +473,7 @@ class BrapiService
                     ->values();
             } catch (\Throwable $e) {
                 Log::error('brapi.dev historical prices error: '.$e->getMessage());
+
                 return collect();
             }
         });
@@ -453,6 +496,7 @@ class BrapiService
                         'symbol' => $symbol,
                         'status' => $response->status(),
                     ]);
+
                     return collect();
                 }
 
@@ -473,6 +517,7 @@ class BrapiService
                     ]);
             } catch (\Throwable $e) {
                 Log::error('brapi.dev dividends error: '.$e->getMessage());
+
                 return collect();
             }
         });

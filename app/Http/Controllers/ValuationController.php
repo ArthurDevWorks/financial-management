@@ -53,7 +53,7 @@ class ValuationController extends Controller
 
         if ($v->method === InvestimentValuation::METHOD_PRECO_TETO) {
             $dy = ((float) ($a['desired_yield'] ?? 0)) / 100;
-            $payout = ((float) ($a['projected_payout'] ?? 0)) / 100;
+            $payout = ((float) ($a['payout'] ?? 0)) / 100;
             $lucro = (float) ($a['projected_net_income'] ?? 0);
             $shares = (float) ($a['total_shares'] ?? 0);
             $growth = ((float) ($a['projected_growth_rate'] ?? 0)) / 100;

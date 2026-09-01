@@ -23,11 +23,13 @@ const isActive = () => page.url.startsWith(props.href);
         as="button"
         class="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150"
         :class="[
-            isActive() && !danger ? 'bg-primary/10 text-primary' : '',
+            isActive() && !danger
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : '',
             danger && 'text-destructive hover:bg-destructive/10',
             !isActive() &&
                 !danger &&
-                'text-muted-foreground hover:bg-white/[0.04] hover:text-foreground',
+                'text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground',
         ]"
     >
         <component

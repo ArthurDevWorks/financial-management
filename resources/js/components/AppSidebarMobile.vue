@@ -21,9 +21,11 @@ function navigate(href: string, method: 'get' | 'post' = 'get') {
     <Sheet :open="open" @update:open="open = $event">
         <SheetContent
             side="left"
-            class="flex w-64 flex-col border-r border-sidebar-border bg-sidebar p-0"
+            class="flex w-64 flex-col border-r border-sidebar-border bg-sidebar p-0 text-sidebar-foreground"
         >
-            <div class="border-b border-sidebar-border px-5 py-5">
+            <div
+                class="border-b border-sidebar-border px-5 py-5 text-sidebar-foreground"
+            >
                 <AppLogo />
             </div>
 
@@ -35,7 +37,7 @@ function navigate(href: string, method: 'get' | 'post' = 'get') {
                     class="mb-6 last:mb-0"
                 >
                     <p
-                        class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-muted-foreground uppercase"
+                        class="mb-2 px-2 pb-1 text-[0.6875rem] font-semibold tracking-[0.06em] text-sidebar-foreground/60 uppercase"
                     >
                         {{ section.title }}
                     </p>
@@ -45,12 +47,12 @@ function navigate(href: string, method: 'get' | 'post' = 'get') {
                             v-for="item in section.items"
                             :key="item.href"
                             variant="ghost"
-                            class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium"
+                            class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-foreground"
                             @click="navigate(item.href)"
                         >
                             <component
                                 :is="item.icon"
-                                class="h-[18px] w-[18px] shrink-0 text-muted-foreground"
+                                class="h-[18px] w-[18px] shrink-0 text-sidebar-foreground/70"
                             />
                             {{ item.label }}
                         </Button>
@@ -65,11 +67,11 @@ function navigate(href: string, method: 'get' | 'post' = 'get') {
                         v-for="item in footerNavItems"
                         :key="item.href"
                         variant="ghost"
-                        class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium"
+                        class="w-full justify-start gap-3 px-3 py-2 text-sm font-medium hover:bg-sidebar-accent hover:text-sidebar-foreground"
                         :class="
                             item.danger
                                 ? 'text-destructive hover:bg-destructive/10'
-                                : ''
+                                : 'text-sidebar-foreground'
                         "
                         @click="navigate(item.href, item.method)"
                     >
@@ -79,7 +81,7 @@ function navigate(href: string, method: 'get' | 'post' = 'get') {
                             :class="
                                 item.danger
                                     ? 'text-destructive'
-                                    : 'text-muted-foreground'
+                                    : 'text-sidebar-foreground/70'
                             "
                         />
                         {{ item.label }}
